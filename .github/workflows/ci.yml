@@ -24,13 +24,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: backend/pom.xml
 
       - name: Kiểm tra và Build Backend
         run: |
           if [ -f "backend/pom.xml" ]; then
-            echo "Phát hiện backend/pom.xml. Bắt đầu build và kiểm tra cú pháp..."
+            echo "Phát hiện backend/pom.xml. Bắt đầu build và chạy test..."
             cd backend
-            mvn -B clean test-compile
+            mvn -B clean test
           else
             echo "Chưa có file backend/pom.xml. Bỏ qua bước kiểm tra biên dịch Java."
           fi
@@ -65,4 +66,3 @@ jobs:
           else
             echo "Chưa có file frontend/package.json. Bỏ qua bước kiểm tra biên dịch React."
           fi
-
