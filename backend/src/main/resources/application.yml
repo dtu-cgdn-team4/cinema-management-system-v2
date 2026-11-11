@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: cinema-management
+  config:
+    import: "optional:file:.env[.properties]"
+  datasource:
+    url: "jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:cinema_db}"
+    username: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+  flyway:
+    enabled: true
+    clean-disabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
