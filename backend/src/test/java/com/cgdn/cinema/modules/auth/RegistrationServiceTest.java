@@ -81,4 +81,25 @@ class RegistrationServiceTest {
                 .extracting("field").isEqualTo("fullName");
         verify(users, never()).saveAndFlush(any());
     }
+
+    @Test
+    void blankOptionalFieldsAreStoredAsNull() {
+        when(users.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var request = new RegisterRequest(valid.username(), valid.fullName(), valid.email(),
+                valid.phoneNumber(), valid.dateOfBirth(), valid.gender(), valid.password(), "", "   ");
+        service.register(request);
+        var user = org.mockito.ArgumentCaptor.forClass(NguoiDung.class);
+        verify(users).saveAndFlush(user.capture());
+        assertThat(user.getValue().getCccd()).isNull();
+        assertThat(user.getValue().getDiaChi()).isNull();
+    }
+
+    @Test
+    void shortNonblankAddressIsRejected() {
+        var request = new RegisterRequest(valid.username(), valid.fullName(), valid.email(),
+                valid.phoneNumber(), valid.dateOfBirth(), valid.gender(), valid.password(), null, "abc");
+        assertThatThrownBy(() -> service.register(request)).isInstanceOf(BusinessException.class)
+                .extracting("field").isEqualTo("address");
+        verify(users, never()).saveAndFlush(any());
+    }
 }

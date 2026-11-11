@@ -63,6 +63,11 @@ class AuthControllerTest {
                         .content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.username").exists())
+                .andExpect(jsonPath("$.errors.fullName").exists())
+                .andExpect(jsonPath("$.errors.email").exists())
+                .andExpect(jsonPath("$.errors.phoneNumber").exists())
+                .andExpect(jsonPath("$.errors.dateOfBirth").exists())
+                .andExpect(jsonPath("$.errors.gender").exists())
                 .andExpect(jsonPath("$.errors.password").exists());
         mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                         .content(valid.replace("viewer@example.com", "bad-email")
@@ -72,6 +77,30 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.email").exists())
                 .andExpect(jsonPath("$.errors.phoneNumber").exists())
                 .andExpect(jsonPath("$.errors.password").exists());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void blankOptionalFieldsAreAccepted() throws Exception {
+        when(service.register(any())).thenReturn(new RegisterResponse(1L, "viewer_1", "Viewer One",
+                "viewer@example.com", "KHACH_HANG"));
+        for (String optional : new String[]{
+                "\"idCard\":\"\"", "\"address\":\"\"", "\"idCard\":\"\",\"address\":\"\""}) {
+            mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                            .content(valid.replace("\"password\":\"SecurePass1\"",
+                                    "\"password\":\"SecurePass1\"," + optional)))
+                    .andExpect(status().isCreated());
+        }
+    }
+
+    @Test
+    void weakPasswordsAreRejected() throws Exception {
+        for (String password : new String[]{"Short1A", "lowercase1", "UPPERCASE1", "NoNumber"}) {
+            mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                            .content(valid.replace("SecurePass1", password)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.password").exists());
+        }
         verifyNoInteractions(service);
     }
 }

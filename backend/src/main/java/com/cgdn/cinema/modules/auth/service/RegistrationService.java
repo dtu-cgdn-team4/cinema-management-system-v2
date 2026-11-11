@@ -46,9 +46,10 @@ public class RegistrationService {
         if (users.existsByEmail(email)) throw new BusinessException(ErrorCode.EMAIL_EXISTS, "email");
         if (users.existsBySoDienThoai(request.phoneNumber())) throw new BusinessException(ErrorCode.PHONE_EXISTS, "phoneNumber");
 
+        String idCard = request.idCard() == null || request.idCard().isBlank() ? null : request.idCard();
         NguoiDung user = new NguoiDung(username, passwordEncoder.encode(request.password()),
                 fullName, email, request.phoneNumber(), birthDate, request.gender(),
-                request.idCard(), address == null || address.isEmpty() ? null : address);
+                idCard, address == null || address.isEmpty() ? null : address);
         try {
             NguoiDung saved = users.saveAndFlush(user);
             return new RegisterResponse(saved.getId(), saved.getTaiKhoan(), saved.getHoTen(),

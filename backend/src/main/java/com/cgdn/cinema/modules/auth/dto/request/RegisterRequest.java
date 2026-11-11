@@ -29,8 +29,8 @@ public record RegisterRequest(
         @Pattern(regexp = "(?s)(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}",
                 message = "Mật khẩu tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số.")
         String password,
-        @Pattern(regexp = "[0-9]{9}|[0-9]{12}", message = "CMND/CCCD phải gồm 9 hoặc 12 số.")
+        @Pattern(regexp = "\\s*|[0-9]{9}|[0-9]{12}", message = "CMND/CCCD phải gồm 9 hoặc 12 số.")
         String idCard,
-        @Size(min = 5, max = 255, message = "Địa chỉ phải có 5-255 ký tự.")
+        @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự.")
         String address) {
 }
