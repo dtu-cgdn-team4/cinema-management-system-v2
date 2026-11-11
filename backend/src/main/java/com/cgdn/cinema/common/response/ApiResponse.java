@@ -9,7 +9,19 @@ public record ApiResponse<T>(int code, String message, T data, Map<String, Strin
         return new ApiResponse<>(code, message, data, null);
     }
 
+    public static <T> ApiResponse<T> success(T data) {
+        return success(200, "Thành công", data);
+    }
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return success(200, message, data);
+    }
+
     public static ApiResponse<Void> error(int code, String message, Map<String, String> errors) {
         return new ApiResponse<>(code, message, null, errors);
+    }
+
+    public static ApiResponse<Void> error(int code, String message) {
+        return error(code, message, null);
     }
 }

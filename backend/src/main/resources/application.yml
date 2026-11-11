@@ -1,6 +1,9 @@
+server:
+  port: 8080
+
 spring:
   application:
-    name: cinema-management
+    name: cinema-management-system
   config:
     import: "optional:file:.env[.properties]"
   datasource:
@@ -14,3 +17,9 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
