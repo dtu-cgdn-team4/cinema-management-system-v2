@@ -1,0 +1,26 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Backend (Maven / Java)
+backend/target/
+*.class
+*.log
+
+# Frontend (Node / Vite)
+node_modules/
+frontend/dist/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+~$*
+
+# Local tooling
+.archify/
+.playwright-mcp/
+.mcp.json
