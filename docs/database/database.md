@@ -20,9 +20,7 @@ MySQL 8, database `cinema_db`, `utf8mb4` / `utf8mb4_unicode_ci`. Thiết kế l�
 
 | Migration | Nội dung |
 |---|---|
-| `V1__phim_phong_suat_chieu` | Phim, thể loại, phòng, ghế, suất chiếu, bảng giá |
-| `V2__ghe_suat_chieu` | Bản đầu của `ghe_suat_chieu`, còn cột tạm `ma_phien` |
-| `V3__theo_erd` | Đưa schema về đúng sơ đồ: thêm `rap`, `phong_chieu.rap_id`, người dùng, khuyến mãi, đặt vé, thanh toán, hóa đơn, điểm; `ghe_suat_chieu` bỏ `ma_phien`, thêm `nguoi_dung_id`, `dat_ve_id`, `gia` |
+| `V1__khoi_tao_csdl` | Toàn bộ schema theo sơ đồ: phim, thể loại, rạp, phòng, ghế, suất chiếu, bảng giá, người dùng, khuyến mãi, đặt vé, ghế trong suất, thanh toán, hóa đơn, điểm |
 
 ## Rạp, phòng, ghế
 
