@@ -33,3 +33,10 @@ Chỉ thêm thư mục riêng khi module cần, ví dụ `booking/queue/` (xử 
 
 - `db/migration/`: script Flyway `V1__init.sql`, `V2__...`
 - `templates/mail/`: mẫu email vé QR, OTP
+
+## Chạy
+
+- MySQL: tạo database `cinema_db`, chép `.env.example` ở gốc repo thành `.env`, rồi `./mvnw spring-boot:run`.
+- Không có MySQL: `./mvnw spring-boot:run -Dspring-boot.run.profiles=h2`.
+- Test: `./mvnw test` (dùng H2, chạy cả migration và dữ liệu mẫu).
+- Swagger: http://localhost:8080/swagger-ui/index.html

@@ -1,0 +1,24 @@
+# Biến môi trường đọc từ .env (ở gốc repo hoặc trong backend/), xem .env.example
+spring:
+  config:
+    import: optional:file:../.env[.properties],optional:file:.env[.properties]
+  application:
+    name: cinema
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/cinema_db?serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.jdbc.time_zone: Asia/Ho_Chi_Minh
+  flyway:
+    # db/seed: dữ liệu mẫu để phát triển, bỏ khi triển khai thật
+    locations: classpath:db/migration,classpath:db/seed
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+
+app:
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173}
