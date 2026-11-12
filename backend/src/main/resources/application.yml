@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  # Biến DB_* đọc từ backend/.env, chạy trong backend/ hay từ gốc repo đều được (README mục 6)
+  config:
+    import: optional:file:.env[.properties],optional:file:backend/.env[.properties]
   application:
     name: cinema-management-system
 
