@@ -1,0 +1,68 @@
+name: Cinema CMS - CI Pipeline
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+  push:
+    branches: [ develop, main ]
+
+jobs:
+  # ----------------------------------------------------------------------
+  # Job 1: Kiểm tra biên dịch & Test Backend (Spring Boot / Java 17)
+  # ----------------------------------------------------------------------
+  backend-check:
+    name: Backend Build & Test (Java 17)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Thiết lập JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Kiểm tra và Build Backend
+        run: |
+          if [ -f "backend/pom.xml" ]; then
+            echo "Phát hiện backend/pom.xml. Bắt đầu build và chạy test..."
+            cd backend
+            mvn -B clean test
+          else
+            echo "Chưa có file backend/pom.xml. Bỏ qua bước kiểm tra biên dịch Java."
+          fi
+
+  # ----------------------------------------------------------------------
+  # Job 2: Kiểm tra biên dịch Frontend (React / Vite / Node.js)
+  # ----------------------------------------------------------------------
+  frontend-check:
+    name: Frontend Lint & Build (Node.js)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Thiết lập Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Kiểm tra và Build Frontend
+        run: |
+          if [ -f "frontend/package.json" ]; then
+            echo "Phát hiện frontend/package.json. Bắt đầu cài thư viện và build..."
+            cd frontend
+            if [ -f "package-lock.json" ]; then
+              npm ci
+            else
+              npm install
+            fi
+            npm run build
+          else
+            echo "Chưa có file frontend/package.json. Bỏ qua bước kiểm tra biên dịch React."
+          fi

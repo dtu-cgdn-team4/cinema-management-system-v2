@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 public class MovieMapper {
 
-    // ── Genre ────────────────────────────────────────────────────────────
+    // ── Genre
 
     public GenreResponse toGenreResponse(Genre genre) {
         return GenreResponse.builder()
@@ -25,7 +25,7 @@ public class MovieMapper {
                 .build();
     }
 
-    // ── Movie → MovieResponse (danh sách) ────────────────────────────────
+    // ── Movie → MovieResponse (danh sách) 
 
     public MovieResponse toMovieResponse(Movie movie) {
         return MovieResponse.builder()
@@ -40,7 +40,7 @@ public class MovieMapper {
                 .build();
     }
 
-    // ── Movie → MovieDetailResponse (chi tiết) ──────────────────────────
+    // ── Movie → MovieDetailResponse (chi tiết)
 
     public MovieDetailResponse toMovieDetailResponse(Movie movie) {
         return MovieDetailResponse.builder()
@@ -60,7 +60,7 @@ public class MovieMapper {
                 .build();
     }
 
-    // ── Helper ───────────────────────────────────────────────────────────
+    // ── Helper 
 
     private List<GenreResponse> toGenreList(Movie movie) {
         return movie.getTheLoai().stream()

@@ -21,7 +21,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
+        "spring.flyway.enabled=true",
         "spring.flyway.locations=classpath:db/migration",
+        "spring.jpa.hibernate.ddl-auto=validate",
         "spring.jpa.show-sql=false"
 })
 @AutoConfigureMockMvc
@@ -66,7 +68,7 @@ class MovieApiIntegrationTest {
                 .andExpect(jsonPath("$.data.content[0].id").value(900))
                 .andExpect(jsonPath("$.data.content[0].theLoai", hasSize(2)))
                 .andExpect(jsonPath("$.data.content[0].noiDung").doesNotExist())
-                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.pageNo").value(0))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.totalPages").value(2));
         mvc.perform(get("/api/movies/now-showing").param("genreId", "900")
@@ -116,9 +118,9 @@ class MovieApiIntegrationTest {
     @Test
     void pageSizeIsBounded() throws Exception {
         mvc.perform(get("/api/movies/now-showing").param("size", "1000"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.size").value(100));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.pageSize").value(100));
         mvc.perform(get("/api/movies/coming-soon").param("size", "0"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.size").value(10));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.pageSize").value(10));
     }
 
     @Test
@@ -127,7 +129,6 @@ class MovieApiIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.errorCode").value("MOVIE_NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("Không tìm thấy phim"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 

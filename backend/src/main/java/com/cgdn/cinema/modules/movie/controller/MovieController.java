@@ -3,7 +3,6 @@ package com.cgdn.cinema.modules.movie.controller;
 import com.cgdn.cinema.common.response.ApiResponse;
 import com.cgdn.cinema.common.response.PageResponse;
 import com.cgdn.cinema.modules.movie.dto.response.GenreResponse;
-import com.cgdn.cinema.modules.movie.dto.response.MovieDetailResponse;
 import com.cgdn.cinema.modules.movie.dto.response.MovieResponse;
 import com.cgdn.cinema.modules.movie.service.MovieService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import java.util.List;
  * <ul>
  *   <li>GET /api/movies/now-showing   – Danh sách phim đang chiếu</li>
  *   <li>GET /api/movies/coming-soon   – Danh sách phim sắp chiếu</li>
- *   <li>GET /api/movies/{id}          – Chi tiết phim</li>
  *   <li>GET /api/movies/genres        – Danh sách thể loại</li>
  * </ul>
  */
@@ -52,14 +50,6 @@ public class MovieController {
     ) {
         Page<MovieResponse> result = movieService.getComingSoonMovies(page, size, genreId);
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phim sắp chiếu thành công", PageResponse.from(result)));
-    }
-
-    // Chi tiết phim
-
-    @GetMapping("/{movieId}")
-    public ResponseEntity<ApiResponse<MovieDetailResponse>> getDetail(@PathVariable("movieId") Long id) {
-        MovieDetailResponse result = movieService.getMovieDetail(id);
-        return ResponseEntity.ok(ApiResponse.success("Lấy chi tiết phim thành công", result));
     }
 
     // Danh sách thể loại
