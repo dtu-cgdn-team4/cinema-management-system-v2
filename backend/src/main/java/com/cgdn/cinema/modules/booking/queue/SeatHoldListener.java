@@ -3,7 +3,6 @@ package com.cgdn.cinema.modules.booking.queue;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.infrastructure.messaging.RabbitConfig;
-import com.cgdn.cinema.modules.booking.dto.response.SeatHoldResponse;
 import com.cgdn.cinema.modules.booking.service.SeatHoldProcessor;
 import com.cgdn.cinema.modules.booking.service.SeatStatusPublisher;
 import lombok.RequiredArgsConstructor;
@@ -27,17 +26,17 @@ public class SeatHoldListener {
      */
     @RabbitListener(queues = RabbitConfig.SEAT_HOLD_QUEUE, concurrency = "1")
     public SeatHoldReply handle(SeatHoldCommand command) {
-        SeatHoldResponse result;
+        SeatHoldProcessor.Outcome outcome;
         try {
-            result = seatHoldProcessor.hold(command);
+            outcome = seatHoldProcessor.hold(command);
         } catch (BusinessException ex) {
             return new SeatHoldReply(null, ex.getErrorCode());
         } catch (RuntimeException ex) {
             log.error("Giữ ghế thất bại: {}", command, ex);
             return new SeatHoldReply(null, ErrorCode.INTERNAL_ERROR);
         }
-        // Transaction đã commit: báo trạng thái ghế mới cho người đang xem suất.
-        seatStatusPublisher.publish(command.showtimeId());
-        return new SeatHoldReply(result, null);
+        // Transaction đã commit: báo trạng thái ghế mới cho người đang xem suất này và các suất vừa được nhả ghế.
+        outcome.changedShowtimeIds().forEach(seatStatusPublisher::publish);
+        return new SeatHoldReply(outcome.response(), null);
     }
 }

@@ -40,10 +40,14 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
     @Query("delete from SeatHold h where h.showtimeId = :showtimeId and " + EXPIRED)
     int deleteExpiredIn(@Param("showtimeId") Long showtimeId, @Param("now") LocalDateTime now);
 
-    /** Nhả các ghế khách đang giữ ở suất này, dùng khi khách chọn lại ghế. */
+    @Query("select distinct h.showtimeId from SeatHold h where h.userId = :userId"
+            + " and h.status = com.cgdn.cinema.common.enums.SeatStatus.DANG_GIU")
+    List<Long> findShowtimesHeldBy(@Param("userId") Long userId);
+
+    /** Nhả mọi ghế khách đang giữ (chưa thanh toán), ở mọi suất. */
     @Transactional
     @Modifying
-    @Query("delete from SeatHold h where h.showtimeId = :showtimeId and h.userId = :userId"
+    @Query("delete from SeatHold h where h.userId = :userId"
             + " and h.status = com.cgdn.cinema.common.enums.SeatStatus.DANG_GIU")
-    int deleteHeldBy(@Param("showtimeId") Long showtimeId, @Param("userId") Long userId);
+    int deleteHeldBy(@Param("userId") Long userId);
 }

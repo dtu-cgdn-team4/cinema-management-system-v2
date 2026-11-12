@@ -3,6 +3,7 @@ package com.cgdn.cinema.modules.booking.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,8 +42,12 @@ public class SeatHoldProcessor {
     private final PricingService pricingService;
     private final Clock clock;
 
+    /** Kết quả giữ ghế, kèm các suất có ghế đổi trạng thái để báo qua WebSocket. */
+    public record Outcome(SeatHoldResponse response, Set<Long> changedShowtimeIds) {
+    }
+
     @Transactional
-    public SeatHoldResponse hold(SeatHoldCommand command) {
+    public Outcome hold(SeatHoldCommand command) {
         ShowtimeResponse showtime = showtimeService.getUpcomingShowtime(command.showtimeId());
         Map<Long, Seat> roomSeats = roomService.getSeats(showtime.room().id()).stream()
                 .collect(Collectors.toMap(Seat::getId, Function.identity()));
@@ -53,8 +58,10 @@ public class SeatHoldProcessor {
 
         LocalDateTime now = LocalDateTime.now(clock);
         seatHoldRepository.deleteExpiredIn(command.showtimeId(), now);
-        // Khách quay lại chọn ghế thì lượt giữ cũ được thay bằng lượt mới.
-        seatHoldRepository.deleteHeldBy(command.showtimeId(), command.userId());
+        // Mỗi khách chỉ giữ ghế ở một suất (business-rules, chốt 12/11/2026): lượt giữ mới thay mọi lượt cũ.
+        Set<Long> changed = new HashSet<>(seatHoldRepository.findShowtimesHeldBy(command.userId()));
+        changed.add(command.showtimeId());
+        seatHoldRepository.deleteHeldBy(command.userId());
         Set<Long> occupied = seatHoldRepository.findActive(command.showtimeId(), now).stream()
                 .map(SeatHold::getSeatId)
                 .collect(Collectors.toSet());
@@ -79,7 +86,7 @@ public class SeatHoldProcessor {
                 .map(s -> new SeatHoldResponse.HeldSeat(s.getId(), s.getLabel(), s.getType(), prices.get(s.getType())))
                 .toList();
         long total = seats.stream().mapToLong(SeatHoldResponse.HeldSeat::price).sum();
-        return new SeatHoldResponse(command.showtimeId(), expiresAt, seats, total);
+        return new Outcome(new SeatHoldResponse(command.showtimeId(), expiresAt, seats, total), changed);
     }
 
     private static SeatHold newHold(SeatHoldCommand command, Seat seat, LocalDateTime expiresAt) {

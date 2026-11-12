@@ -87,6 +87,7 @@ class SeatSelectionApiTest {
     private int port;
 
     private long showtimeId;
+    private long otherShowtimeId;
     private final Map<String, Long> seatIds = new HashMap<>();
     private final List<StompSession> sessions = new ArrayList<>();
 
@@ -95,8 +96,8 @@ class SeatSelectionApiTest {
         // Suất xa nhất của phim 1, để không bị bắt đầu giữa lúc chạy test
         JsonNode showtimes = data(mvc.perform(get("/api/v1/movies/1/showtimes")));
         showtimeId = showtimes.get(showtimes.size() - 1).get("id").asLong();
-        data(mvc.perform(get(seatsUrl()))).get("rows").forEach(row -> row.get("seats")
-                .forEach(seat -> seatIds.put(seat.get("label").asText(), seat.get("id").asLong())));
+        otherShowtimeId = showtimes.get(showtimes.size() - 2).get("id").asLong();
+        seatIds.putAll(seatIdsOf(showtimeId));
     }
 
     @AfterEach
@@ -168,6 +169,21 @@ class SeatSelectionApiTest {
     }
 
     @Test
+    void holdingInAnotherShowtimeReleasesTheFirstOne() throws Exception {
+        data(hold(1, 2, "C04", "C05"));
+        BlockingQueue<SeatStatusMessage> messages = subscribe();
+        Map<String, Long> otherSeats = seatIdsOf(otherShowtimeId);
+
+        data(mvc.perform(post("/api/v1/showtimes/" + otherShowtimeId + "/seats/hold").header("X-User-Id", 1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(bodyIds(2, List.of(otherSeats.get("C04"), otherSeats.get("C05"))))));
+
+        assertThat(labels(data(mvc.perform(get(seatsUrl()))), "TAKEN")).doesNotContain("C04", "C05");
+        assertThat(awaitMessage(messages, m -> !m.takenSeatIds().contains(seatIds.get("C04"))))
+                .as("báo cho người đang xem suất cũ").isNotNull();
+    }
+
+    @Test
     void holdingRequiresAnExistingUser() throws Exception {
         expectError(mvc.perform(post(holdUrl()).contentType(MediaType.APPLICATION_JSON).content(body(1, "C04"))),
                 401, "Vui lòng đăng nhập để đặt vé");
@@ -234,6 +250,14 @@ class SeatSelectionApiTest {
 
     private String seatsUrl() {
         return "/api/v1/showtimes/" + showtimeId + "/seats";
+    }
+
+    /** Nhãn ghế (A01...) → id ghế trong phòng của suất. */
+    private Map<String, Long> seatIdsOf(long showtime) throws Exception {
+        Map<String, Long> ids = new HashMap<>();
+        data(mvc.perform(get("/api/v1/showtimes/" + showtime + "/seats"))).get("rows").forEach(row -> row.get("seats")
+                .forEach(seat -> ids.put(seat.get("label").asText(), seat.get("id").asLong())));
+        return ids;
     }
 
     private String holdUrl() {
