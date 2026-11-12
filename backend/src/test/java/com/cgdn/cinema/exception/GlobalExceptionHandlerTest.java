@@ -12,13 +12,13 @@ class GlobalExceptionHandlerTest {
     @Test
     void unexpectedErrorReturnsMatchingCodeWithoutLeakingInternalDetails() throws Exception {
         MockMvcBuilders.standaloneSetup(new FailingController())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(new com.fasterxml.jackson.databind.ObjectMapper()))
                 .build()
                 .perform(get("/test/error"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"))
-                .andExpect(jsonPath("$.message").value("Đã xảy ra lỗi hệ thống"))
+                .andExpect(jsonPath("$.errorCode").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("Lỗi hệ thống, vui lòng thử lại sau"))
                 .andExpect(jsonPath("$.success").doesNotExist())
                 .andExpect(jsonPath("$.data").doesNotExist());
     }

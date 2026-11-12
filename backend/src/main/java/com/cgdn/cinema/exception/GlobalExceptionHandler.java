@@ -1,59 +1,122 @@
 package com.cgdn.cinema.exception;
 
 import com.cgdn.cinema.common.response.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-/**
- * Xử lý exception tập trung, trả về {@link ApiResponse} thống nhất.
- */
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/** Chuyển lỗi thành ApiResponse: code là HTTP status, message hiển thị được cho người dùng. */
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+@RequiredArgsConstructor
+public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException ex) {
-        ErrorCode error = ErrorCode.RESOURCE_NOT_FOUND;
-        return ResponseEntity.status(error.getHttpStatus())
-                .body(ApiResponse.error(error.getHttpStatus().value(), error.name(), error.getMessage()));
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return ResponseEntity.badRequest()
-                .body(ApiResponse.error(ErrorCode.INVALID_REQUEST.getHttpStatus().value(),
-                        ErrorCode.INVALID_REQUEST.name(),
-                        "Tham số '" + ex.getName() + "' không đúng kiểu dữ liệu"));
-    }
+    private final ObjectMapper objectMapper;
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex) {
-        log.warn("BusinessException: {}", ex.getMessage());
-        return ResponseEntity
-                .status(ex.getErrorCode().getHttpStatus())
-                .body(ApiResponse.error(ex.getErrorCode().getHttpStatus().value(),
-                        ex.getErrorCode().name(), ex.getMessage()));
+        ErrorCode code = ex.getErrorCode();
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.getStatus().value(), code.getCode(), ex.getMessage()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-        log.warn("IllegalArgumentException: {}", ex.getMessage());
-        return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.error(ErrorCode.INVALID_REQUEST.getHttpStatus().value(),
-                        ErrorCode.INVALID_REQUEST.name(), ex.getMessage()));
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+        }
+        ErrorCode code = ErrorCode.VALIDATION_ERROR;
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.getStatus().value(), code.getCode(), code.getMessage(), fieldErrors));
+    }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex) {
+        return toResponse(ErrorCode.INVALID_REQUEST);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestParameterException ex) {
+        ErrorCode code = ErrorCode.INVALID_REQUEST;
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.getStatus().value(), code.getCode(),
+                        "Thiếu tham số bắt buộc: " + ex.getParameterName()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(405)
+                .body(ApiResponse.error(405, "METHOD_NOT_ALLOWED", "Phương thức HTTP không được hỗ trợ"));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException ex) {
+        return toResponse(ErrorCode.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException ex) {
+        return toResponse(ErrorCode.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return toResponse(ErrorCode.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
-        log.error("Unhandled exception", ex);
-        return ResponseEntity
-                .internalServerError()
-                .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value(),
-                        ErrorCode.INTERNAL_SERVER_ERROR.name(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
+    public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
+        log.error("Unhandled error", ex);
+        return toResponse(ErrorCode.INTERNAL_ERROR);
+    }
+
+    @Override
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+        writeSecurityError(response, ErrorCode.UNAUTHORIZED);
+    }
+
+    @Override
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) throws IOException {
+        writeSecurityError(response, ErrorCode.FORBIDDEN);
+    }
+
+    private ResponseEntity<ApiResponse<Void>> toResponse(ErrorCode code) {
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.getStatus().value(), code.getCode(), code.getMessage()));
+    }
+
+    private void writeSecurityError(HttpServletResponse response, ErrorCode code) throws IOException {
+        response.setStatus(code.getStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(response.getWriter(),
+                ApiResponse.error(code.getStatus().value(), code.getCode(), code.getMessage()));
     }
 }

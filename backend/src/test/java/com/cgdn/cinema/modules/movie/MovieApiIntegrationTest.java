@@ -58,8 +58,21 @@ class MovieApiIntegrationTest {
     }
 
     @Test
+    void developShowingEndpointKeepsItsOriginalResponse() throws Exception {
+        mvc.perform(get("/api/v1/movies").param("status", "SHOWING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(900))
+                .andExpect(jsonPath("$.data[0].title").value("Test movie 900"))
+                .andExpect(jsonPath("$.data[0].genres", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].trailerUrl").value("https://example.com/trailer"))
+                .andExpect(jsonPath("$.data[0].tenPhim").doesNotExist());
+    }
+
+    @Test
     void nowShowingHasStablePagesAndFullGenres() throws Exception {
-        mvc.perform(get("/api/movies/now-showing").param("genreId", "900").param("size", "1"))
+        mvc.perform(get("/api/v1/movies/now-showing").param("genreId", "900").param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.success").doesNotExist())
@@ -71,7 +84,7 @@ class MovieApiIntegrationTest {
                 .andExpect(jsonPath("$.data.pageNo").value(0))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
                 .andExpect(jsonPath("$.data.totalPages").value(2));
-        mvc.perform(get("/api/movies/now-showing").param("genreId", "900")
+        mvc.perform(get("/api/v1/movies/now-showing").param("genreId", "900")
                         .param("size", "1").param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].id").value(901))
@@ -80,7 +93,7 @@ class MovieApiIntegrationTest {
 
     @Test
     void comingSoonExcludesTodayExpiredAndDeletedMovies() throws Exception {
-        mvc.perform(get("/api/movies/coming-soon").param("genreId", "900"))
+        mvc.perform(get("/api/v1/movies/coming-soon").param("genreId", "900"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.content", hasSize(1)))
@@ -89,7 +102,7 @@ class MovieApiIntegrationTest {
 
     @Test
     void pageBeyondLastReturnsEmptyList() throws Exception {
-        mvc.perform(get("/api/movies/now-showing").param("genreId", "900").param("page", "99"))
+        mvc.perform(get("/api/v1/movies/now-showing").param("genreId", "900").param("page", "99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(0)))
                 .andExpect(jsonPath("$.data.totalElements").value(2));
@@ -97,7 +110,7 @@ class MovieApiIntegrationTest {
 
     @Test
     void invalidPageReturnsBadRequest() throws Exception {
-        mvc.perform(get("/api/movies/now-showing").param("page", "-1"))
+        mvc.perform(get("/api/v1/movies/now-showing").param("page", "-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
@@ -108,7 +121,7 @@ class MovieApiIntegrationTest {
     @Test
     void invalidParameterTypesReturnBadRequest() throws Exception {
         for (String parameter : new String[]{"page", "size", "genreId"}) {
-            mvc.perform(get("/api/movies/now-showing").param(parameter, "abc"))
+            mvc.perform(get("/api/v1/movies/now-showing").param(parameter, "abc"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value(400))
                     .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"));
@@ -117,15 +130,15 @@ class MovieApiIntegrationTest {
 
     @Test
     void pageSizeIsBounded() throws Exception {
-        mvc.perform(get("/api/movies/now-showing").param("size", "1000"))
+        mvc.perform(get("/api/v1/movies/now-showing").param("size", "1000"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.pageSize").value(100));
-        mvc.perform(get("/api/movies/coming-soon").param("size", "0"))
+        mvc.perform(get("/api/v1/movies/coming-soon").param("size", "0"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.pageSize").value(10));
     }
 
     @Test
     void deletedMovieDetailReturnsNotFound() throws Exception {
-        mvc.perform(get("/api/movies/904"))
+        mvc.perform(get("/api/v1/movies/904"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.errorCode").value("MOVIE_NOT_FOUND"))
@@ -134,12 +147,12 @@ class MovieApiIntegrationTest {
 
     @Test
     void detailAndGenresUseTheSameResponseFormat() throws Exception {
-        mvc.perform(get("/api/movies/900"))
+        mvc.perform(get("/api/v1/movies/900"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.errorCode").doesNotExist())
                 .andExpect(jsonPath("$.data.id").value(900));
-        mvc.perform(get("/api/movies/genres"))
+        mvc.perform(get("/api/v1/movies/genres"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.errorCode").doesNotExist())
@@ -150,15 +163,15 @@ class MovieApiIntegrationTest {
     void openApiDoesNotAdvertiseKeyword() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/api/movies/now-showing'].get.parameters", hasSize(3)))
-                .andExpect(jsonPath("$.paths['/api/movies/coming-soon'].get.parameters", hasSize(3)));
+                .andExpect(jsonPath("$.paths['/api/v1/movies/now-showing'].get.parameters", hasSize(3)))
+                .andExpect(jsonPath("$.paths['/api/v1/movies/coming-soon'].get.parameters", hasSize(3)));
     }
 
     @Test
     void unknownEndpointReturnsNotFoundInsteadOfServerError() throws Exception {
-        mvc.perform(get("/api/does-not-exist"))
+        mvc.perform(get("/api/v1/movies/missing/path"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"));
+                .andExpect(jsonPath("$.errorCode").value("NOT_FOUND"));
     }
 }

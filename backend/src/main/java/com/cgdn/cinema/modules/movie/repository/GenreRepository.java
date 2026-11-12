@@ -16,6 +16,6 @@ public interface GenreRepository extends JpaRepository<Genre, Long> {
     /**
      * Lấy toàn bộ thể loại, sắp xếp theo tên.
      */
-    @Query("SELECT g FROM Genre g ORDER BY g.ten")
+    @Query("SELECT g FROM Genre g ORDER BY g.name")
     List<Genre> findAllOrderByTen();
 }

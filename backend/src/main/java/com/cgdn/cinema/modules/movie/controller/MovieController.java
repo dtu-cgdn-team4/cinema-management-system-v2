@@ -1,63 +1,54 @@
 package com.cgdn.cinema.modules.movie.controller;
 
+import java.util.List;
 import com.cgdn.cinema.common.response.ApiResponse;
 import com.cgdn.cinema.common.response.PageResponse;
 import com.cgdn.cinema.modules.movie.dto.response.GenreResponse;
+import com.cgdn.cinema.modules.movie.dto.response.MovieListResponse;
 import com.cgdn.cinema.modules.movie.dto.response.MovieResponse;
 import com.cgdn.cinema.modules.movie.service.MovieService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-/**
- * REST API công khai cho module phim – không yêu cầu đăng nhập.
- *
- * <ul>
- *   <li>GET /api/movies/now-showing   – Danh sách phim đang chiếu</li>
- *   <li>GET /api/movies/coming-soon   – Danh sách phim sắp chiếu</li>
- *   <li>GET /api/movies/genres        – Danh sách thể loại</li>
- * </ul>
- */
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
 public class MovieController {
 
+    public enum MovieStatus { SHOWING }
+
     private final MovieService movieService;
 
-    // Danh sách phim đang chiếu 
+    /** Danh sách phim theo trạng thái; hiện chỉ có SHOWING (phim đang chiếu). */
+    @GetMapping
+    public ApiResponse<List<MovieResponse>> getMovies(
+            @RequestParam(defaultValue = "SHOWING") MovieStatus status) {
+        return ApiResponse.success(movieService.getShowingMovies());
+    }
 
     @GetMapping("/now-showing")
-    public ResponseEntity<ApiResponse<PageResponse<MovieResponse>>> getNowShowing(
+    public ApiResponse<PageResponse<MovieListResponse>> getNowShowing(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long genreId
-    ) {
-        Page<MovieResponse> result = movieService.getNowShowingMovies(page, size, genreId);
-        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phim đang chiếu thành công", PageResponse.from(result)));
+            @RequestParam(required = false) Long genreId) {
+        return ApiResponse.success("Lấy danh sách phim đang chiếu thành công",
+                PageResponse.from(movieService.getNowShowingMovies(page, size, genreId)));
     }
-
-    // Danh sách phim sắp chiếu
 
     @GetMapping("/coming-soon")
-    public ResponseEntity<ApiResponse<PageResponse<MovieResponse>>> getComingSoon(
+    public ApiResponse<PageResponse<MovieListResponse>> getComingSoon(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long genreId
-    ) {
-        Page<MovieResponse> result = movieService.getComingSoonMovies(page, size, genreId);
-        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách phim sắp chiếu thành công", PageResponse.from(result)));
+            @RequestParam(required = false) Long genreId) {
+        return ApiResponse.success("Lấy danh sách phim sắp chiếu thành công",
+                PageResponse.from(movieService.getComingSoonMovies(page, size, genreId)));
     }
-
-    // Danh sách thể loại
 
     @GetMapping("/genres")
-    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAllGenres() {
-        List<GenreResponse> result = movieService.getAllGenres();
-        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thể loại thành công", result));
+    public ApiResponse<List<GenreResponse>> getAllGenres() {
+        return ApiResponse.success("Lấy danh sách thể loại thành công", movieService.getAllGenres());
     }
-
 }

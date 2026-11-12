@@ -2,9 +2,6 @@ package com.cgdn.cinema.exception;
 
 import lombok.Getter;
 
-/**
- * Exception nghiệp vụ, ném khi quy tắc kinh doanh bị vi phạm.
- */
 @Getter
 public class BusinessException extends RuntimeException {
 
@@ -15,8 +12,8 @@ public class BusinessException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-    public BusinessException(ErrorCode errorCode, String customMessage) {
-        super(customMessage);
+    public BusinessException(ErrorCode errorCode, String message) {
+        super(message);
         this.errorCode = errorCode;
     }
 }

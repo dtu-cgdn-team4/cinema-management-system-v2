@@ -13,3 +13,7 @@ spring:
   flyway:
     enabled: false
 
+app:
+  jwt:
+    secret: test-only-signing-key-with-at-least-256-bits
+
