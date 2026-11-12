@@ -22,7 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/movies", "/api/v1/movies"})
+@RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
 public class MovieDetailController {
 
@@ -35,7 +35,7 @@ public class MovieDetailController {
         return ApiResponse.success(movieDetailService.getMovieDetail(movieId));
     }
 
-    @GetMapping("/{movieId}/showtimes")
+    @GetMapping("/{movieId}/schedule")
     @Operation(summary = "Lịch chiếu theo ngày, khu vực, rạp; giá vé và số ghế còn trống theo phòng")
     public ApiResponse<MovieShowtimesResponse> getShowtimes(
             @PathVariable("movieId") @Positive Long movieId,

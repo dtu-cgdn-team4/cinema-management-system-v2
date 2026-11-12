@@ -42,7 +42,7 @@ class MovieDetailIntegrationTest {
 
     @Test
     void returnsDetailsFromExistingSchemaAndOnlyUpcomingActiveShowtimes() throws Exception {
-        mockMvc.perform(get("/api/movies/9001"))
+        mockMvc.perform(get("/api/v1/movies/9001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("Thành công"))
@@ -79,7 +79,7 @@ class MovieDetailIntegrationTest {
     @ParameterizedTest
     @ValueSource(longs = {9002, 9999})
     void returns404ForDeletedOrMissingMovie(long movieId) throws Exception {
-        mockMvc.perform(get("/api/movies/{movieId}", movieId))
+        mockMvc.perform(get("/api/v1/movies/{movieId}", movieId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("Không tìm thấy phim với ID: " + movieId))
@@ -89,7 +89,7 @@ class MovieDetailIntegrationTest {
 
     @Test
     void returnsUpcomingMovieDetails() throws Exception {
-        mockMvc.perform(get("/api/movies/9003"))
+        mockMvc.perform(get("/api/v1/movies/9003"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(9003))
                 .andExpect(jsonPath("$.data.releaseDate").value("2099-01-01"))
@@ -98,7 +98,7 @@ class MovieDetailIntegrationTest {
 
     @Test
     void returnsMovieWithoutGenresActorsOrShowtimes() throws Exception {
-        mockMvc.perform(get("/api/movies/9004"))
+        mockMvc.perform(get("/api/v1/movies/9004"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(9004))
                 .andExpect(jsonPath("$.data.actors").isEmpty())
@@ -109,7 +109,7 @@ class MovieDetailIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-1", "abc", "1.5", "9223372036854775808"})
     void rejectsInvalidMovieIds(String movieId) throws Exception {
-        mockMvc.perform(get("/api/movies/{movieId}", movieId))
+        mockMvc.perform(get("/api/v1/movies/{movieId}", movieId))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("ID phim phải là số nguyên dương hợp lệ."))

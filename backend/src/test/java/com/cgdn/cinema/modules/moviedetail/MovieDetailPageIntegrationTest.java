@@ -51,7 +51,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void returnsHeroOverviewAndTrailerDataWithoutInventingMissingMedia() throws Exception {
-        mockMvc.perform(get("/api/movies/9001"))
+        mockMvc.perform(get("/api/v1/movies/9001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.screeningStatus").value("NOW_SHOWING"))
                 .andExpect(jsonPath("$.data.status").value(1))
@@ -68,7 +68,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void groupsScheduleByRoomAndReturnsActualPricesAndSeatAvailability() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("city", "Đà Nẵng"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.movieId").value(9001))
@@ -95,7 +95,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void returnsSoldOutAndNullPriceInsteadOfInventingPriceForUnconfiguredSeatType() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("cinemaId", "9201"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.rooms[1].prices[0].seatType").value("LOAI_MOI"))
@@ -107,7 +107,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void usesSelectedDateForIsoWeekdayPricingAndIncludesNextMidnightOnlyInNextDay() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-02")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-02")
                         .param("cinemaId", "9201"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.rooms", hasSize(1)))
@@ -118,7 +118,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void filtersByCityWithoutMakingUpRoomCapacityFromRoomGrid() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("city", "  TP. Hồ Chí Minh  "))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.city").value("TP. Hồ Chí Minh"))
@@ -132,7 +132,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void keepsCinemaOptionsWhenSelectingAnotherCinema() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("city", "Đà Nẵng").param("cinemaId", "9204"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.cinemaId").value(9204))
@@ -142,7 +142,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void returnsEmptyRoomsWhenCinemaDoesNotBelongToSelectedCity() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("city", "TP. Hồ Chí Minh").param("cinemaId", "9201"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.cinemas[*].id", contains(9203)))
@@ -151,7 +151,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void returnsEmptyScheduleForUnknownCity() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", "2099-01-01")
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01")
                         .param("city", "Không có khu vực này"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.cinemaId").value(nullValue()))
@@ -162,7 +162,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void defaultsToTodayInCinemaTimeZoneAndReturnsEmptyListsForMovieWithoutSchedule() throws Exception {
-        mockMvc.perform(get("/api/movies/9004/showtimes"))
+        mockMvc.perform(get("/api/v1/movies/9004/schedule"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.date").value(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).toString()))
                 .andExpect(jsonPath("$.data.availableDates").isEmpty())
@@ -187,7 +187,7 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void returnsRelatedCardsRankedBySharedGenresAndExcludesCurrentDeletedAndEndedMovies() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/related"))
+        mockMvc.perform(get("/api/v1/movies/9001/related"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[*].id", contains(9006, 9003, 9007, 9004)))
                 .andExpect(jsonPath("$.data[0].posterUrl").value("https://cinema.example/related.jpg"))
@@ -199,14 +199,14 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void appliesRelatedLimit() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/related").param("limit", "1"))
+        mockMvc.perform(get("/api/v1/movies/9001/related").param("limit", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[*].id", contains(9006)));
     }
 
     @Test
     void fallsBackToOtherActiveMoviesWhenSourceHasNoGenres() throws Exception {
-        mockMvc.perform(get("/api/movies/9004/related"))
+        mockMvc.perform(get("/api/v1/movies/9004/related"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[*].id", contains(9003, 9007, 9006, 9001)));
     }
@@ -215,25 +215,25 @@ class MovieDetailPageIntegrationTest {
     void returnsEmptyRelatedListWhenNoEligibleMoviesExist() throws Exception {
         jdbcTemplate.update("UPDATE phim SET trang_thai = 2 WHERE id <> 9001");
 
-        mockMvc.perform(get("/api/movies/9001/related"))
+        mockMvc.perform(get("/api/v1/movies/9001/related"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"9002/showtimes", "9999/showtimes", "9002/related", "9999/related"})
+    @ValueSource(strings = {"9002/schedule", "9999/schedule", "9002/related", "9999/related"})
     void rejectsMissingOrDeletedMovieOnNewEndpoints(String suffix) throws Exception {
-        mockMvc.perform(get("/api/movies/" + suffix))
+        mockMvc.perform(get("/api/v1/movies/" + suffix))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"showtimes?date=bad", "showtimes?date=2099-02-30",
-            "showtimes?cinemaId=0", "showtimes?cinemaId=abc", "related?limit=0",
+    @ValueSource(strings = {"schedule?date=bad", "schedule?date=2099-02-30",
+            "schedule?cinemaId=0", "schedule?cinemaId=abc", "related?limit=0",
             "related?limit=21", "related?limit=abc"})
     void validatesScheduleAndRecommendationParameters(String suffix) throws Exception {
-        mockMvc.perform(get("/api/movies/9001/" + suffix))
+        mockMvc.perform(get("/api/v1/movies/9001/" + suffix))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("Tham số yêu cầu không hợp lệ."));
@@ -242,7 +242,7 @@ class MovieDetailPageIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"0001-01-01", "+10000-01-01"})
     void rejectsDatesOutsideMySqlDateRange(String date) throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("date", date))
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", date))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("Tham số yêu cầu không hợp lệ."));
@@ -250,14 +250,14 @@ class MovieDetailPageIntegrationTest {
 
     @Test
     void rejectsCityLongerThanSchemaLimit() throws Exception {
-        mockMvc.perform(get("/api/movies/9001/showtimes").param("city", "x".repeat(101)))
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("city", "x".repeat(101)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400));
     }
 
     @Test
-    void supportsBothNewEndpointsUnderVersionedAlias() throws Exception {
-        mockMvc.perform(get("/api/v1/movies/9001/showtimes").param("date", "2099-01-01"))
+    void exposesScheduleAndRelatedUnderVersionedPrefix() throws Exception {
+        mockMvc.perform(get("/api/v1/movies/9001/schedule").param("date", "2099-01-01"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.movieId").value(9001));
         mockMvc.perform(get("/api/v1/movies/9001/related").param("limit", "1"))
