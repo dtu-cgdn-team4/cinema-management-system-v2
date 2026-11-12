@@ -33,7 +33,7 @@ public class User {
     @Column(name = "tai_khoan", nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(name = "mat_khau", nullable = false, length = 255)
+    @Column(name = "mat_khau", length = 255)
     private String password;
 
     @Column(name = "ho_ten", nullable = false, length = 255)
@@ -42,13 +42,13 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "so_dien_thoai", nullable = false, unique = true, length = 20)
+    @Column(name = "so_dien_thoai", unique = true, length = 20)
     private String phoneNumber;
 
-    @Column(name = "ngay_sinh", nullable = false)
+    @Column(name = "ngay_sinh")
     private LocalDate dateOfBirth;
 
-    @Column(name = "gioi_tinh", nullable = false, length = 10)
+    @Column(name = "gioi_tinh", length = 10)
     private String gender;
 
     @Column(name = "cccd", length = 12)
@@ -65,7 +65,7 @@ public class User {
     @Column(name = "rap_id")
     private Long cinemaId;
 
-    @Column(name = "google_id", length = 255)
+    @Column(name = "google_id", unique = true, length = 255)
     private String googleId;
 
     @Column(name = "diem_tich_luy", nullable = false)
