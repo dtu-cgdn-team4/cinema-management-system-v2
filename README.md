@@ -195,14 +195,57 @@ git clone https://github.com/dtu-cgdn-team4/cinema-management-system.git
 cd cinema-management-system
 
 Bước 2: Khởi tạo cơ sở dữ liệu MySQL:
-Mở MySQL Workbench hoặc Terminal và thực thi câu lệnh:
+
+MySQL 8 phải đang chạy trên máy (cổng mặc định 3306). Mở MySQL Workbench hoặc Terminal (`mysql -u root -p`) và tạo một database rỗng:
+
+```sql
 CREATE DATABASE cinema_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-Bước 3: Cấu hình môi trường cho Backend:
+Không tự chạy các file SQL trong `backend/src/main/resources/db`. Lần chạy backend đầu tiên, Flyway tự tạo bảng (`db/migration`) và nạp dữ liệu mẫu (`db/seed`).
 
-- Di chuyển vào thư mục backend: cd backend
-- Tạo file cấu hình từ file mẫu: copy .env.example .env (trên Windows) hoặc cp .env.example .env (trên Linux hoặc macOS)
-- Mở file .env và điền các thông tin kết nối MySQL, khóa bí mật JWT, tài khoản Cloudinary và tài khoản thử nghiệm PayPal Sandbox của bạn.
+Bước 3: Cấu hình kết nối database cho Backend:
+
+- Di chuyển vào thư mục backend và tạo file `.env` từ file mẫu:
+
+  ```bash
+  cd backend
+  copy .env.example .env    # Windows
+  cp .env.example .env      # Linux, macOS, Git Bash
+  ```
+
+- Mở `backend/.env` và sửa cho đúng MySQL trên máy bạn:
+
+  | Biến | Ý nghĩa | Giá trị mẫu |
+  |---|---|---|
+  | `DB_HOST` | Máy chạy MySQL | `localhost` |
+  | `DB_PORT` | Cổng MySQL | `3306` |
+  | `DB_NAME` | Database đã tạo ở bước 2 | `cinema_db` |
+  | `DB_USERNAME` | Tài khoản MySQL | `root` |
+  | `DB_PASSWORD` | Mật khẩu của tài khoản trên | mật khẩu MySQL của bạn |
+
+- Ghi giá trị trực tiếp, không bọc trong dấu nháy: viết `DB_PASSWORD=abc123`, không viết `DB_PASSWORD="abc123"`.
+- `.env` chứa mật khẩu nên đã nằm trong `.gitignore`, không commit file này. Khi cần biến mới, thêm tên biến kèm giá trị mẫu vào `backend/.env.example`.
+
+Backend tự đọc `backend/.env`, dù chạy bằng lệnh trong thư mục `backend` hay bấm Run trong IDE (VS Code, IntelliJ).
+
+Kiểm tra kết nối: chạy backend theo mục 7. Kết nối thành công khi log có dòng `Successfully applied` (lần chạy đầu) hoặc `is up to date` (các lần sau), tiếp theo là `Started CinemaApplication`. Mở lại `cinema_db` trong Workbench sẽ thấy các bảng nghiệp vụ và bảng `flyway_schema_history`.
+
+Lỗi kết nối thường gặp:
+
+| Lỗi trong log | Nguyên nhân và cách xử lý |
+|---|---|
+| `Access denied for user ...` | Sai `DB_USERNAME` hoặc `DB_PASSWORD` trong `backend/.env` |
+| `Unknown database 'cinema_db'` | Chưa tạo database ở bước 2, hoặc `DB_NAME` gõ sai |
+| `Communications link failure` | MySQL chưa chạy, hoặc sai `DB_HOST`, `DB_PORT` |
+| `Validate failed: Migrations have failed validation` | Database còn lịch sử migration cũ, ví dụ từ nhánh khác. Xoá và tạo lại database bằng lệnh dưới |
+
+```sql
+DROP DATABASE cinema_db;
+CREATE DATABASE cinema_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Lệnh trên xoá toàn bộ dữ liệu của `cinema_db` trên máy bạn. Dữ liệu mẫu được nạp lại ở lần chạy backend tiếp theo.
 
 Bước 4: Cài đặt thư viện phụ thuộc cho Frontend:
 
