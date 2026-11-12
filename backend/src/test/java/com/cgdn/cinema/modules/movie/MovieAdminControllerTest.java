@@ -49,6 +49,9 @@ class MovieAdminControllerTest {
         testMovie.setAgeRating(AgeRating.T16);
         testMovie.setReleaseDate(LocalDate.now().minusDays(5));
         testMovie.setEndDate(LocalDate.now().plusDays(30));
+        testMovie.setDirector("Denis Villeneuve");
+        testMovie.setActors("Timothée Chalamet, Zendaya");
+        testMovie.setProductionCompany("Legendary Pictures");
         testMovie.setTrailerUrl("https://youtube.com/trailer");
         testMovie.setPosterUrl("https://image.com/poster.jpg");
         testMovie.setDescription("Nội dung phim viễn tưởng...");

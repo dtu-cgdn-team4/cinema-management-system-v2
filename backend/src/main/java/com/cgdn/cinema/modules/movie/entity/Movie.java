@@ -51,6 +51,15 @@ public class Movie {
     @Column(name = "ngay_ket_thuc")
     private LocalDate endDate;
 
+    @Column(name = "dao_dien", nullable = false)
+    private String director;
+
+    @Column(name = "dien_vien", nullable = false, length = 1000)
+    private String actors;
+
+    @Column(name = "hang_san_xuat", nullable = false)
+    private String productionCompany;
+
     @Column(name = "poster_url")
     private String posterUrl;
 
