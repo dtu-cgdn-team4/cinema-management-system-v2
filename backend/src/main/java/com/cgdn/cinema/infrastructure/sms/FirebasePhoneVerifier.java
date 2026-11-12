@@ -22,7 +22,7 @@ public class FirebasePhoneVerifier {
         try {
             token = firebaseAuth.verifyIdToken(idToken);
         } catch (FirebaseAuthException | IllegalArgumentException exception) {
-            throw new BusinessException(ErrorCode.INVALID_PHONE_VERIFICATION, "firebaseIdToken");
+            throw BusinessException.forField(ErrorCode.INVALID_PHONE_VERIFICATION, "firebaseIdToken");
         }
         Object firebaseClaim = token.getClaims().get("firebase");
         Object provider = firebaseClaim instanceof Map<?, ?> firebase
@@ -30,7 +30,7 @@ public class FirebasePhoneVerifier {
         // Số ở API dùng đầu 0, còn Firebase lưu E.164; chỉ token đăng nhập bằng phone cho đúng số mới hợp lệ.
         String verifiedPhone = "+84" + localPhoneNumber.substring(1);
         if (!"phone".equals(provider) || !verifiedPhone.equals(token.getClaims().get("phone_number"))) {
-            throw new BusinessException(ErrorCode.INVALID_PHONE_VERIFICATION, "firebaseIdToken");
+            throw BusinessException.forField(ErrorCode.INVALID_PHONE_VERIFICATION, "firebaseIdToken");
         }
     }
 }

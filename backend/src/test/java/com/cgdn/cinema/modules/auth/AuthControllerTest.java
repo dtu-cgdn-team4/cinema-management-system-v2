@@ -5,7 +5,10 @@ import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.exception.GlobalExceptionHandler;
 import com.cgdn.cinema.modules.auth.controller.AuthController;
 import com.cgdn.cinema.modules.auth.dto.response.RegisterResponse;
+import com.cgdn.cinema.modules.auth.service.AuthService;
 import com.cgdn.cinema.modules.auth.service.RegistrationService;
+import com.cgdn.cinema.security.GoogleProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -30,8 +33,9 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         service = mock(RegistrationService.class);
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(service))
-                .setControllerAdvice(new GlobalExceptionHandler()).build();
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(
+                        mock(AuthService.class), mock(GoogleProperties.class), service))
+                .setControllerAdvice(new GlobalExceptionHandler(new ObjectMapper())).build();
     }
 
     @Test
@@ -48,8 +52,8 @@ class AuthControllerTest {
     @Test
     void duplicateFieldsReturn409() throws Exception {
         for (var duplicate : new BusinessException[]{
-                new BusinessException(ErrorCode.USERNAME_EXISTS, "username"),
-                new BusinessException(ErrorCode.EMAIL_EXISTS, "email")}) {
+                BusinessException.forField(ErrorCode.USERNAME_EXISTS, "username"),
+                BusinessException.forField(ErrorCode.EMAIL_EXISTS, "email")}) {
             reset(service);
             when(service.register(any())).thenThrow(duplicate);
             mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(valid))

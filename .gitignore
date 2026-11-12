@@ -24,3 +24,16 @@ Thumbs.db
 .archify/
 .playwright-mcp/
 .mcp.json
+.claude/
+CLAUDE.md
+.postman/
+postman/
+
+# Tài liệu chỉ để trên máy
+docs/*.docx
+docs/*.xlsx
+docs/README.md
+docs/api/api-conventions.md
+docs/architecture/architecture.md
+docs/conventions/
+docs/requirements/
