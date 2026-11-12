@@ -59,7 +59,6 @@ public class Movie {
     private String description;
 
     @JdbcTypeCode(SqlTypes.TINYINT)
-
     @Column(name = "trang_thai")
     private Integer status;
 

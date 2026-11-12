@@ -13,3 +13,9 @@ spring:
   flyway:
     enabled: false
 
+  # Consumer RabbitMQ và broker nhúng chỉ bật ở profile "mq" (EmbeddedRabbitConfig)
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+

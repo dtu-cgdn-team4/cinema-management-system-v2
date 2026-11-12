@@ -3,6 +3,7 @@ package com.cgdn.cinema.exception;
 import com.cgdn.cinema.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,10 +17,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex) {
-        return toResponse(ex.getErrorCode());
+        return toResponse(ex.getErrorCode(), ex.getMessage());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class})
     public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex) {
         return toResponse(ErrorCode.INVALID_REQUEST);
     }
@@ -36,7 +38,10 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ApiResponse<Void>> toResponse(ErrorCode code) {
-        return ResponseEntity.status(code.getStatus())
-                .body(ApiResponse.error(code.getStatus().value(), code.getMessage()));
+        return toResponse(code, code.getMessage());
+    }
+
+    private ResponseEntity<ApiResponse<Void>> toResponse(ErrorCode code, String message) {
+        return ResponseEntity.status(code.getStatus()).body(ApiResponse.error(code.getStatus().value(), message));
     }
 }
