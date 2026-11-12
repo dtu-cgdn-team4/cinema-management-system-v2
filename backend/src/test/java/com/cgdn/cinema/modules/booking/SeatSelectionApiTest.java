@@ -207,6 +207,16 @@ class SeatSelectionApiTest {
     }
 
     @Test
+    void clientsCannotPublishSeatStatus() throws Exception {
+        BlockingQueue<SeatStatusMessage> messages = subscribe();
+        StompSession client = sessions.get(sessions.size() - 1);
+
+        client.send(SeatStatusPublisher.TOPIC.formatted(showtimeId), new SeatStatusMessage(showtimeId, List.of(-1L)));
+
+        assertThat(awaitMessage(messages, m -> m.takenSeatIds().contains(-1L))).as("tin giả từ client").isNull();
+    }
+
+    @Test
     void expiredHoldsAreReleasedAndViewersNotified() throws Exception {
         data(hold(1, 3, "B01", "B02", "B03"));
         BlockingQueue<SeatStatusMessage> messages = subscribe();
