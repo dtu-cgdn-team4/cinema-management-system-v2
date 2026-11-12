@@ -6,7 +6,8 @@ public enum ErrorCode {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dữ liệu đăng ký không hợp lệ."),
     USERNAME_EXISTS(HttpStatus.CONFLICT, "Tên đăng nhập đã tồn tại."),
     EMAIL_EXISTS(HttpStatus.CONFLICT, "Email đã tồn tại."),
-    PHONE_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã tồn tại.");
+    PHONE_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã tồn tại."),
+    INVALID_PHONE_VERIFICATION(HttpStatus.UNAUTHORIZED, "Xác minh số điện thoại không hợp lệ.");
 
     private final HttpStatus status;
     private final String message;

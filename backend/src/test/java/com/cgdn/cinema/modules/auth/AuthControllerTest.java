@@ -22,7 +22,8 @@ class AuthControllerTest {
     private RegistrationService service;
     private final String valid = """
             {"username":"viewer_1","fullName":"Viewer One","email":"viewer@example.com",
-             "phoneNumber":"0901234567","dateOfBirth":"2000-01-01","gender":"MALE",
+             "phoneNumber":"0901234567","firebaseIdToken":"test-id-token",
+             "dateOfBirth":"2000-01-01","gender":"MALE",
              "password":"SecurePass1"}
             """;
 
@@ -66,6 +67,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.fullName").exists())
                 .andExpect(jsonPath("$.errors.email").exists())
                 .andExpect(jsonPath("$.errors.phoneNumber").exists())
+                .andExpect(jsonPath("$.errors.firebaseIdToken").exists())
                 .andExpect(jsonPath("$.errors.dateOfBirth").exists())
                 .andExpect(jsonPath("$.errors.gender").exists())
                 .andExpect(jsonPath("$.errors.password").exists());

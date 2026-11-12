@@ -1,6 +1,7 @@
 package com.cgdn.cinema.modules.auth;
 
 import com.cgdn.cinema.exception.BusinessException;
+import com.cgdn.cinema.infrastructure.sms.FirebasePhoneVerifier;
 import com.cgdn.cinema.modules.auth.dto.request.RegisterRequest;
 import com.cgdn.cinema.modules.auth.service.RegistrationService;
 import com.cgdn.cinema.modules.user.entity.NguoiDung;
@@ -18,14 +19,16 @@ import static org.mockito.Mockito.*;
 
 class RegistrationServiceTest {
     private NguoiDungRepository users;
+    private FirebasePhoneVerifier phoneVerifier;
     private RegistrationService service;
     private RegisterRequest valid;
 
     @BeforeEach
     void setUp() {
         users = mock(NguoiDungRepository.class);
-        service = new RegistrationService(users);
-        valid = new RegisterRequest("viewer_1", "Viewer One", "VIEWER@example.com", "0901234567",
+        phoneVerifier = mock(FirebasePhoneVerifier.class);
+        service = new RegistrationService(users, phoneVerifier);
+        valid = new RegisterRequest("viewer_1", "Viewer One", "VIEWER@example.com", "0901234567", "test-id-token",
                 LocalDate.of(2000, 1, 1), "MALE", "SecurePass1", null, null);
     }
 
@@ -33,6 +36,7 @@ class RegistrationServiceTest {
     void savesOnlyHashAndReturnsSafeResponse() {
         when(users.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var response = service.register(valid);
+        verify(phoneVerifier).verify("test-id-token", "0901234567");
         var user = org.mockito.ArgumentCaptor.forClass(NguoiDung.class);
         verify(users).saveAndFlush(user.capture());
         assertThat(user.getValue().getMatKhau()).isNotEqualTo(valid.password());
@@ -40,6 +44,14 @@ class RegistrationServiceTest {
         assertThat(user.getValue().getVaiTro()).isEqualTo("KHACH_HANG");
         assertThat(response.email()).isEqualTo("viewer@example.com");
         assertThat(response.toString()).doesNotContain(valid.password());
+    }
+
+    @Test
+    void invalidPhoneVerificationNeverSavesUser() {
+        doThrow(new BusinessException(com.cgdn.cinema.exception.ErrorCode.INVALID_PHONE_VERIFICATION,
+                "firebaseIdToken")).when(phoneVerifier).verify("test-id-token", "0901234567");
+        assertThatThrownBy(() -> service.register(valid)).isInstanceOf(BusinessException.class);
+        verifyNoInteractions(users);
     }
 
     @Test
@@ -66,7 +78,7 @@ class RegistrationServiceTest {
     void rejectsUnderageAndOverageWithoutSaving() {
         for (LocalDate date : new LocalDate[]{LocalDate.now().minusYears(12), LocalDate.now().minusYears(121)}) {
             var request = new RegisterRequest(valid.username(), valid.fullName(), valid.email(),
-                    valid.phoneNumber(), date, valid.gender(), valid.password(), null, null);
+                    valid.phoneNumber(), valid.firebaseIdToken(), date, valid.gender(), valid.password(), null, null);
             assertThatThrownBy(() -> service.register(request)).isInstanceOf(BusinessException.class)
                     .extracting("field").isEqualTo("dateOfBirth");
         }
@@ -75,7 +87,7 @@ class RegistrationServiceTest {
 
     @Test
     void rejectsNameThatBecomesTooShortAfterTrimming() {
-        var request = new RegisterRequest(valid.username(), " A ", valid.email(), valid.phoneNumber(),
+        var request = new RegisterRequest(valid.username(), " A ", valid.email(), valid.phoneNumber(), valid.firebaseIdToken(),
                 valid.dateOfBirth(), valid.gender(), valid.password(), null, null);
         assertThatThrownBy(() -> service.register(request)).isInstanceOf(BusinessException.class)
                 .extracting("field").isEqualTo("fullName");
@@ -86,7 +98,7 @@ class RegistrationServiceTest {
     void blankOptionalFieldsAreStoredAsNull() {
         when(users.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var request = new RegisterRequest(valid.username(), valid.fullName(), valid.email(),
-                valid.phoneNumber(), valid.dateOfBirth(), valid.gender(), valid.password(), "", "   ");
+                valid.phoneNumber(), valid.firebaseIdToken(), valid.dateOfBirth(), valid.gender(), valid.password(), "", "   ");
         service.register(request);
         var user = org.mockito.ArgumentCaptor.forClass(NguoiDung.class);
         verify(users).saveAndFlush(user.capture());
@@ -97,7 +109,7 @@ class RegistrationServiceTest {
     @Test
     void shortNonblankAddressIsRejected() {
         var request = new RegisterRequest(valid.username(), valid.fullName(), valid.email(),
-                valid.phoneNumber(), valid.dateOfBirth(), valid.gender(), valid.password(), null, "abc");
+                valid.phoneNumber(), valid.firebaseIdToken(), valid.dateOfBirth(), valid.gender(), valid.password(), null, "abc");
         assertThatThrownBy(() -> service.register(request)).isInstanceOf(BusinessException.class)
                 .extracting("field").isEqualTo("address");
         verify(users, never()).saveAndFlush(any());

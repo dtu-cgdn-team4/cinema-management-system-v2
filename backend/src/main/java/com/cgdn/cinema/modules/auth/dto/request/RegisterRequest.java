@@ -20,6 +20,8 @@ public record RegisterRequest(
         @NotBlank(message = "Vui lòng nhập số điện thoại.")
         @Pattern(regexp = "0[35789][0-9]{8}", message = "Số điện thoại phải gồm 10 số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.")
         String phoneNumber,
+        @NotBlank(message = "Vui lòng xác minh số điện thoại bằng Firebase OTP.")
+        String firebaseIdToken,
         @NotNull(message = "Vui lòng chọn ngày sinh.")
         LocalDate dateOfBirth,
         @NotBlank(message = "Vui lòng chọn giới tính.")

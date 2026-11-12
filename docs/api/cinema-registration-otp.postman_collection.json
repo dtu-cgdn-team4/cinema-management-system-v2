@@ -1,0 +1,1650 @@
+{
+  "info": {
+    "name": "Cinema API",
+    "description": "Cinema API > Auth API > 01 - Firebase OTP và token. Chạy tuần tự từ Yêu cầu OTP; 42 request, không gửi SMS thật, tạo 3 tài khoản thử local mỗi lần chạy.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth API",
+      "item": [
+        {
+          "name": "01 - Firebase OTP và token",
+          "item": [
+            {
+              "name": "Yêu cầu OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"{{testPhoneE164}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const digits = Math.floor(1000000 + Math.random() * 8999996);",
+                      "const tag = String(digits);",
+                      "pm.collectionVariables.set('runTag', tag);",
+                      "pm.collectionVariables.set('testPhone', '090' + tag);",
+                      "pm.collectionVariables.set('testPhoneE164', '+8490' + tag);",
+                      "pm.collectionVariables.set('wrongPhone', '090' + String(digits + 3));",
+                      "pm.collectionVariables.set('testUsername', 'otp_pm_' + tag);",
+                      "pm.collectionVariables.set('testEmail', 'otp.pm.' + tag + '@example.com');",
+                      "pm.collectionVariables.set('testEmailUpper', 'OTP.PM.' + tag + '@EXAMPLE.COM');",
+                      "pm.collectionVariables.set('otherUsername', 'otp_other_' + tag);",
+                      "pm.collectionVariables.set('otherEmail', 'otp.other.' + tag + '@example.com');",
+                      "pm.collectionVariables.set('optionalPhone', '090' + String(digits + 1));",
+                      "pm.collectionVariables.set('optionalPhoneE164', '+8490' + String(digits + 1));",
+                      "pm.collectionVariables.set('filledPhone', '090' + String(digits + 2));",
+                      "pm.collectionVariables.set('filledPhoneE164', '+8490' + String(digits + 2));",
+                      "pm.collectionVariables.set('underageDate', String(new Date().getFullYear() - 12) + '-01-01');",
+                      "pm.collectionVariables.set('overageDate', String(new Date().getFullYear() - 121) + '-01-01');",
+                      "pm.collectionVariables.set('futureDate', String(new Date().getFullYear() + 1) + '-01-01');",
+                      "pm.collectionVariables.set('longPassword', 'Aa1' + 'x'.repeat(70));",
+                      "pm.collectionVariables.set('longAddress', 'x'.repeat(256));",
+                      "pm.collectionVariables.unset('firebaseIdToken');",
+                      "pm.collectionVariables.unset('otpCode');"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Firebase nhận yêu cầu OTP\", () => pm.response.to.have.status(200));",
+                      "pm.test('Có sessionInfo', () => pm.expect(pm.response.json().sessionInfo).to.be.a('string').and.not.empty);",
+                      "pm.collectionVariables.set('sessionInfo', pm.response.json().sessionInfo);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Lấy mã OTP từ Emulator",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/emulator/v1/projects/{{firebaseProjectId}}/verificationCodes"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Đọc mã từ Emulator\", () => pm.response.to.have.status(200));",
+                      "const phone = pm.collectionVariables.get('testPhoneE164');",
+                      "const matches = pm.response.json().verificationCodes.filter(x => x.phoneNumber === phone);",
+                      "pm.test('Có mã cho số thử nghiệm', () => pm.expect(matches.length).to.be.greaterThan(0));",
+                      "if (matches.length) { const latest = matches[matches.length - 1]; pm.collectionVariables.set('otpCode', latest.code); pm.collectionVariables.set('sessionInfo', latest.sessionInfo); pm.collectionVariables.set('wrongOtpCode', latest.code === '000000' ? '111111' : '000000'); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 Mã OTP sai bị Firebase từ chối",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionInfo\": \"{{sessionInfo}}\",\n  \"code\": \"{{wrongOtpCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"OTP sai bị từ chối\", () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 Xác nhận OTP đúng",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionInfo\": \"{{sessionInfo}}\",\n  \"code\": \"{{otpCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"OTP đúng\", () => pm.response.to.have.status(200));",
+                      "pm.test('Có Firebase ID token', () => pm.expect(pm.response.json().idToken).to.be.a('string').and.not.empty);",
+                      "pm.collectionVariables.set('firebaseIdToken', pm.response.json().idToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 Tạo token email để kiểm tra bảo vệ",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:signUp?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"otp.email.{{runTag}}@example.com\",\n  \"password\": \"SecurePass1\",\n  \"returnSecureToken\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Firebase tạo tài khoản email thử nghiệm\", () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('emailOnlyToken', pm.response.json().idToken);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "02 - API đăng ký từ chối dữ liệu sai",
+          "item": [
+            {
+              "name": "01 Token giả",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"invalid\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Token giả bị từ chối\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"errors.firebaseIdToken\", () => pm.expect(pm.response.json().errors).to.have.property(\"firebaseIdToken\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Token đúng nhưng số khác",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{wrongPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Số không khớp token\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"errors.firebaseIdToken\", () => pm.expect(pm.response.json().errors).to.have.property(\"firebaseIdToken\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 Token email không phải phone",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{emailOnlyToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Token email bị từ chối\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"errors.firebaseIdToken\", () => pm.expect(pm.response.json().errors).to.have.property(\"firebaseIdToken\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 Thiếu token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Thiếu token\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.firebaseIdToken\", () => pm.expect(pm.response.json().errors).to.have.property(\"firebaseIdToken\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 Body rỗng",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Thiếu trường bắt buộc\", () => pm.response.to.have.status(400));",
+                      "pm.test('Có lỗi của các trường bắt buộc', () => { const e = pm.response.json().errors; ['username','fullName','email','phoneNumber','firebaseIdToken','dateOfBirth','gender','password'].forEach(k => pm.expect(e).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 JSON sai cú pháp",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"JSON sai cú pháp\", () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "07 Username quá ngắn",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"ab\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"07 Username quá ngắn\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.username\", () => pm.expect(pm.response.json().errors).to.have.property(\"username\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "08 Username chứa ký tự sai",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"bad name\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"08 Username chứa ký tự sai\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.username\", () => pm.expect(pm.response.json().errors).to.have.property(\"username\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "09 Username quá dài",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"09 Username quá dài\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.username\", () => pm.expect(pm.response.json().errors).to.have.property(\"username\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "10 Họ tên để trống",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"10 Họ tên để trống\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.fullName\", () => pm.expect(pm.response.json().errors).to.have.property(\"fullName\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "11 Họ tên ngắn sau trim",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \" A \",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"11 Họ tên ngắn sau trim\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.fullName\", () => pm.expect(pm.response.json().errors).to.have.property(\"fullName\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "12 Họ tên quá dài",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"12 Họ tên quá dài\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.fullName\", () => pm.expect(pm.response.json().errors).to.have.property(\"fullName\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "13 Email sai định dạng",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"not-email\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"13 Email sai định dạng\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.email\", () => pm.expect(pm.response.json().errors).to.have.property(\"email\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "14 Email quá dài",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"14 Email quá dài\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.email\", () => pm.expect(pm.response.json().errors).to.have.property(\"email\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "15 Số điện thoại sai định dạng",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"123\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"15 Số điện thoại sai định dạng\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.phoneNumber\", () => pm.expect(pm.response.json().errors).to.have.property(\"phoneNumber\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "16 Thiếu ngày sinh",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"16 Thiếu ngày sinh\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.dateOfBirth\", () => pm.expect(pm.response.json().errors).to.have.property(\"dateOfBirth\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "17 Chưa đủ 13 tuổi",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"{{underageDate}}\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"17 Chưa đủ 13 tuổi\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.dateOfBirth\", () => pm.expect(pm.response.json().errors).to.have.property(\"dateOfBirth\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "18 Tuổi quá 120",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"{{overageDate}}\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"18 Tuổi quá 120\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.dateOfBirth\", () => pm.expect(pm.response.json().errors).to.have.property(\"dateOfBirth\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "19 Ngày sinh tương lai",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"{{futureDate}}\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"19 Ngày sinh tương lai\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.dateOfBirth\", () => pm.expect(pm.response.json().errors).to.have.property(\"dateOfBirth\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "20 Giới tính sai",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"UNKNOWN\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"20 Giới tính sai\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.gender\", () => pm.expect(pm.response.json().errors).to.have.property(\"gender\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "21 Mật khẩu yếu",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"weak\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"21 Mật khẩu yếu\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.password\", () => pm.expect(pm.response.json().errors).to.have.property(\"password\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "22 Mật khẩu quá 72 byte",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"{{longPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"22 Mật khẩu quá 72 byte\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.password\", () => pm.expect(pm.response.json().errors).to.have.property(\"password\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "23 CCCD sai",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\",\n  \"idCard\": \"1234\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"23 CCCD sai\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.idCard\", () => pm.expect(pm.response.json().errors).to.have.property(\"idCard\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "24 Địa chỉ quá ngắn",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\",\n  \"address\": \"abc\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"24 Địa chỉ quá ngắn\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.address\", () => pm.expect(pm.response.json().errors).to.have.property(\"address\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "25 Địa chỉ quá dài",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\",\n  \"address\": \"{{longAddress}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"25 Địa chỉ quá dài\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"errors.address\", () => pm.expect(pm.response.json().errors).to.have.property(\"address\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "03 - Đăng ký thành công và trùng dữ liệu",
+          "item": [
+            {
+              "name": "01 Đăng ký thành công",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Tạo tài khoản\", () => pm.response.to.have.status(201));",
+                      "const result = pm.response.json();",
+                      "pm.test('Vai trò khách hàng', () => pm.expect(result.data.role).to.equal('KHACH_HANG'));",
+                      "pm.test('Email được chuẩn hóa', () => pm.expect(result.data.email).to.equal(pm.collectionVariables.get('testEmail')));",
+                      "pm.test('Response không lộ mật khẩu/token', () => { pm.expect(result.data).not.to.have.property('password'); pm.expect(result.data).not.to.have.property('firebaseIdToken'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Trùng username",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{otherEmail}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Username trùng\", () => pm.response.to.have.status(409));",
+                      "pm.test(\"errors.username\", () => pm.expect(pm.response.json().errors).to.have.property(\"username\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 Trùng email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"{{testEmailUpper}}\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Email trùng\", () => pm.response.to.have.status(409));",
+                      "pm.test(\"errors.email\", () => pm.expect(pm.response.json().errors).to.have.property(\"email\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 Trùng số điện thoại",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"otp_phone_{{runTag}}\",\n  \"fullName\": \"OTP Postman User\",\n  \"email\": \"otp.phone.{{runTag}}@example.com\",\n  \"phoneNumber\": \"{{testPhone}}\",\n  \"firebaseIdToken\": \"{{firebaseIdToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"MALE\",\n  \"password\": \"SecurePass1\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Số điện thoại trùng\", () => pm.response.to.have.status(409));",
+                      "pm.test(\"errors.phoneNumber\", () => pm.expect(pm.response.json().errors).to.have.property(\"phoneNumber\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "04 - Trường tùy chọn",
+          "item": [
+            {
+              "name": "01 Tùy chọn rỗng - Yêu cầu OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"{{optionalPhoneE164}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"01 Tùy chọn rỗng gửi OTP\", () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('optionalTokenSession', pm.response.json().sessionInfo);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "01 Tùy chọn rỗng - Lấy mã OTP",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/emulator/v1/projects/{{firebaseProjectId}}/verificationCodes"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"01 Tùy chọn rỗng xem mã\", () => pm.response.to.have.status(200));",
+                      "const matches = pm.response.json().verificationCodes.filter(x => x.phoneNumber === pm.collectionVariables.get('optionalPhoneE164'));",
+                      "pm.test('Có mã OTP', () => pm.expect(matches.length).to.be.greaterThan(0));",
+                      "if (matches.length) { const latest = matches[matches.length-1]; pm.collectionVariables.set('optionalTokenCode', latest.code); pm.collectionVariables.set('optionalTokenSession', latest.sessionInfo); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "01 Tùy chọn rỗng - Xác nhận OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionInfo\": \"{{optionalTokenSession}}\",\n  \"code\": \"{{optionalTokenCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"01 Tùy chọn rỗng xác nhận\", () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('optionalToken', pm.response.json().idToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "01 Tùy chọn rỗng - Đăng ký",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"otp_blank_{{runTag}}\",\n  \"fullName\": \"OTP Blank Optional\",\n  \"email\": \"otp.blank.{{runTag}}@example.com\",\n  \"phoneNumber\": \"{{optionalPhone}}\",\n  \"firebaseIdToken\": \"{{optionalToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"FEMALE\",\n  \"password\": \"SecurePass1\",\n  \"idCard\": \"\",\n  \"address\": \"   \"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CCCD và địa chỉ rỗng được chấp nhận\", () => pm.response.to.have.status(201));",
+                      "pm.test('Vai trò khách hàng', () => pm.expect(pm.response.json().data.role).to.equal('KHACH_HANG'));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Tùy chọn hợp lệ - Yêu cầu OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"{{filledPhoneE164}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"02 Tùy chọn hợp lệ gửi OTP\", () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('filledTokenSession', pm.response.json().sessionInfo);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Tùy chọn hợp lệ - Lấy mã OTP",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/emulator/v1/projects/{{firebaseProjectId}}/verificationCodes"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"02 Tùy chọn hợp lệ xem mã\", () => pm.response.to.have.status(200));",
+                      "const matches = pm.response.json().verificationCodes.filter(x => x.phoneNumber === pm.collectionVariables.get('filledPhoneE164'));",
+                      "pm.test('Có mã OTP', () => pm.expect(matches.length).to.be.greaterThan(0));",
+                      "if (matches.length) { const latest = matches[matches.length-1]; pm.collectionVariables.set('filledTokenCode', latest.code); pm.collectionVariables.set('filledTokenSession', latest.sessionInfo); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Tùy chọn hợp lệ - Xác nhận OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{firebaseBaseUrl}}/identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key={{firebaseApiKey}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sessionInfo\": \"{{filledTokenSession}}\",\n  \"code\": \"{{filledTokenCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"02 Tùy chọn hợp lệ xác nhận\", () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('filledToken', pm.response.json().idToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 Tùy chọn hợp lệ - Đăng ký",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{apiBaseUrl}}/api/v1/auth/register",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"otp_filled_{{runTag}}\",\n  \"fullName\": \"OTP Filled Optional\",\n  \"email\": \"otp.filled.{{runTag}}@example.com\",\n  \"phoneNumber\": \"{{filledPhone}}\",\n  \"firebaseIdToken\": \"{{filledToken}}\",\n  \"dateOfBirth\": \"2000-01-01\",\n  \"gender\": \"OTHER\",\n  \"password\": \"SecurePass1\",\n  \"idCard\": \"123456789\",\n  \"address\": \"123 Test Street\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CCCD và địa chỉ hợp lệ được chấp nhận\", () => pm.response.to.have.status(201));",
+                      "pm.test('Vai trò khách hàng', () => pm.expect(pm.response.json().data.role).to.equal('KHACH_HANG'));",
+                      "['sessionInfo','otpCode','wrongOtpCode','firebaseIdToken','emailOnlyToken','optionalTokenSession','optionalTokenCode','optionalToken','filledTokenSession','filledTokenCode','filledToken'].forEach(key => pm.collectionVariables.unset(key));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "apiBaseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "firebaseBaseUrl",
+      "value": "http://127.0.0.1:9099"
+    },
+    {
+      "key": "firebaseProjectId",
+      "value": "demo-cinema"
+    },
+    {
+      "key": "firebaseApiKey",
+      "value": "fake-api-key"
+    }
+  ]
+}
