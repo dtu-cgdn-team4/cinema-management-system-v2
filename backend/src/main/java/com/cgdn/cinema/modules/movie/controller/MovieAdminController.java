@@ -7,6 +7,7 @@ import com.cgdn.cinema.modules.movie.service.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/movies")
 @RequiredArgsConstructor
 @Tag(name = "Admin Movie", description = "Quản lý phim dành cho quản trị viên")
-@CrossOrigin(origins = "*")
+@PreAuthorize("hasRole('ADMIN')")
 public class MovieAdminController {
 
     private final MovieService movieService;

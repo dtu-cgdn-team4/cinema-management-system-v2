@@ -1,22 +1,24 @@
 package com.cgdn.cinema.modules.movie.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-@Entity
-@Table(name = "the_loai")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "the_loai")
 public class Genre {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ten", nullable = false, unique = true, length = 100)
-    private String ten;
+    @Column(name = "ten")
+    private String name;
 }
-

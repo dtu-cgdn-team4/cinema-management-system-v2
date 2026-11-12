@@ -1,80 +1,74 @@
 package com.cgdn.cinema.modules.movie.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import com.cgdn.cinema.common.enums.AgeRating;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-@Entity
-@Table(name = "phim")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "phim")
 public class Movie {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ten_phim", nullable = false)
-    private String tenPhim;
+    @Column(name = "ten_phim")
+    private String title;
 
-    @Column(name = "thoi_luong", nullable = false)
-    private Integer thoiLuong;
+    /** Thời lượng phim tính bằng phút. */
+    @Column(name = "thoi_luong")
+    private Integer duration;
 
-    @Column(name = "nhan_tuoi", nullable = false, length = 5)
-    private String nhanTuoi;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "nhan_tuoi")
+    private AgeRating ageRating;
 
-    @Column(name = "ngay_khoi_chieu", nullable = false)
-    private LocalDate ngayKhoiChieu;
+    @Column(name = "ngay_khoi_chieu")
+    private LocalDate releaseDate;
 
-    @Column(name = "ngay_ket_thuc", nullable = false)
-    private LocalDate ngayKetThuc;
+    @Column(name = "ngay_ket_thuc")
+    private LocalDate endDate;
 
-    @Column(name = "dao_dien", nullable = false)
-    private String daoDien;
-
-    @Column(name = "dien_vien", nullable = false, length = 1000)
-    private String dienVien;
-
-    @Column(name = "hang_san_xuat", nullable = false)
-    private String hangSanXuat;
-
-    @Column(name = "trailer_url", nullable = false, length = 500)
-    private String trailerUrl;
-
-    @Column(name = "poster_url", nullable = false, length = 500)
+    @Column(name = "poster_url")
     private String posterUrl;
 
-    @Column(name = "noi_dung", nullable = false, columnDefinition = "TEXT")
-    private String noiDung;
+    @Column(name = "trailer_url")
+    private String trailerUrl;
 
-    @Column(name = "trang_thai", nullable = false)
-    @Builder.Default
-    private Integer trangThai = 1; // 1: Hoạt động, 2: Ngừng chiếu (xóa mềm)
+    @Column(name = "noi_dung")
+    private String description;
 
-    @CreationTimestamp
-    @Column(name = "ngay_tao", updatable = false)
-    private LocalDateTime ngayTao;
+    // Cột trong MySQL là TINYINT; giữ kiểu Java Integer nhưng ánh xạ đúng kiểu SQL.
+    @JdbcTypeCode(SqlTypes.TINYINT)
+    @Column(name = "trang_thai")
+    private Integer status;
 
-    @UpdateTimestamp
-    @Column(name = "ngay_cap_nhat")
-    private LocalDateTime ngayCapNhat;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "phim_the_loai",
-        joinColumns = @JoinColumn(name = "phim_id"),
-        inverseJoinColumns = @JoinColumn(name = "the_loai_id")
-    )
-    @Builder.Default
-    private Set<Genre> theLoais = new HashSet<>();
+    @ManyToMany
+    @JoinTable(name = "phim_the_loai",
+            joinColumns = @JoinColumn(name = "phim_id"),
+            inverseJoinColumns = @JoinColumn(name = "the_loai_id"))
+    @OrderBy("id")
+    private Set<Genre> genres = new LinkedHashSet<>();
 }
-

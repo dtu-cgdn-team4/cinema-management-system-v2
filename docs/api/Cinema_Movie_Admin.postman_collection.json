@@ -2,13 +2,28 @@
   "info": {
     "_postman_id": "c1a93b4d-7a8e-49b2-9d3e-8c3b4f912345",
     "name": "Cinema Management - Admin Movie API",
-    "description": "Collection kiểm thử API Quản lý phim (Task 3: Xem DS phim & Xóa mềm) - Sprint 1",
+    "description": "Collection kiểm thử API Quản lý phim (Task 3: Xem DS phim & Xóa mềm) - Sprint 1. Cần đặt adminToken bằng JWT của tài khoản Admin.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{adminToken}}",
+        "type": "string"
+      }
+    ]
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
       "type": "string"
     }
   ],
