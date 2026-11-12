@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.jpa.open-in-view=false"
 })
 @AutoConfigureMockMvc
+@WithMockUser
 @Transactional
 @Sql(scripts = {"/moviedetail/movie-detail-fixture.sql", "/moviedetail/movie-page-fixture.sql"},
         config = @SqlConfig(encoding = "UTF-8"))
@@ -230,8 +232,10 @@ class MovieDetailPageIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"showtimes?date=bad", "showtimes?date=2099-02-30",
-            "showtimes?cinemaId=0", "showtimes?cinemaId=abc", "related?limit=0",
-            "related?limit=21", "related?limit=abc"})
+            "showtimes?cinemaId=0", "showtimes?cinemaId=-1", "showtimes?cinemaId=abc",
+            "showtimes?cinemaId=1.5", "showtimes?cinemaId=9223372036854775808",
+            "related?limit=0", "related?limit=-1", "related?limit=21",
+            "related?limit=abc", "related?limit=1.5", "related?limit=2147483648"})
     void validatesScheduleAndRecommendationParameters(String suffix) throws Exception {
         mockMvc.perform(get("/api/movies/9001/" + suffix))
                 .andExpect(status().isBadRequest())
@@ -256,12 +260,11 @@ class MovieDetailPageIntegrationTest {
     }
 
     @Test
-    void supportsBothNewEndpointsUnderVersionedAlias() throws Exception {
+    void preservesVersionedBookingShowtimes() throws Exception {
         mockMvc.perform(get("/api/v1/movies/9001/showtimes").param("date", "2099-01-01"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.movieId").value(9001));
-        mockMvc.perform(get("/api/v1/movies/9001/related").param("limit", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[*].id", contains(9006)));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].movieId").value(9001))
+                .andExpect(jsonPath("$.data[0].startTime").exists());
     }
 }

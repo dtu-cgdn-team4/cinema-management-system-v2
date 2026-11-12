@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.jpa.open-in-view=false"
 })
 @AutoConfigureMockMvc
+@WithMockUser
 @Transactional
 @Sql(scripts = "/moviedetail/movie-detail-fixture.sql", config = @SqlConfig(encoding = "UTF-8"))
 class MovieDetailIntegrationTest {
@@ -70,11 +71,12 @@ class MovieDetailIntegrationTest {
                 .andExpect(jsonPath("$.data.showtimes[0].endsAt").value("2099-01-01T14:15:00"));
     }
 
-    @Test
-    void supportsVersionedPathUsedByExistingSeedDocumentation() throws Exception {
-        mockMvc.perform(get("/api/v1/movies/9001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(9001));
+    @ParameterizedTest
+    @ValueSource(strings = {"/api/v1/movies/9001", "/api/v1/movies/9001/related"})
+    void doesNotExposeVersionedMovieDetailAliases(String path) throws Exception {
+        mockMvc.perform(get(path))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @ParameterizedTest
@@ -84,7 +86,7 @@ class MovieDetailIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("Không tìm thấy phim với ID: " + movieId))
-                .andExpect(jsonPath("$.data").value(nullValue()));
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
@@ -109,11 +111,13 @@ class MovieDetailIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-1", "abc", "1.5", "9223372036854775808"})
     void rejectsInvalidMovieIds(String movieId) throws Exception {
-        mockMvc.perform(get("/api/movies/{movieId}", movieId))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("ID phim phải là số nguyên dương hợp lệ."))
-                .andExpect(jsonPath("$.data").value(nullValue()));
+        for (String suffix : new String[]{"", "/showtimes", "/related"}) {
+            mockMvc.perform(get("/api/movies/" + movieId + suffix))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value(400))
+                    .andExpect(jsonPath("$.message").value("ID phim phải là số nguyên dương hợp lệ."))
+                    .andExpect(jsonPath("$.data").doesNotExist());
+        }
     }
 
     @Test

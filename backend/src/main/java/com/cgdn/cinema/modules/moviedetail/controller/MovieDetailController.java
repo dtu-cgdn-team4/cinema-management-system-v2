@@ -13,7 +13,6 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,20 +21,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/movies", "/api/v1/movies"})
 @RequiredArgsConstructor
 public class MovieDetailController {
 
     private final MovieDetailService movieDetailService;
 
-    @GetMapping("/{movieId}")
+    @GetMapping("/api/movies/{movieId}")
     @Operation(summary = "Lấy chi tiết phim và các suất chiếu chưa bắt đầu")
     public ApiResponse<MovieDetailResponse> getMovieDetail(
             @PathVariable("movieId") @Positive Long movieId) {
         return ApiResponse.success(movieDetailService.getMovieDetail(movieId));
     }
 
-    @GetMapping("/{movieId}/showtimes")
+    @GetMapping("/api/movies/{movieId}/showtimes")
     @Operation(summary = "Lịch chiếu theo ngày, khu vực, rạp; giá vé và số ghế còn trống theo phòng")
     public ApiResponse<MovieShowtimesResponse> getShowtimes(
             @PathVariable("movieId") @Positive Long movieId,
@@ -45,7 +43,7 @@ public class MovieDetailController {
         return ApiResponse.success(movieDetailService.getShowtimes(movieId, date, city, cinemaId));
     }
 
-    @GetMapping("/{movieId}/related")
+    @GetMapping("/api/movies/{movieId}/related")
     @Operation(summary = "Phim liên quan, ưu tiên số thể loại chung rồi ngày khởi chiếu mới nhất")
     public ApiResponse<List<MovieSummaryResponse>> getRelatedMovies(
             @PathVariable("movieId") @Positive Long movieId,
