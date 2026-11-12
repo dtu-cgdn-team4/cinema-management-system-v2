@@ -1,8 +1,8 @@
 package com.cgdn.cinema.modules.user.entity;
 
+import com.cgdn.cinema.common.constants.AppConstants;
 import com.cgdn.cinema.common.enums.RecordStatus;
 import com.cgdn.cinema.common.enums.Role;
-import com.cgdn.cinema.config.TimeConfig;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -89,7 +89,7 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now(TimeConfig.VIETNAM_ZONE);
+        LocalDateTime now = LocalDateTime.now(AppConstants.ZONE);
         if (createdAt == null) {
             createdAt = now;
         }
@@ -110,7 +110,7 @@ public class User {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now(TimeConfig.VIETNAM_ZONE);
+        updatedAt = LocalDateTime.now(AppConstants.ZONE);
     }
 
     public Long getId() {

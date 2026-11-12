@@ -3,6 +3,7 @@ package com.cgdn.cinema.security;
 import com.cgdn.cinema.exception.GlobalExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -62,6 +63,10 @@ public class SecurityConfig {
                         .accessDeniedHandler(globalExceptionHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/movies/**",
+                                "/api/v1/cinemas/**",
+                                "/api/v1/showtimes/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/staff/**", "/api/v1/counter/**").hasAnyRole("STAFF", "ADMIN")
                         .anyRequest().authenticated())

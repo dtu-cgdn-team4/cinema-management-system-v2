@@ -6,9 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class CinemaManagementApplication {
+public class CinemaApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CinemaManagementApplication.class, args);
+        SpringApplication.run(CinemaApplication.class, args);
     }
 }

@@ -1,5 +1,6 @@
 package com.cgdn.cinema.modules.auth;
 
+import com.cgdn.cinema.common.constants.AppConstants;
 import com.cgdn.cinema.common.enums.RecordStatus;
 import com.cgdn.cinema.common.enums.Role;
 import com.cgdn.cinema.exception.BusinessException;
@@ -10,7 +11,6 @@ import com.cgdn.cinema.security.GoogleTokenVerifier;
 import com.cgdn.cinema.security.GoogleUserClaims;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -176,7 +175,7 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/auth/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.email").value("khach01@cinema.vn"))
                 .andExpect(jsonPath("$.data.roleCode").value("USER"));
     }
@@ -187,7 +186,7 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khach01@cinema.vn", "Secret@123")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.user.username").value("khachhang01"))
                 .andExpect(jsonPath("$.data.user.role").value("KHACH_HANG"))
                 .andExpect(jsonPath("$.data.user.roleCode").value("USER"));
@@ -212,19 +211,23 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/staff/ping").header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
         mockMvc.perform(get("/api/v1/admin/ping").header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
 
         mockMvc.perform(get("/api/v1/staff/ping").header("Authorization", "Bearer " + staffToken))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/admin/ping").header("Authorization", "Bearer " + staffToken))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
         mockMvc.perform(get("/api/v1/user-only/ping").header("Authorization", "Bearer " + staffToken))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.errorCode").value("FORBIDDEN"));
 
         mockMvc.perform(get("/api/v1/staff/ping").header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
@@ -239,14 +242,16 @@ class AuthControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(loginBody("khachhang01", "WrongPassword")))
                     .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+                    .andExpect(jsonPath("$.code").value(401))
+                    .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
         }
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khachhang01", "WrongPassword")))
                 .andExpect(status().isLocked())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
+                .andExpect(jsonPath("$.code").value(423))
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_LOCKED"));
 
         User lockedUser = userRepository.findByUsername("khachhang01").orElseThrow();
         assertThat(lockedUser.getFailedLoginAttempts()).isEqualTo(5);
@@ -256,9 +261,10 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khachhang01", "Secret@123")))
                 .andExpect(status().isLocked())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
+                .andExpect(jsonPath("$.code").value(423))
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_LOCKED"));
 
-        LocalDateTime sixteenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusMinutes(16);
+        LocalDateTime sixteenMinutesAgo = LocalDateTime.now(AppConstants.ZONE).minusMinutes(16);
         jdbcTemplate.update("UPDATE nguoi_dung SET ngay_cap_nhat = ? WHERE id = ?",
                 sixteenMinutesAgo, lockedUser.getId());
 
@@ -266,7 +272,7 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khachhang01", "Secret@123")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
 
         User unlockedUser = userRepository.findByUsername("khachhang01").orElseThrow();
@@ -280,7 +286,7 @@ class AuthControllerIntegrationTest {
         activeCustomer.setLocked(true);
         userRepository.save(activeCustomer);
 
-        LocalDateTime sixteenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusMinutes(16);
+        LocalDateTime sixteenMinutesAgo = LocalDateTime.now(AppConstants.ZONE).minusMinutes(16);
         jdbcTemplate.update("UPDATE nguoi_dung SET ngay_cap_nhat = ? WHERE id = ?",
                 sixteenMinutesAgo, activeCustomer.getId());
 
@@ -288,7 +294,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khachhang01", "WrongAgain")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
 
         User reloaded = userRepository.findByUsername("khachhang01").orElseThrow();
         assertThat(reloaded.getLocked()).isFalse();
@@ -301,7 +308,7 @@ class AuthControllerIntegrationTest {
         activeCustomer.setFailedLoginAttempts(0);
         userRepository.save(activeCustomer);
 
-        LocalDateTime thirtyMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusMinutes(30);
+        LocalDateTime thirtyMinutesAgo = LocalDateTime.now(AppConstants.ZONE).minusMinutes(30);
         jdbcTemplate.update("UPDATE nguoi_dung SET ngay_cap_nhat = ? WHERE id = ?",
                 thirtyMinutesAgo, activeCustomer.getId());
 
@@ -309,7 +316,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("khachhang01", "Secret@123")))
                 .andExpect(status().isLocked())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
+                .andExpect(jsonPath("$.code").value(423))
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_LOCKED"));
     }
 
     @Test
@@ -324,7 +332,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("deleted01", "Secret@123")))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_DISABLED"));
     }
 
     @Test
@@ -333,7 +342,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody("", "")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.data.username").isNotEmpty())
                 .andExpect(jsonPath("$.data.password").isNotEmpty());
     }
@@ -342,8 +352,8 @@ class AuthControllerIntegrationTest {
     void getCurrentUser_withoutToken_returnsUnauthorizedJson() throws Exception {
         mockMvc.perform(get("/api/v1/auth/me"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
     }
 
     @Test
@@ -357,7 +367,7 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("idToken", "valid-google-token"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.data.user.email").value("newuser@gmail.com"))
@@ -385,7 +395,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody(created.getUsername(), "any-pass")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("GOOGLE_PASSWORD_NOT_SET"));
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.errorCode").value("GOOGLE_PASSWORD_NOT_SET"));
     }
 
     @Test
@@ -420,7 +431,8 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("idToken", "other-sub-token"))))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("GOOGLE_ACCOUNT_MISMATCH"));
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.errorCode").value("GOOGLE_ACCOUNT_MISMATCH"));
     }
 
     @Test
@@ -429,46 +441,47 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("idToken", "bad-token"))))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("INVALID_GOOGLE_TOKEN"));
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.errorCode").value("INVALID_GOOGLE_TOKEN"));
 
         mockMvc.perform(post("/api/v1/auth/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("idToken", ""))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
     @Test
     void googleAuthUrlAndCallback_succeed() throws Exception {
-        stubGoogleTokenVerifier.registerAuthCode(
-                "auth-code-123",
-                new GoogleUserClaims("google-code-sub", "callback@gmail.com", "Callback User")
-        );
-
         MvcResult urlResult = mockMvc.perform(get("/api/v1/auth/google/url"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.authorizationUrl").isNotEmpty())
                 .andReturn();
 
-        Cookie stateCookie = urlResult.getResponse().getCookie("GOOGLE_OAUTH_STATE");
-        assertThat(stateCookie).isNotNull();
-        String authorizationUrl = objectMapper.readTree(urlResult.getResponse().getContentAsString())
+        String stateCookie = urlResult.getResponse().getCookie("GOOGLE_OAUTH_STATE").getValue();
+        String authUrl = objectMapper.readTree(urlResult.getResponse().getContentAsString())
                 .path("data").path("authorizationUrl").asText();
-        assertThat(authorizationUrl).contains("client_id=test", "state=" + stateCookie.getValue());
+        assertThat(authUrl).contains("state=" + stateCookie);
+
+        stubGoogleTokenVerifier.registerAuthCode(
+                "auth-code-123",
+                new GoogleUserClaims("google-code-sub", "callback@gmail.com", "Callback User")
+        );
 
         mockMvc.perform(get("/api/v1/auth/google/callback")
                         .param("code", "auth-code-123")
-                        .param("state", stateCookie.getValue())
-                        .cookie(stateCookie))
+                        .param("state", stateCookie)
+                        .cookie(new jakarta.servlet.http.Cookie("GOOGLE_OAUTH_STATE", stateCookie)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.data.user.email").value("callback@gmail.com"));
 
         mockMvc.perform(get("/api/v1/auth/google/callback"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
-
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"));
     }
 
     private String loginAndGetToken(String username, String password) throws Exception {

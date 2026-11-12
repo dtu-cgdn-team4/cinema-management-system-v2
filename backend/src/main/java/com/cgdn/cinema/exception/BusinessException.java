@@ -1,14 +1,14 @@
 package com.cgdn.cinema.exception;
 
-/**
- * Ngoại lệ nghiệp vụ mang theo ErrorCode để GlobalExceptionHandler chuẩn hóa phản hồi.
- */
+import lombok.Getter;
+
+@Getter
 public class BusinessException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode.getDefaultMessage());
+        super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
@@ -16,9 +16,4 @@ public class BusinessException extends RuntimeException {
         super(message);
         this.errorCode = errorCode;
     }
-
-    public ErrorCode getErrorCode() {
-        return errorCode;
-    }
 }
-

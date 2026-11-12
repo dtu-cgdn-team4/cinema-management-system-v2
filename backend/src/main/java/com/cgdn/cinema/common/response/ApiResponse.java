@@ -1,63 +1,59 @@
 package com.cgdn.cinema.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
-/**
- * Khuôn mẫu phản hồi JSON chuẩn cho toàn bộ API backend.
- */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
+    private int code;
+    private String errorCode;
+    private String message;
+    private T data;
 
-    private final boolean success;
-    private final String code;
-    private final String message;
-    private final T data;
-    private final LocalDateTime timestamp;
-
-    private ApiResponse(boolean success, String code, String message, T data) {
-        this.success = success;
-        this.code = code;
-        this.message = message;
-        this.data = data;
-        this.timestamp = LocalDateTime.now();
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .code(200)
+                .message("Thành công")
+                .data(data)
+                .build();
     }
 
     public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<>(true, "SUCCESS", message, data);
+        return ApiResponse.<T>builder()
+                .code(200)
+                .message(message)
+                .data(data)
+                .build();
     }
 
-    public static <T> ApiResponse<T> success(T data) {
-        return success("Thành công", data);
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return ApiResponse.<T>builder()
+                .code(code)
+                .message(message)
+                .build();
     }
 
-    public static <T> ApiResponse<T> error(String code, String message) {
-        return new ApiResponse<>(false, code, message, null);
+    public static <T> ApiResponse<T> error(int code, String errorCode, String message) {
+        return ApiResponse.<T>builder()
+                .code(code)
+                .errorCode(errorCode)
+                .message(message)
+                .build();
     }
 
-    public static <T> ApiResponse<T> error(String code, String message, T data) {
-        return new ApiResponse<>(false, code, message, data);
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public static <T> ApiResponse<T> error(int code, String errorCode, String message, T data) {
+        return ApiResponse.<T>builder()
+                .code(code)
+                .errorCode(errorCode)
+                .message(message)
+                .data(data)
+                .build();
     }
 }
-
