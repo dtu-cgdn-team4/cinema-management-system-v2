@@ -6,13 +6,14 @@ import com.cgdn.cinema.modules.booking.dto.response.SeatHoldResponse;
 import com.cgdn.cinema.modules.booking.dto.response.SeatMapResponse;
 import com.cgdn.cinema.modules.booking.service.SeatHoldService;
 import com.cgdn.cinema.modules.booking.service.SeatMapService;
+import com.cgdn.cinema.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,13 +32,13 @@ public class SeatController {
     }
 
     /**
-     * Giữ ghế 10 phút khi khách bấm "Tiếp tục" (SRS 6.2.2). Yêu cầu đi qua RabbitMQ, xử lý tuần tự.
-     * ponytail: user tạm lấy từ header X-User-Id vì develop chưa có đăng nhập; khi có JWT thì lấy từ token và bỏ header.
+     * Giữ ghế 10 phút khi khách bấm "Tiếp tục" (SRS 6.2.2), phải đăng nhập (SecurityConfig). Yêu cầu đi qua
+     * RabbitMQ, xử lý tuần tự.
      */
     @PostMapping("/hold")
     public ApiResponse<SeatHoldResponse> holdSeats(@PathVariable Long showtimeId,
-                                                   @RequestHeader(name = "X-User-Id", required = false) Long userId,
+                                                   @AuthenticationPrincipal CustomUserDetails user,
                                                    @Valid @RequestBody SeatHoldRequest request) {
-        return ApiResponse.success(seatHoldService.hold(userId, showtimeId, request));
+        return ApiResponse.success(seatHoldService.hold(user.getId(), showtimeId, request));
     }
 }

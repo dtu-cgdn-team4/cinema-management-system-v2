@@ -17,12 +17,14 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "phim")
 public class Movie {
@@ -34,7 +36,7 @@ public class Movie {
     @Column(name = "ten_phim")
     private String title;
 
-    /** Phút. */
+    /** Thời lượng phim tính bằng phút. */
     @Column(name = "thoi_luong")
     private Integer duration;
 
@@ -49,6 +51,15 @@ public class Movie {
     @Column(name = "ngay_ket_thuc")
     private LocalDate endDate;
 
+    @Column(name = "dao_dien", nullable = false)
+    private String director;
+
+    @Column(name = "dien_vien", nullable = false, length = 1000)
+    private String actors;
+
+    @Column(name = "hang_san_xuat", nullable = false)
+    private String productionCompany;
+
     @Column(name = "poster_url")
     private String posterUrl;
 
@@ -58,6 +69,7 @@ public class Movie {
     @Column(name = "noi_dung")
     private String description;
 
+    // Cột trong MySQL là TINYINT; giữ kiểu Java Integer nhưng ánh xạ đúng kiểu SQL.
     @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "trang_thai")
     private Integer status;

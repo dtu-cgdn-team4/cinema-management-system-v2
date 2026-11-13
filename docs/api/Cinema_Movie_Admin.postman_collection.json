@@ -1,0 +1,121 @@
+{
+  "info": {
+    "_postman_id": "c1a93b4d-7a8e-49b2-9d3e-8c3b4f912345",
+    "name": "Cinema Management - Admin Movie API",
+    "description": "Collection kiểm thử API Quản lý phim (Task 3: Xem DS phim & Xóa mềm) - Sprint 1. Cần đặt adminToken bằng JWT của tài khoản Admin.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{adminToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Lấy danh sách phim (Phân trang mặc định)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies?page=0&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies"],
+          "query": [
+            { "key": "page", "value": "0" },
+            { "key": "size", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Tìm kiếm phim theo từ khóa",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies?keyword=Dune",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies"],
+          "query": [
+            { "key": "keyword", "value": "Dune" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Lọc phim theo thể loại (ID = 1: Hành động)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies?theLoaiId=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies"],
+          "query": [
+            { "key": "theLoaiId", "value": "1" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Lọc phim Đang chiếu (DANG_CHIEU)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies?status=DANG_CHIEU",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies"],
+          "query": [
+            { "key": "status", "value": "DANG_CHIEU" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Lọc phim Ngừng chiếu (NGUNG_CHIEU)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies?status=NGUNG_CHIEU",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies"],
+          "query": [
+            { "key": "status", "value": "NGUNG_CHIEU" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Ngừng chiếu phim (Xóa mềm ID = 1)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/movies/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "movies", "1"]
+        }
+      }
+    }
+  ]
+}
+

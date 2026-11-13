@@ -15,19 +15,23 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 /**
- * STOMP qua WebSocket: client kết nối ws://host:8080/ws rồi đăng ký /topic/showtimes/{showtimeId}/seats
- * để nhận trạng thái ghế mới khi có người giữ hoặc ghế được nhả. Chỉ server được đẩy tin.
+ * STOMP qua WebSocket: client kết nối ws://host:8080/api/v1/showtimes/ws rồi đăng ký
+ * /topic/showtimes/{showtimeId}/seats để nhận trạng thái ghế mới khi có người giữ hoặc ghế được nhả.
+ * Chỉ server được đẩy tin.
  */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    /** Nằm dưới GET /api/v1/showtimes/** mà SecurityConfig cho xem không cần đăng nhập. */
+    public static final String ENDPOINT = "/api/v1/showtimes/ws";
 
     @Value("${app.websocket.allowed-origins:http://localhost:5173}")
     private String[] allowedOrigins;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns(allowedOrigins);
+        registry.addEndpoint(ENDPOINT).setAllowedOriginPatterns(allowedOrigins);
     }
 
     @Override

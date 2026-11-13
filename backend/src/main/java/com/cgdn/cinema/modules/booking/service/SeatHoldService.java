@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,10 +27,8 @@ import org.springframework.stereotype.Service;
 public class SeatHoldService {
 
     private final RabbitTemplate rabbitTemplate;
-    private final JdbcTemplate jdbcTemplate;
 
     public SeatHoldResponse hold(Long userId, Long showtimeId, SeatHoldRequest request) {
-        requireUser(userId);
         validateCount(request.quantity(), request.seatIds());
 
         SeatHoldReply reply;
@@ -68,17 +65,6 @@ public class SeatHoldService {
         }
         if (seatIds.size() > quantity) {
             throw new BusinessException(ErrorCode.SEAT_COUNT_EXCEEDED, quantity);
-        }
-    }
-
-    // ponytail: X-User-Id chưa được xác thực nên phải kiểm tra user có thật (khóa ngoại nguoi_dung_id);
-    // khi có đăng nhập JWT thì bỏ hàm này cùng header.
-    private void requireUser(Long userId) {
-        Integer count = userId == null ? Integer.valueOf(0) : jdbcTemplate.queryForObject(
-                "select count(*) from nguoi_dung where id = ? and trang_thai = ?",
-                Integer.class, userId, AppConstants.STATUS_ACTIVE);
-        if (count == null || count == 0) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
     }
 }

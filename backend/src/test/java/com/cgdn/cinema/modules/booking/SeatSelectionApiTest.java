@@ -1,6 +1,7 @@
 package com.cgdn.cinema.modules.booking;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +23,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import com.cgdn.cinema.common.constants.AppConstants;
+import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.infrastructure.websocket.WebSocketConfig;
 import com.cgdn.cinema.modules.booking.dto.response.SeatStatusMessage;
 import com.cgdn.cinema.modules.booking.scheduler.SeatHoldReleaseJob;
 import com.cgdn.cinema.modules.booking.service.SeatStatusPublisher;
@@ -54,7 +57,8 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 /**
  * SRS 6.2.2 chọn ghế trên dữ liệu db/test-seed: phòng 8 hàng × 12 ghế, lối đi sau ghế 03 và 09,
- * mọi suất đã bán A01, A02, D05, D07, F08, F09. Giữ ghế đi qua RabbitMQ (broker nhúng), trạng thái ghế qua WebSocket.
+ * mọi suất đã bán A01, A02, D05, D07, F08, F09. Giữ ghế cần đăng nhập (khach1, khach2), đi qua RabbitMQ
+ * (broker nhúng); trạng thái ghế qua WebSocket.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -90,6 +94,7 @@ class SeatSelectionApiTest {
     private long otherShowtimeId;
     private final Map<String, Long> seatIds = new HashMap<>();
     private final List<StompSession> sessions = new ArrayList<>();
+    private final Map<Long, String> tokens = new HashMap<>();
 
     @BeforeEach
     void pickShowtime() throws Exception {
@@ -174,7 +179,7 @@ class SeatSelectionApiTest {
         BlockingQueue<SeatStatusMessage> messages = subscribe();
         Map<String, Long> otherSeats = seatIdsOf(otherShowtimeId);
 
-        data(mvc.perform(post("/api/v1/showtimes/" + otherShowtimeId + "/seats/hold").header("X-User-Id", 1)
+        data(mvc.perform(post("/api/v1/showtimes/" + otherShowtimeId + "/seats/hold").header(AUTHORIZATION, bearer(1))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(bodyIds(2, List.of(otherSeats.get("C04"), otherSeats.get("C05"))))));
 
@@ -184,10 +189,11 @@ class SeatSelectionApiTest {
     }
 
     @Test
-    void holdingRequiresAnExistingUser() throws Exception {
+    void holdingRequiresLogin() throws Exception {
         expectError(mvc.perform(post(holdUrl()).contentType(MediaType.APPLICATION_JSON).content(body(1, "C04"))),
-                401, "Vui lòng đăng nhập để đặt vé");
-        expectError(hold(999, 1, "C04"), 401, "Vui lòng đăng nhập để đặt vé");
+                401, ErrorCode.UNAUTHORIZED.getMessage());
+        expectError(mvc.perform(post(holdUrl()).header(AUTHORIZATION, "Bearer token-sai")
+                .contentType(MediaType.APPLICATION_JSON).content(body(1, "C04"))), 401, ErrorCode.UNAUTHORIZED.getMessage());
     }
 
     @Test
@@ -248,6 +254,18 @@ class SeatSelectionApiTest {
                 Integer.class)).isZero();
     }
 
+    /** Đăng nhập bằng tài khoản khach{userId} trong db/test-seed (mật khẩu 123456), lấy JWT. */
+    private String bearer(long userId) throws Exception {
+        String token = tokens.get(userId);
+        if (token == null) {
+            String login = json.writeValueAsString(Map.of("username", "khach" + userId, "password", "123456"));
+            token = data(mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(login)))
+                    .get("accessToken").asText();
+            tokens.put(userId, token);
+        }
+        return "Bearer " + token;
+    }
+
     private String seatsUrl() {
         return "/api/v1/showtimes/" + showtimeId + "/seats";
     }
@@ -277,7 +295,7 @@ class SeatSelectionApiTest {
     }
 
     private ResultActions holdIds(long userId, int quantity, List<Long> ids) throws Exception {
-        return mvc.perform(post(holdUrl()).header("X-User-Id", userId)
+        return mvc.perform(post(holdUrl()).header(AUTHORIZATION, bearer(userId))
                 .contentType(MediaType.APPLICATION_JSON).content(bodyIds(quantity, ids)));
     }
 
@@ -285,7 +303,7 @@ class SeatSelectionApiTest {
     private int postHold(long userId, String... labels) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-User-Id", String.valueOf(userId));
+        headers.set(AUTHORIZATION, bearer(userId));
         return rest.postForEntity(holdUrl(), new HttpEntity<>(body(labels.length, labels), headers), String.class)
                 .getStatusCode().value();
     }
@@ -319,7 +337,7 @@ class SeatSelectionApiTest {
     private BlockingQueue<SeatStatusMessage> subscribe() throws Exception {
         WebSocketStompClient client = new WebSocketStompClient(new StandardWebSocketClient());
         client.setMessageConverter(new MappingJackson2MessageConverter());
-        StompSession session = client.connectAsync("ws://localhost:" + port + "/ws", new StompSessionHandlerAdapter() {
+        StompSession session = client.connectAsync("ws://localhost:" + port + WebSocketConfig.ENDPOINT, new StompSessionHandlerAdapter() {
         }).get(5, TimeUnit.SECONDS);
         sessions.add(session);
         BlockingQueue<SeatStatusMessage> messages = new LinkedBlockingQueue<>();
