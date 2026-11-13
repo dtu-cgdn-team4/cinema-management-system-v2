@@ -34,7 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -359,6 +361,50 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(401))
                 .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    void accountProfile_requiresTokenAndReturnsOnlyTokenOwnersPublicFields() throws Exception {
+        mockMvc.perform(get("/api/v1/account/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
+
+        activeCustomer.setCitizenId("048202001234");
+        activeCustomer.setAddress("Đà Nẵng");
+        activeCustomer.setLoyaltyPoints(120);
+        userRepository.save(activeCustomer);
+        User other = userRepository.save(createUser(
+                "khachhang02", "khach02@cinema.vn", "0909876543",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode()));
+
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+        MvcResult result = mockMvc.perform(get("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.memberCode").value(String.format("TV%07d", activeCustomer.getId())))
+                .andExpect(jsonPath("$.data.username").value(activeCustomer.getUsername()))
+                .andExpect(jsonPath("$.data.fullName").value(activeCustomer.getFullName()))
+                .andExpect(jsonPath("$.data.email").value(activeCustomer.getEmail()))
+                .andExpect(jsonPath("$.data.phoneNumber").value(activeCustomer.getPhoneNumber()))
+                .andExpect(jsonPath("$.data.citizenId").value("048202001234"))
+                .andExpect(jsonPath("$.data.address").value("Đà Nẵng"))
+                .andExpect(jsonPath("$.data.loyaltyPoints").value(120))
+                .andExpect(jsonPath("$.data.joinedAt").isNotEmpty())
+                .andReturn();
+
+        JsonNode profile = objectMapper.readTree(result.getResponse().getContentAsString()).path("data");
+        Set<String> fields = new HashSet<>();
+        profile.fieldNames().forEachRemaining(fields::add);
+        assertThat(fields).containsExactlyInAnyOrderElementsOf(
+                Set.of("memberCode", "username", "fullName", "dateOfBirth", "gender", "email",
+                        "phoneNumber", "citizenId", "address", "loyaltyPoints", "joinedAt"));
+
+        String otherToken = loginAndGetToken(other.getUsername(), "Secret@123");
+        mockMvc.perform(get("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.username").value(other.getUsername()))
+                .andExpect(jsonPath("$.data.memberCode").value(String.format("TV%07d", other.getId())));
     }
 
     @Test
