@@ -45,6 +45,13 @@ public class MovieService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MOVIE_NOT_FOUND));
     }
 
+    /** Phim theo id, không xét ngày chiếu (dùng khi đã có suất chiếu hợp lệ). */
+    public MovieResponse getMovie(Long id) {
+        return movieRepository.findById(id)
+                .map(MovieMapper::toResponse)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MOVIE_NOT_FOUND));
+    }
+
     /**
      * Lấy danh sách phim theo từ khóa, thể loại và trạng thái, có hỗ trợ phân trang.
      */

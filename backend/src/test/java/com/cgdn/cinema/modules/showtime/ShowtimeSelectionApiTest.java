@@ -67,6 +67,8 @@ class ShowtimeSelectionApiTest {
             assertThat(end).isEqualTo(start.plusMinutes(166));
             assertThat(s.get("price").asLong()).isEqualTo(PRICES.get(start.getDayOfWeek()));
             assertThat(s.get("room").get("totalSeats").asInt()).isEqualTo(96);
+            // test-seed bán sẵn 6 ghế ở mọi suất
+            assertThat(s.get("availableSeats").asInt()).isEqualTo(96 - 6);
             if (previous != null) {
                 assertThat(start).isAfterOrEqualTo(previous);
             }

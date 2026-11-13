@@ -33,4 +33,11 @@ public class BusinessException extends RuntimeException {
     public String field() {
         return field;
     }
+
+    /** args điền vào các %d của message, ví dụ BusinessException(SEAT_COUNT_MISSING, 2). */
+    public BusinessException(ErrorCode errorCode, Object... args) {
+        super(errorCode.getMessage().formatted(args));
+        this.errorCode = errorCode;
+        this.field = null;
+    }
 }

@@ -41,7 +41,6 @@ public class Showtime {
     private LocalDateTime endTime;
 
     @JdbcTypeCode(SqlTypes.TINYINT)
-
     @Column(name = "trang_thai")
     private Integer status;
 }
