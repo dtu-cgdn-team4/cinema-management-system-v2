@@ -9,6 +9,7 @@ import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
 import com.cgdn.cinema.security.GoogleTokenVerifier;
 import com.cgdn.cinema.security.GoogleUserClaims;
+import com.google.firebase.auth.FirebaseAuth;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -44,6 +46,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthControllerIntegrationTest {
+
+    @MockitoBean
+    FirebaseAuth firebaseAuth;
 
     @Autowired
     private MockMvc mockMvc;

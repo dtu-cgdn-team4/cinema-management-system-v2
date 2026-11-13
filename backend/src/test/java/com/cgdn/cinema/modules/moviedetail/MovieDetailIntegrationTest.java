@@ -2,6 +2,7 @@ package com.cgdn.cinema.modules.moviedetail;
 
 import com.cgdn.cinema.modules.moviedetail.repository.MovieDetailRepository;
 import com.cgdn.cinema.modules.moviedetail.repository.MovieDetailShowtimeProjection;
+import com.google.firebase.auth.FirebaseAuth;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @Sql(scripts = "/moviedetail/movie-detail-fixture.sql", config = @SqlConfig(encoding = "UTF-8"))
 class MovieDetailIntegrationTest {
+
+    @MockitoBean
+    FirebaseAuth firebaseAuth;
 
     @Autowired
     private MockMvc mockMvc;

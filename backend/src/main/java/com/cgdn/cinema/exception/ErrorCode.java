@@ -23,6 +23,10 @@ public enum ErrorCode {
     GOOGLE_EMAIL_UNVERIFIED(HttpStatus.UNAUTHORIZED, "Email Google chưa được xác minh"),
     GOOGLE_ACCOUNT_MISMATCH(HttpStatus.CONFLICT, "Email này đã được liên kết với một tài khoản Google khác"),
     GOOGLE_PASSWORD_NOT_SET(HttpStatus.BAD_REQUEST, "Tài khoản này đăng nhập bằng Google và chưa thiết lập mật khẩu"),
+    USERNAME_EXISTS(HttpStatus.CONFLICT, "Tên đăng nhập đã tồn tại."),
+    EMAIL_EXISTS(HttpStatus.CONFLICT, "Email đã tồn tại."),
+    PHONE_EXISTS(HttpStatus.CONFLICT, "Số điện thoại đã tồn tại."),
+    INVALID_PHONE_VERIFICATION(HttpStatus.UNAUTHORIZED, "Xác minh số điện thoại không hợp lệ."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi hệ thống, vui lòng thử lại sau");
 
     private final HttpStatus status;

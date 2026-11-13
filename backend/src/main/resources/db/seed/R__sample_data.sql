@@ -84,16 +84,16 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
     (1, 'admin', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
-    
+
     -- Nhân viên rạp Lumière Landmark 81 (rap_id bắt buộc = 1 theo CHECK constraint)
     (2, 'staff_landmark', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Trần Văn Long', 'longtv@lumiere.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
-    
+
     -- Nhân viên rạp Lumière Đà Nẵng Center (rap_id bắt buộc = 3 theo CHECK constraint)
     (3, 'staff_danang', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Vinh Hà', 'hanv@lumiere.vn', '0905333444', '2003-11-10', 'Nam', '048099003344', 'Sơn Trà, TP. Đà Nẵng', 'NHAN_VIEN', 3, 0, 1),
-    
+
     -- Khách hàng mẫu 1 (rap_id bắt buộc NULL theo CHECK constraint)
     (4, 'hoangnam', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
-    
+
     -- Khách hàng mẫu 2 (rap_id bắt buộc NULL theo CHECK constraint)
     (5, 'thanhhang', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1);
 
@@ -140,9 +140,8 @@ INSERT IGNORE INTO suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc, t
     (3, 3, 1, CONCAT(CURRENT_DATE(), ' 17:00:00'), CONCAT(CURRENT_DATE(), ' 19:30:00'), 1),
     -- Hôm nay: Phim Quật Mộ Trùng Ma tại Phòng 1 (Suất tối muộn)
     (4, 4, 1, CONCAT(CURRENT_DATE(), ' 20:30:00'), CONCAT(CURRENT_DATE(), ' 23:00:00'), 1),
-    
+
     -- Ngày mai: Lịch chiếu tiếp theo
     (5, 1, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 10:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 13:00:00'), 1),
     (6, 6, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 14:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 16:40:00'), 1),
     (7, 2, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 19:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 21:30:00'), 1);
-
