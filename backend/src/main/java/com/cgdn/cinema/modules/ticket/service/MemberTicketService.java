@@ -4,6 +4,7 @@ import com.cgdn.cinema.common.constants.AppConstants;
 import com.cgdn.cinema.common.response.PageResponse;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.ticket.dto.response.MemberTicketDetailResponse;
 import com.cgdn.cinema.modules.ticket.dto.response.MemberTicketListResponse;
 import com.cgdn.cinema.modules.ticket.dto.response.MemberTicketListResponse.Ticket;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Booking;
@@ -39,6 +40,38 @@ public class MemberTicketService {
 
         return new MemberTicketListResponse(PageResponse.from(tickets),
                 new MemberTicketListResponse.Counts(counts.all(), counts.upcoming(), counts.history()),
+                now, AppConstants.ZONE.getId());
+    }
+
+    public MemberTicketDetailResponse getBooking(long userId, String bookingCode) {
+        if (bookingCode == null || bookingCode.isBlank() || bookingCode.length() > 50) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy vé đã mua.");
+        }
+        var detail = repository.findPaidBookingByCodeAndUserId(bookingCode, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Không tìm thấy vé đã mua."));
+        var booking = detail.booking();
+        var movie = booking.movie();
+        var showtime = booking.showtime();
+        var recipient = detail.recipient();
+        LocalDateTime endsAt = showtime.startsAt().plusMinutes(movie.durationMinutes());
+        LocalDateTime now = LocalDateTime.ofInstant(clock.instant(), AppConstants.ZONE);
+
+        return new MemberTicketDetailResponse(booking.bookingCode(), booking.channel(), booking.createdAt(),
+                booking.paidAt(), booking.collectedAt(), booking.status(),
+                new MemberTicketDetailResponse.Movie(movie.id(), movie.title(), movie.posterUrl(),
+                        movie.durationMinutes(), movie.ageRating()),
+                new MemberTicketDetailResponse.Cinema(showtime.cinemaId(), showtime.cinemaName(),
+                        showtime.cinemaAddress()),
+                new MemberTicketDetailResponse.Room(showtime.roomId(), showtime.roomName()),
+                new MemberTicketDetailResponse.Showtime(showtime.id(), showtime.startsAt(), endsAt),
+                booking.seatCount(), detail.seats().stream()
+                        .map(seat -> new MemberTicketDetailResponse.Seat(seat.seatId(), seat.rowName(),
+                                seat.number(), seat.type(), seat.price())).toList(),
+                booking.subtotal(), booking.discountAmount(), booking.totalAmount(), "VND",
+                new MemberTicketDetailResponse.Recipient(recipient.name(), recipient.email(), recipient.phoneNumber()),
+                detail.payments().stream()
+                        .map(payment -> new MemberTicketDetailResponse.Payment(payment.method(), payment.amount(),
+                                payment.transactionCode(), payment.status(), payment.occurredAt())).toList(),
                 now, AppConstants.ZONE.getId());
     }
 
