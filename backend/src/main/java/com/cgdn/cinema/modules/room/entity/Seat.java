@@ -43,7 +43,11 @@ public class Seat {
     private SeatType type;
 
     @JdbcTypeCode(SqlTypes.TINYINT)
-
     @Column(name = "trang_thai")
     private Integer status;
+
+    /** Nhãn hiển thị, ví dụ A01. */
+    public String getLabel() {
+        return rowName + "%02d".formatted(number);
+    }
 }

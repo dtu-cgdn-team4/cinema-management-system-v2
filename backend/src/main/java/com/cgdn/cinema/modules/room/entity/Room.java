@@ -39,7 +39,6 @@ public class Room {
     private Integer columnCount;
 
     @JdbcTypeCode(SqlTypes.TINYINT)
-
     @Column(name = "trang_thai")
     private Integer status;
 }
