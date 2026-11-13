@@ -33,7 +33,7 @@ export default function SiteHeader() {
           </Link>
           <Link
             to="/dang-nhap"
-            className="flex h-12 items-center gap-2.5 rounded-xl border border-white/10 bg-card px-5.5 text-sm font-semibold transition hover:border-white/20"
+            className="flex h-12 items-center gap-2.5 rounded-xl border border-white/10 bg-card px-5.5 text-sm font-semibold whitespace-nowrap transition hover:border-white/20"
           >
             <UserRound size={18} strokeWidth={1.6} absoluteStrokeWidth className="text-muted" />
             Đăng nhập
