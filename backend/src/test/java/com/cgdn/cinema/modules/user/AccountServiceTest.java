@@ -1,5 +1,7 @@
 package com.cgdn.cinema.modules.user;
 
+import com.cgdn.cinema.exception.BusinessException;
+import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
 import com.cgdn.cinema.modules.user.service.AccountService;
@@ -11,6 +13,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,5 +66,16 @@ class AccountServiceTest {
         assertEquals("TV0000001", profile.memberCode());
         assertNull(profile.phoneNumber());
         assertNull(profile.dateOfBirth());
+    }
+
+    @Test
+    void missingCurrentUserReturnsNotFound() {
+        UserRepository users = mock(UserRepository.class);
+        when(users.findById(42L)).thenReturn(Optional.empty());
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> new AccountService(users).getProfile(42L));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, error.getErrorCode());
     }
 }

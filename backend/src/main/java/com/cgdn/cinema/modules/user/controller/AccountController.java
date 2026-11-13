@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** API hồ sơ của tài khoản đang đăng nhập. */
 @RestController
 @RequestMapping("/api/v1/account")
 public class AccountController {
@@ -26,6 +27,7 @@ public class AccountController {
         if (userDetails == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
+        // Chỉ dùng ID từ phiên đăng nhập, không nhận ID tài khoản từ client.
         return ApiResponse.success(accountService.getProfile(userDetails.getId()));
     }
 }

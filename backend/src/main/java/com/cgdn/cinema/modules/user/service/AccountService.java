@@ -10,19 +10,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
+/** Đọc hồ sơ từ CSDL và chuyển sang dữ liệu được phép trả về cho client. */
 @Service
 public class AccountService {
 
-    private final UserRepository users;
+    private final UserRepository userRepository;
 
-    public AccountService(UserRepository users) {
-        this.users = users;
+    public AccountService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
     public AccountProfileResponse getProfile(Long userId) {
-        User user = users.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // Mã thành viên là cách hiển thị ID hiện có, chưa có cột riêng trong CSDL.
         return new AccountProfileResponse(
                 String.format(Locale.ROOT, "TV%07d", user.getId()),
                 user.getUsername(),
