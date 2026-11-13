@@ -7,6 +7,7 @@ import com.cgdn.cinema.modules.user.dto.request.UpdateAccountProfileRequest;
 import com.cgdn.cinema.modules.user.dto.response.AccountProfileResponse;
 import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ import java.time.Period;
 import java.util.Locale;
 
 /**
- * Quản lý hồ sơ người dùng: đọc thông tin tài khoản và cập nhật hồ sơ cá nhân.
+ * Quản lý việc đọc và cập nhật hồ sơ cá nhân của người dùng.
  */
 @Service
 public class AccountService {
@@ -24,16 +25,30 @@ public class AccountService {
     private final UserRepository userRepository;
     private final Clock clock;
 
-    @org.springframework.beans.factory.annotation.Autowired
+    /**
+     * Tạo dịch vụ hồ sơ với kho người dùng và đồng hồ hệ thống.
+     *
+     * @param userRepository kho truy vấn và lưu người dùng
+     * @param clock đồng hồ dùng để tính tuổi nhất quán
+     */
+    @Autowired
     public AccountService(UserRepository userRepository, Clock clock) {
         this.userRepository = userRepository;
         this.clock = clock;
     }
 
+    /** Tạo dịch vụ dùng múi giờ mặc định của ứng dụng. */
     public AccountService(UserRepository userRepository) {
         this(userRepository, Clock.system(AppConstants.ZONE));
     }
 
+    /**
+     * Lấy hồ sơ tài khoản theo ID.
+     *
+     * @param userId ID lấy từ danh tính đã xác thực
+     * @return hồ sơ tài khoản
+     * @throws BusinessException nếu không tìm thấy người dùng
+     */
     @Transactional(readOnly = true)
     public AccountProfileResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
@@ -41,12 +56,20 @@ public class AccountService {
         return toProfileResponse(user);
     }
 
+    /**
+     * Áp dụng các trường được gửi trong yêu cầu PATCH lên hồ sơ hiện tại.
+     *
+     * @param userId ID lấy từ Security Principal, không lấy từ request body
+     * @param request dữ liệu cập nhật hồ sơ
+     * @return hồ sơ sau khi lưu
+     * @throws BusinessException nếu request hoặc một trong các trường không hợp lệ
+     */
     @Transactional
     public AccountProfileResponse updateProfile(Long userId, UpdateAccountProfileRequest request) {
         if (request == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST);
         }
-        // Từ chối mọi trường lạ hoặc trường chỉ đọc (kể cả khi gửi null), không âm thầm bỏ qua
+        // @JsonAnySetter ghi nhận cả trường lạ gửi null, vì vậy từ chối thay vì âm thầm bỏ qua.
         if (request.hasUnknownFields()) {
             String unknown = request.getUnknownFields().keySet().iterator().next();
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Trường '" + unknown + "' không được phép cập nhật.");
@@ -61,8 +84,9 @@ public class AccountService {
         return toProfileResponse(saved);
     }
 
+    /** Cập nhật từng trường được phép, chỉ khi trường đó có mặt trong JSON. */
     private void applyProfileUpdates(User user, UpdateAccountProfileRequest request) {
-        // fullName: bắt buộc nếu gửi lên; null, rỗng hoặc chỉ có khoảng trắng phải trả lỗi
+        // Họ tên bắt buộc khi được gửi; sau trim độ dài phải từ 2 đến 150 ký tự.
         if (request.isFullNamePresent()) {
             String rawName = request.getFullName();
             if (rawName == null || rawName.trim().isEmpty()) {
@@ -78,7 +102,7 @@ public class AccountService {
             user.setFullName(fullName);
         }
 
-        // dateOfBirth: tùy chọn; gửi null thì xóa giá trị; nếu có ngày thì tuổi phải từ 13 đến 120
+        // Tuổi được tính theo Clock của ứng dụng để quy tắc 13–120 ổn định theo múi giờ hệ thống.
         if (request.isDateOfBirthPresent()) {
             LocalDate birthDate = request.getDateOfBirth();
             if (birthDate == null) {
@@ -92,7 +116,7 @@ public class AccountService {
             }
         }
 
-        // gender: tùy chọn; gửi null thì xóa giá trị; chỉ chấp nhận MALE, FEMALE, OTHER
+        // Chuẩn hóa giới tính không phân biệt hoa thường; chỉ nhận MALE, FEMALE hoặc OTHER.
         if (request.isGenderPresent()) {
             String rawGender = request.getGender();
             if (rawGender == null) {
@@ -106,7 +130,7 @@ public class AccountService {
             }
         }
 
-        // citizenId: tùy chọn; gửi null hoặc rỗng thì xóa; nếu có giá trị phải là 9 hoặc 12 chữ số
+        // CCCD tùy chọn; null/rỗng xóa giá trị, còn lại phải đúng 9 hoặc 12 chữ số.
         if (request.isCitizenIdPresent()) {
             String rawId = request.getCitizenId();
             if (rawId == null || rawId.trim().isEmpty()) {
@@ -120,7 +144,7 @@ public class AccountService {
             }
         }
 
-        // address: tùy chọn; gửi null hoặc rỗng thì xóa; nếu có giá trị thì phải từ 5 đến 255 ký tự
+        // Địa chỉ tùy chọn; null/rỗng xóa giá trị, nội dung sau trim dài từ 5 đến 255 ký tự.
         if (request.isAddressPresent()) {
             String rawAddress = request.getAddress();
             if (rawAddress == null || rawAddress.trim().isEmpty()) {
@@ -138,6 +162,7 @@ public class AccountService {
         }
     }
 
+    /** Chuyển thực thể người dùng thành response hồ sơ theo hợp đồng API hiện tại. */
     private AccountProfileResponse toProfileResponse(User user) {
         // Mã thành viên là cách hiển thị ID hiện có (TV + 7 chữ số), chưa có cột riêng trong CSDL.
         return new AccountProfileResponse(
