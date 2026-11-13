@@ -1,6 +1,8 @@
 package com.cgdn.cinema.modules.ticket.repository;
 
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Booking;
+import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.BookingView;
+import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Counts;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Detail;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Movie;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Payment;
@@ -56,15 +58,18 @@ public class MemberTicketReadRepository {
             where b.nguoi_dung_id = :userId and b.trang_thai_dat_ve = :paidStatus
             """;
 
-    private static final String COUNT_BOOKINGS = """
-            select count(*) from dat_ve b
-            where b.nguoi_dung_id = :userId and b.trang_thai_dat_ve = :paidStatus
-            """;
+    private static final String COUNT_BOOKINGS = "select count(*) " + BOOKING_FROM;
 
-    private static final String LIST_BOOKINGS = "select " + BOOKING_COLUMNS + BOOKING_FROM + """
+    private static final String BOOKING_PAGINATION = """
             order by b.ngay_tao desc, b.id desc
             limit :limit offset :offset
             """;
+
+    private static final String COUNT_VIEWS = """
+            select count(*) as all_count,
+                   coalesce(sum(case when showtime.bat_dau > :now then 1 else 0 end), 0) as upcoming_count,
+                   coalesce(sum(case when showtime.bat_dau <= :now then 1 else 0 end), 0) as history_count
+            """ + BOOKING_FROM;
 
     private static final String FIND_BOOKING = "select " + BOOKING_COLUMNS + """
             , b.ten_nguoi_nhan as recipient_name, b.email_nguoi_nhan as recipient_email,
@@ -100,18 +105,45 @@ public class MemberTicketReadRepository {
 
     /** pageNumber bắt đầu từ 0; thứ tự cố định theo ngày đặt mới nhất, sau đó ID giảm dần. */
     public Page<Booking> findPaidBookingsByUserId(long userId, int pageNumber, int pageSize) {
+        return findPaidBookingsByUserId(userId, pageNumber, pageSize, BookingView.ALL, null);
+    }
+
+    /** Lọc trong SQL trước khi đếm/phân trang. now bắt buộc khi chọn UPCOMING hoặc HISTORY. */
+    public Page<Booking> findPaidBookingsByUserId(
+            long userId, int pageNumber, int pageSize, BookingView view, LocalDateTime now) {
         MapSqlParameterSource parameters = userParameters(userId);
+        Assert.notNull(view, "view must not be null");
+        if (view != BookingView.ALL) {
+            Assert.notNull(now, "now must not be null for a time-filtered view");
+        }
+        String viewFilter = switch (view) {
+            case ALL -> "";
+            case UPCOMING -> " and showtime.bat_dau > :now\n";
+            case HISTORY -> " and showtime.bat_dau <= :now\n";
+        };
+        parameters.addValue("now", now);
         PageRequest pageable = PageRequest.of(pageNumber, pageSize,
                 Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        long total = jdbcTemplate.queryForObject(COUNT_BOOKINGS, parameters, Long.class);
+        long total = jdbcTemplate.queryForObject(COUNT_BOOKINGS + viewFilter, parameters, Long.class);
         if (total == 0 || pageable.getOffset() >= total) {
             return new PageImpl<>(List.of(), pageable, total);
         }
 
         parameters.addValue("limit", pageable.getPageSize()).addValue("offset", pageable.getOffset());
-        List<Booking> bookings = jdbcTemplate.query(LIST_BOOKINGS, parameters,
+        List<Booking> bookings = jdbcTemplate.query(
+                "select " + BOOKING_COLUMNS + BOOKING_FROM + viewFilter + BOOKING_PAGINATION, parameters,
                 (resultSet, rowNumber) -> readBooking(resultSet));
         return new PageImpl<>(bookings, pageable, total);
+    }
+
+    /** Đếm trên toàn bộ đơn hợp lệ của thành viên, không phụ thuộc view hoặc trang đang xem. */
+    public Counts countPaidBookingsByUserId(long userId, LocalDateTime now) {
+        MapSqlParameterSource parameters = userParameters(userId);
+        Assert.notNull(now, "now must not be null");
+        parameters.addValue("now", now);
+        return jdbcTemplate.queryForObject(COUNT_VIEWS, parameters,
+                (resultSet, rowNumber) -> new Counts(resultSet.getLong("all_count"),
+                        resultSet.getLong("upcoming_count"), resultSet.getLong("history_count")));
     }
 
     /** Không cung cấp truy vấn ghế/giao dịch công khai chỉ theo ID đơn, tránh bỏ qua chủ sở hữu. */

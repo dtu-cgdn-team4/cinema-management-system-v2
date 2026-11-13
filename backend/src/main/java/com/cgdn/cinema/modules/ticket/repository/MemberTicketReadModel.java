@@ -10,6 +10,13 @@ public final class MemberTicketReadModel {
     private MemberTicketReadModel() {
     }
 
+    public enum BookingView {
+        ALL, UPCOMING, HISTORY
+    }
+
+    public record Counts(long all, long upcoming, long history) {
+    }
+
     public record Booking(
             long id,
             String bookingCode,

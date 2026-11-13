@@ -1,6 +1,7 @@
 package com.cgdn.cinema.modules.ticket.repository;
 
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Booking;
+import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.BookingView;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Payment;
 import com.cgdn.cinema.modules.ticket.repository.MemberTicketReadModel.Seat;
 import java.math.BigDecimal;
@@ -289,6 +290,64 @@ class MemberTicketReadRepositoryTest {
         assertThatIllegalArgumentException().isThrownBy(() -> repository.findPaidBookingsByUserId(MEMBER_ID, -1, 10));
         assertThatIllegalArgumentException().isThrownBy(() -> repository.findPaidBookingsByUserId(MEMBER_ID, 0, 0));
         assertThatIllegalArgumentException().isThrownBy(() -> repository.findPaidBookingByCodeAndUserId(" ", MEMBER_ID));
+    }
+
+    @Test
+    void filtersTimeBeforePaginationAndIncludesExactStartInHistory() {
+        insertBooking(6001, MEMBER_ID, CREATED_AT.plusDays(3), "DA_THANH_TOAN");
+        insertBooking(6002, MEMBER_ID, CREATED_AT, "DA_THANH_TOAN");
+        insertBooking(6003, MEMBER_ID, CREATED_AT.plusDays(1), "DA_THANH_TOAN");
+        jdbc.update("""
+                insert into suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc)
+                values (4002, 3001, 2001, ?, ?), (4003, 3001, 2001, ?, ?)
+                """, STARTS_AT.minusSeconds(1), STARTS_AT.plusHours(3),
+                STARTS_AT.plusSeconds(1), STARTS_AT.plusHours(4));
+        jdbc.update("update dat_ve set suat_chieu_id = 4002 where id = 6001");
+        jdbc.update("update dat_ve set suat_chieu_id = 4003 where id = 6002");
+
+        var upcoming = repository.findPaidBookingsByUserId(MEMBER_ID, 0, 1, BookingView.UPCOMING, STARTS_AT);
+        var history = repository.findPaidBookingsByUserId(MEMBER_ID, 0, 1, BookingView.HISTORY, STARTS_AT);
+        var secondHistory = repository.findPaidBookingsByUserId(MEMBER_ID, 1, 1, BookingView.HISTORY, STARTS_AT);
+
+        assertThat(upcoming.getContent()).extracting(Booking::id).containsExactly(6002L);
+        assertThat(upcoming.getTotalElements()).isEqualTo(1);
+        assertThat(history.getContent()).extracting(Booking::id).containsExactly(6001L);
+        assertThat(history.getTotalElements()).isEqualTo(2);
+        assertThat(secondHistory.getContent()).extracting(Booking::id).containsExactly(6003L);
+    }
+
+    @Test
+    void countsOnlyOwnedPaidOrdersWithoutMultiplyingSeatsOrTransactions() {
+        insertBooking(6001, MEMBER_ID, CREATED_AT, "DA_THANH_TOAN");
+        insertBooking(6002, MEMBER_ID, CREATED_AT, "DA_THANH_TOAN");
+        insertBooking(6003, OTHER_MEMBER_ID, CREATED_AT, "DA_THANH_TOAN");
+        insertBooking(6004, MEMBER_ID, CREATED_AT, "TEST_UNPAID");
+        jdbc.update("""
+                insert into suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc)
+                values (4002, 3001, 2001, ?, ?)
+                """, STARTS_AT.plusSeconds(1), STARTS_AT.plusHours(3));
+        jdbc.update("update dat_ve set suat_chieu_id = 4002 where id in (6002, 6003, 6004)");
+        insertSeat(6001, 5001, new BigDecimal("160000"));
+        insertSeat(6001, 5002, new BigDecimal("160000"));
+        insertPayment(9001, 6001, "PROVIDER_OK", CREATED_AT);
+        insertPayment(9002, 6001, "PROVIDER_OK", CREATED_AT);
+
+        var counts = repository.countPaidBookingsByUserId(MEMBER_ID, STARTS_AT);
+
+        assertThat(counts.all()).isEqualTo(2);
+        assertThat(counts.upcoming()).isEqualTo(1);
+        assertThat(counts.history()).isEqualTo(1);
+    }
+
+    @Test
+    void returnsZeroCountsWhenMemberHasNoPaidOrders() {
+        insertBooking(6001, OTHER_MEMBER_ID, CREATED_AT, "DA_THANH_TOAN");
+
+        var counts = repository.countPaidBookingsByUserId(MEMBER_ID, STARTS_AT);
+
+        assertThat(counts.all()).isZero();
+        assertThat(counts.upcoming()).isZero();
+        assertThat(counts.history()).isZero();
     }
 
     private void insertBooking(long id, Long userId, LocalDateTime createdAt, String status) {
