@@ -184,7 +184,7 @@ Yêu cầu tiên quyết trên máy phát triển:
 
 - Bộ công cụ Java Development Kit (JDK): phiên bản 17 trở lên
 - Apache Maven: phiên bản 3.8 trở lên
-- Node.js: phiên bản 18 trở lên và npm phiên bản 9 trở lên
+- Node.js: phiên bản 20.19 trở lên (Vite 8, Tailwind CSS 4) và npm phiên bản 9 trở lên
 - Hệ quản trị MySQL Server: phiên bản 8.0 trở lên
 - Git Client
 
@@ -246,6 +246,18 @@ CREATE DATABASE cinema_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 Lệnh trên xoá toàn bộ dữ liệu của `cinema_db` trên máy bạn. Dữ liệu mẫu được nạp lại ở lần chạy backend tiếp theo.
+
+Bước 3b: Chạy RabbitMQ cho hàng đợi giữ ghế (Q&A #14):
+
+Giữ ghế đi qua RabbitMQ, nên backend cần RabbitMQ đang chạy. Cách nhanh nhất là Docker:
+
+```bash
+docker run -d --name cinema-rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4-management
+```
+
+- Lần sau chỉ cần `docker start cinema-rabbitmq`. Trang quản lý ở <http://localhost:15672>, tài khoản `guest` / `guest`.
+- RabbitMQ chạy trên máy với tài khoản mặc định thì để nguyên các biến `RABBITMQ_*` trong `backend/.env`.
+- Thiếu RabbitMQ thì backend vẫn khởi động, nhưng API giữ ghế trả 503 "Hệ thống đang bận". `mvn test` dùng broker nhúng nên không cần RabbitMQ.
 
 Bước 4: Cài đặt thư viện phụ thuộc cho Frontend:
 

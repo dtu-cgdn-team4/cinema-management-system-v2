@@ -1,5 +1,6 @@
 -- Dữ liệu cố định cho test API (profile testdata), ngày tính theo ngày chạy test.
 -- 5 rạp, mỗi phòng 96 ghế; phim 1–4 đang chiếu, 5 sắp chiếu, 6 đã hết chiếu.
+-- Mọi suất đã bán A01, A02, D05, D07, F08, F09 (D06 thành ghế lẻ có sẵn); tài khoản 1, 2 dùng để giữ ghế.
 
 -- Rạp
 INSERT INTO rap (id, ten_rap, thanh_pho, dia_chi, so_dien_thoai, gio_mo_cua, gio_dong_cua, hinh_anh_url) VALUES
@@ -15,6 +16,11 @@ INSERT INTO phong_chieu (rap_id, ten_phong, so_hang, so_cot) VALUES
     (3, 'Phòng 01', 8, 14),
     (4, 'Phòng 01', 8, 14), (4, 'Phòng 02', 8, 14),
     (5, 'Phòng 01', 8, 14);
+
+-- Tài khoản mẫu, mật khẩu đều là 123456
+INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, vai_tro) VALUES
+    (1, 'khach1', '$2a$10$0YUmnRzrCtjGnIOaPcEEEu3C/Ztpwa.gsUZtR9.ZLK.PrgrkwNvAy', 'Nguyễn Văn An', 'khach1@example.com', '0900000001', '2000-01-15', 'NAM', 'KHACH_HANG'),
+    (2, 'khach2', '$2a$10$0YUmnRzrCtjGnIOaPcEEEu3C/Ztpwa.gsUZtR9.ZLK.PrgrkwNvAy', 'Trần Thị Bình', 'khach2@example.com', '0900000002', '2001-05-20', 'NU', 'KHACH_HANG');
 
 INSERT INTO the_loai (id, ten) VALUES
     (1, 'Khoa học viễn tưởng'),
@@ -56,3 +62,12 @@ CROSS JOIN (SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT
 CROSS JOIN (SELECT 0 AS thu_tu, 540 AS phut UNION ALL SELECT 1, 735 UNION ALL SELECT 2, 930
             UNION ALL SELECT 3, 1125 UNION ALL SELECT 4, 1320) s
 JOIN phim f ON f.id = MOD(d.n + p.id + s.thu_tu, 4) + 1;
+
+-- Ghế đã bán ở mọi suất; nguoi_dung_id null như khách mua tại quầy
+INSERT INTO ghe_suat_chieu (suat_chieu_id, ghe_id, trang_thai_ghe)
+SELECT s.id, g.id, 'DA_THANH_TOAN'
+FROM suat_chieu s
+JOIN ghe g ON g.phong_chieu_id = s.phong_chieu_id
+WHERE (g.ten_hang = 'A' AND g.so_ghe IN (1, 2))
+   OR (g.ten_hang = 'D' AND g.so_ghe IN (5, 7))
+   OR (g.ten_hang = 'F' AND g.so_ghe IN (8, 9));

@@ -33,20 +33,32 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
+    private static final String REGISTRATION_PATH = "/api/v1/auth/register";
+    private static final String REGISTRATION_VALIDATION_MESSAGE = "Dữ liệu đăng ký không hợp lệ.";
     private final ObjectMapper objectMapper;
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex) {
         ErrorCode code = ex.getErrorCode();
+        // Lỗi đăng ký vẫn trả errors theo tên trường; các API đăng nhập giữ errorCode như trên develop.
+        if (ex.field() != null) {
+            return ResponseEntity.status(code.getStatus())
+                    .body(ApiResponse.error(code.getStatus().value(), ex.getMessage(),
+                            Map.of(ex.field(), ex.getMessage())));
+        }
         return ResponseEntity.status(code.getStatus())
                 .body(ApiResponse.error(code.getStatus().value(), code.getCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+        }
+        if (isRegistration(request)) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, REGISTRATION_VALIDATION_MESSAGE, fieldErrors));
         }
         ErrorCode code = ErrorCode.VALIDATION_ERROR;
         return ResponseEntity.status(code.getStatus())
@@ -54,7 +66,11 @@ public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessD
     }
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
-    public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex, HttpServletRequest request) {
+        if (ex instanceof HttpMessageNotReadableException && isRegistration(request)) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, REGISTRATION_VALIDATION_MESSAGE));
+        }
         return toResponse(ErrorCode.INVALID_REQUEST);
     }
 
@@ -110,6 +126,10 @@ public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessD
     private ResponseEntity<ApiResponse<Void>> toResponse(ErrorCode code) {
         return ResponseEntity.status(code.getStatus())
                 .body(ApiResponse.error(code.getStatus().value(), code.getCode(), code.getMessage()));
+    }
+
+    private boolean isRegistration(HttpServletRequest request) {
+        return REGISTRATION_PATH.equals(request.getRequestURI());
     }
 
     private void writeSecurityError(HttpServletResponse response, ErrorCode code) throws IOException {

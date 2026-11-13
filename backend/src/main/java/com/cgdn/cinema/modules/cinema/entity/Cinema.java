@@ -44,7 +44,6 @@ public class Cinema {
     private String imageUrl;
 
     @JdbcTypeCode(SqlTypes.TINYINT)
-
     @Column(name = "trang_thai")
     private Integer status;
 }

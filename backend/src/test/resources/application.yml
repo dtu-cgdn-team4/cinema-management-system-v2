@@ -13,6 +13,12 @@ spring:
   flyway:
     enabled: false
 
+  # Consumer RabbitMQ và broker nhúng chỉ bật ở profile "mq" (EmbeddedRabbitConfig)
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
 app:
   jwt:
     secret: test-only-signing-key-with-at-least-256-bits

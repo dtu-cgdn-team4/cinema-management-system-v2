@@ -1,32 +1,50 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer base {
-  html, body {
-    @apply bg-[#0d0e10] text-[#f5f2ed] font-sans m-0 p-0;
-    height: 100%;
-    overflow-x: hidden;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  }
+/* Palette and type used by the Galaxy Cinema screens. */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
 
-  /* Khắc phục triệt để lỗi Chrome / Edge autofill nền trắng cho input */
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
-  input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #17181b inset !important;
-    -webkit-text-fill-color: #f5f2ed !important;
-    caret-color: #f5f2ed !important;
-    transition: background-color 5000s ease-in-out 0s;
-  }
+  --color-page: #08090c;
+  --color-surface: #12141b;
+  --color-card: #1a1c27;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-brand: #ea384d;
+  --color-brand-dark: #dc2626;
+  --color-muted: #a1a1aa;
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-info: #60a5fa;
+}
 
-  /* Ẩn thanh cuộn trên các trình duyệt nhưng vẫn cho phép tương tác */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+body {
+  @apply bg-page font-sans text-white antialiased;
+}
+
+/* Keep Chrome and Edge autofill fields on the dark login palette. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #17181b inset !important;
+  -webkit-text-fill-color: #f5f2ed !important;
+  caret-color: #f5f2ed !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

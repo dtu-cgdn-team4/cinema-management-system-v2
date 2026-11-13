@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import GoogleCallbackPage from '@/features/auth/pages/GoogleCallbackPage';
+import CustomerLayout from '@/layouts/CustomerLayout.jsx';
+import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage.jsx';
 import { useAuth } from '@/context/AuthContext';
 
 /**
@@ -63,12 +65,27 @@ export const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-      {/* Trang chủ sau khi đăng nhập */}
-      <Route path="/" element={<HomePage />} />
+      {/* Trang chủ và lịch chiếu từ develop */}
+      <Route path="/" element={<Navigate to="/lich-chieu" replace />} />
+      <Route path="/tai-khoan" element={<HomePage />} />
+      <Route element={<CustomerLayout />}>
+        <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
+        <Route
+          path="/dat-ve/suat-chieu/:showtimeId/chon-ghe"
+          element={
+            <p className="py-24 text-center text-muted">
+              Màn hình chọn ghế: làm ở task 6.2.1.2.
+            </p>
+          }
+        />
+        <Route
+          path="*"
+          element={<p className="py-24 text-center text-muted">Trang đang được xây dựng.</p>}
+        />
+      </Route>
 
       {/* Các route phụ */}
       <Route path="/register" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
