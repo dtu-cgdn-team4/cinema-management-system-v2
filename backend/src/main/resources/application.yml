@@ -2,7 +2,7 @@ server:
   port: 8080
 
 spring:
-  # Biến DB_* đọc từ backend/.env, chạy trong backend/ hay từ gốc repo đều được (README mục 6)
+  # Biến DB_*, RABBITMQ_* đọc từ backend/.env, chạy trong backend/ hay từ gốc repo đều được (README mục 6)
   config:
     import: optional:file:.env[.properties],optional:file:backend/.env[.properties]
   application:
@@ -28,6 +28,15 @@ spring:
     locations:
       - classpath:db/migration
       - classpath:db/seed
+
+  # Hàng đợi giữ ghế (Q&A #14)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    template:
+      reply-timeout: 10s
 
 springdoc:
   api-docs:

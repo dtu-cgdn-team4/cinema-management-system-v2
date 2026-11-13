@@ -1,0 +1,6 @@
+# Bật consumer giữ ghế; chỉ một context test dùng profile này để hàng đợi có đúng một consumer.
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: true
