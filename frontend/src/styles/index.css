@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-[#0d0e10] text-[#f5f2ed] font-sans m-0 p-0;
+    height: 100%;
+    overflow-x: hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Khắc phục triệt để lỗi Chrome / Edge autofill nền trắng cho input */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #17181b inset !important;
+    -webkit-text-fill-color: #f5f2ed !important;
+    caret-color: #f5f2ed !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Ẩn thanh cuộn trên các trình duyệt nhưng vẫn cho phép tương tác */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
