@@ -5,14 +5,18 @@ import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.modules.auth.dto.request.GoogleLoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.LoginRequest;
+import com.cgdn.cinema.modules.auth.dto.request.RegisterRequest;
 import com.cgdn.cinema.modules.auth.dto.response.GoogleAuthUrlResponse;
 import com.cgdn.cinema.modules.auth.dto.response.LoginResponse;
+import com.cgdn.cinema.modules.auth.dto.response.RegisterResponse;
 import com.cgdn.cinema.modules.auth.service.AuthService;
+import com.cgdn.cinema.modules.auth.service.RegistrationService;
 import com.cgdn.cinema.security.CustomUserDetails;
 import com.cgdn.cinema.security.GoogleProperties;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,10 +50,19 @@ public class AuthController {
 
     private final AuthService authService;
     private final GoogleProperties googleProperties;
+    private final RegistrationService registration;
 
-    public AuthController(AuthService authService, GoogleProperties googleProperties) {
+    public AuthController(AuthService authService, GoogleProperties googleProperties,
+                          RegistrationService registration) {
         this.authService = authService;
         this.googleProperties = googleProperties;
+        this.registration = registration;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+                HttpStatus.CREATED.value(), "Đăng ký thành công.", registration.register(request)));
     }
 
     @PostMapping("/login")

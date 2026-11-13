@@ -4,6 +4,7 @@ import com.cgdn.cinema.common.enums.AgeRating;
 import com.cgdn.cinema.common.enums.RecordStatus;
 import com.cgdn.cinema.modules.movie.entity.Movie;
 import com.cgdn.cinema.modules.movie.repository.MovieRepository;
+import com.google.firebase.auth.FirebaseAuth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDate;
 
@@ -29,6 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @WithMockUser(roles = "ADMIN")
 class MovieAdminControllerTest {
+
+    @MockitoBean
+    FirebaseAuth firebaseAuth;
 
     @Autowired
     private MockMvc mockMvc;

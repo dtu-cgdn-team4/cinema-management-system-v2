@@ -28,6 +28,7 @@ import com.cgdn.cinema.infrastructure.websocket.WebSocketConfig;
 import com.cgdn.cinema.modules.booking.dto.response.SeatStatusMessage;
 import com.cgdn.cinema.modules.booking.scheduler.SeatHoldReleaseJob;
 import com.cgdn.cinema.modules.booking.service.SeatStatusPublisher;
+import com.google.firebase.auth.FirebaseAuth;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -50,6 +51,7 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -66,6 +68,9 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 @EnabledForJreRange(max = JRE.JAVA_22,
         disabledReason = "Broker nhúng Qpid chưa chạy trên JDK 23+; CI chạy Java 17 nên vẫn kiểm tra")
 class SeatSelectionApiTest {
+
+    @MockitoBean
+    private FirebaseAuth firebaseAuth;
 
     private static final String TAKEN_MESSAGE = "Ghế bạn chọn đã có người giữ hoặc đã bán, vui lòng chọn ghế khác";
 

@@ -1,6 +1,7 @@
 package com.cgdn.cinema.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,15 @@ public class ApiResponse<T> {
     private String errorCode;
     private String message;
     private T data;
+    private Map<String, String> errors;
+
+    public static <T> ApiResponse<T> success(int code, String message, T data) {
+        return ApiResponse.<T>builder()
+                .code(code)
+                .message(message)
+                .data(data)
+                .build();
+    }
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
@@ -37,6 +47,14 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .code(code)
                 .message(message)
+                .build();
+    }
+
+    public static ApiResponse<Void> error(int code, String message, Map<String, String> errors) {
+        return ApiResponse.<Void>builder()
+                .code(code)
+                .message(message)
+                .errors(errors)
                 .build();
     }
 
