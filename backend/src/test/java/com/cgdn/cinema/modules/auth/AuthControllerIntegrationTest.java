@@ -40,6 +40,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -405,6 +406,268 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.username").value(other.getUsername()))
                 .andExpect(jsonPath("$.data.memberCode").value(String.format("TV%07d", other.getId())));
+    }
+
+    @Test
+    void updateAccountProfile_withoutToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"Người Dùng Mới\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    void updateAccountProfile_partialUpdate_preservesAbsentFields() throws Exception {
+        activeCustomer.setCitizenId("048202001234");
+        activeCustomer.setAddress("Đà Nẵng");
+        activeCustomer.setLoyaltyPoints(120);
+        userRepository.save(activeCustomer);
+
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"Nguyễn Văn Đổi Tên\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.fullName").value("Nguyễn Văn Đổi Tên"))
+                .andExpect(jsonPath("$.data.username").value(activeCustomer.getUsername()))
+                .andExpect(jsonPath("$.data.email").value(activeCustomer.getEmail()))
+                .andExpect(jsonPath("$.data.phoneNumber").value(activeCustomer.getPhoneNumber()))
+                .andExpect(jsonPath("$.data.citizenId").value("048202001234"))
+                .andExpect(jsonPath("$.data.address").value("Đà Nẵng"))
+                .andExpect(jsonPath("$.data.loyaltyPoints").value(120))
+                .andExpect(jsonPath("$.data.dateOfBirth").value("2000-01-15"))
+                .andExpect(jsonPath("$.data.gender").value("NAM"));
+
+        User reloaded = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        assertThat(reloaded.getFullName()).isEqualTo("Nguyễn Văn Đổi Tên");
+        assertThat(reloaded.getCitizenId()).isEqualTo("048202001234");
+        assertThat(reloaded.getAddress()).isEqualTo("Đà Nẵng");
+        assertThat(reloaded.getEmail()).isEqualTo(activeCustomer.getEmail());
+        assertThat(reloaded.getPhoneNumber()).isEqualTo(activeCustomer.getPhoneNumber());
+    }
+
+    @Test
+    void updateAccountProfile_clearsOptionalFieldsWithNull() throws Exception {
+        activeCustomer.setCitizenId("048202001234");
+        activeCustomer.setAddress("Đà Nẵng");
+        userRepository.save(activeCustomer);
+
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"address\":null,\"citizenId\":null,\"dateOfBirth\":null,\"gender\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.fullName").value(activeCustomer.getFullName()))
+                .andExpect(jsonPath("$.data.address").doesNotExist())
+                .andExpect(jsonPath("$.data.citizenId").doesNotExist())
+                .andExpect(jsonPath("$.data.dateOfBirth").doesNotExist())
+                .andExpect(jsonPath("$.data.gender").doesNotExist());
+
+        User reloaded = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        assertThat(reloaded.getAddress()).isNull();
+        assertThat(reloaded.getCitizenId()).isNull();
+        assertThat(reloaded.getDateOfBirth()).isNull();
+        assertThat(reloaded.getGender()).isNull();
+        assertThat(reloaded.getFullName()).isEqualTo(activeCustomer.getFullName());
+    }
+
+    @Test
+    void updateAccountProfile_blankOrInvalidFullName_returnsBadRequest() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        // null fullName
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // empty fullName
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // whitespace fullName
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // 1 char fullName
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"A\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void updateAccountProfile_rejectsUnknownAndReadOnlyFields() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        // email có giá trị
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"hacker@cinema.vn\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // email có giá trị null
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // phoneNumber có giá trị null
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // phoneNumber có giá trị
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":\"0909999999\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // role
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"ADMIN\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // loyaltyPoints
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"loyaltyPoints\":9999}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // userId
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":123}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // trường lạ bất kỳ
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"strangeField\":\"hack\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void updateAccountProfile_rejectsInvalidData() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        // ngày sinh không hợp lệ: tuổi < 13
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"dateOfBirth\":\"2025-01-01\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // định dạng ngày sinh sai
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"dateOfBirth\":\"not-a-date\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // giới tính sai
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"gender\":\"UNKNOWN\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // CMND/CCCD sai định dạng (không phải 9 hoặc 12 số)
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"citizenId\":\"12345\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        // địa chỉ ngắn hơn 5 ký tự
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"address\":\"HN\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void updateAccountProfile_userACannotModifyUserB() throws Exception {
+        User other = userRepository.save(createUser(
+                "khachhang02", "khach02@cinema.vn", "0909876543",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode()));
+        other.setFullName("User B Original");
+        other.setAddress("Hà Nội");
+        userRepository.save(other);
+
+        String tokenA = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        // User A gửi yêu cầu cập nhật tên của mình
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"User A New Name\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.fullName").value("User A New Name"));
+
+        // User B không hề bị ảnh hưởng
+        User userBAfter = userRepository.findById(other.getId()).orElseThrow();
+        assertThat(userBAfter.getFullName()).isEqualTo("User B Original");
+        assertThat(userBAfter.getAddress()).isEqualTo("Hà Nội");
+
+        // User B kiểm tra profile qua token của chính mình
+        String tokenB = loginAndGetToken(other.getUsername(), "Secret@123");
+        mockMvc.perform(get("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + tokenB))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.fullName").value("User B Original"))
+                .andExpect(jsonPath("$.data.username").value("khachhang02"));
+
+        // User A cố tình gửi thêm userId của User B trong body -> bị từ chối 400
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":" + other.getId() + ",\"fullName\":\"Tamper Attempt\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
     }
 
     @Test
