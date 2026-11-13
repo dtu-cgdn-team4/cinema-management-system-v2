@@ -41,6 +41,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -406,6 +407,37 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.username").value(other.getUsername()))
                 .andExpect(jsonPath("$.data.memberCode").value(String.format("TV%07d", other.getId())));
+    }
+
+    @Test
+    void changePassword_requiresTokenAndUpdatesOnlyAuthenticatedAccount() throws Exception {
+        mockMvc.perform(put("/api/v1/account/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"Secret@123\",\"newPassword\":\"NewPass456\",\"confirmPassword\":\"NewPass456\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("UNAUTHORIZED"));
+
+        User other = userRepository.save(createUser(
+                "passwordother", "passwordother@cinema.vn", "0909876555",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode()));
+        String originalOtherHash = other.getPassword();
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        MvcResult result = mockMvc.perform(put("/api/v1/account/me/password")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"Secret@123\",\"newPassword\":\"NewPass456\",\"confirmPassword\":\"NewPass456\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Đổi mật khẩu thành công"))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        assertThat(responseBody).doesNotContain("NewPass456", "Secret@123", "password");
+        User changed = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        User unchanged = userRepository.findById(other.getId()).orElseThrow();
+        assertThat(passwordEncoder.matches("NewPass456", changed.getPassword())).isTrue();
+        assertThat(unchanged.getPassword()).isEqualTo(originalOtherHash);
     }
 
     @Test

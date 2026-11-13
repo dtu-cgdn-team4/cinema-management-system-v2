@@ -14,6 +14,7 @@ public enum ErrorCode {
     MOVIE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy phim đang chiếu"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Tài khoản hoặc mật khẩu không chính xác"),
+    CURRENT_PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không chính xác"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn"),
     ACCOUNT_LOCKED(HttpStatus.LOCKED, "Tài khoản đã bị khóa do đăng nhập sai quá số lần quy định"),
     ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "Tài khoản đã ngừng hoạt động"),
