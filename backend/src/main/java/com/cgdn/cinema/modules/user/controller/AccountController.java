@@ -3,6 +3,7 @@ package com.cgdn.cinema.modules.user.controller;
 import com.cgdn.cinema.common.response.ApiResponse;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.user.dto.request.ChangePasswordRequest;
 import com.cgdn.cinema.modules.user.dto.request.UpdateAccountProfileRequest;
 import com.cgdn.cinema.modules.user.dto.response.AccountProfileResponse;
 import com.cgdn.cinema.modules.user.service.AccountService;
@@ -12,13 +13,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Cung cấp API đọc và cập nhật hồ sơ của tài khoản đang đăng nhập.
- * Danh tính tài khoản luôn được lấy từ Security Principal.
+ * Cung cấp API đọc, cập nhật hồ sơ và đổi mật khẩu của tài khoản đang đăng nhập.
+ * Danh tính tài khoản luôn được lấy từ Security Principal, không nhận ID tài khoản từ client.
  */
 @Tag(name = "Account", description = "API quản lý thông tin tài khoản cá nhân")
 @RestController
@@ -67,5 +69,26 @@ public class AccountController {
         }
         // Chỉ cập nhật tài khoản lấy từ principal; không nhận userId từ request.
         return ApiResponse.success(accountService.updateProfile(userDetails.getId(), request));
+    }
+
+    /**
+     * Đổi mật khẩu của tài khoản được xác thực trong Security Context.
+     * ID truyền xuống service chỉ lấy từ JWT principal; body không có trường userId.
+     *
+     * @param userDetails principal được JwtAuthenticationFilter thiết lập
+     * @param request mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu mới
+     * @return thông báo thành công, không kèm mật khẩu hoặc password hash
+     * @throws BusinessException nếu principal không hợp lệ hoặc nghiệp vụ đổi mật khẩu thất bại
+     */
+    @Operation(summary = "Đổi mật khẩu của tài khoản đang đăng nhập")
+    @PutMapping("/me/password")
+    public ApiResponse<Void> changePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ChangePasswordRequest request) {
+        if (userDetails == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        accountService.changePassword(userDetails.getId(), request);
+        return ApiResponse.success("Đổi mật khẩu thành công", null);
     }
 }

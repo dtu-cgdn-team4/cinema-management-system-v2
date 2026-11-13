@@ -2,6 +2,7 @@ package com.cgdn.cinema.modules.user;
 
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.user.dto.request.ChangePasswordRequest;
 import com.cgdn.cinema.modules.user.dto.request.UpdateAccountProfileRequest;
 import com.cgdn.cinema.modules.user.dto.response.AccountProfileResponse;
 import com.cgdn.cinema.modules.user.entity.User;
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -21,6 +24,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,12 +38,13 @@ class AccountServiceTest {
 
     private UserRepository users;
     private AccountService accountService;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final Clock fixedClock = Clock.fixed(Instant.parse("2026-11-13T10:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh"));
 
     @BeforeEach
     void setUp() {
         users = mock(UserRepository.class);
-        accountService = new AccountService(users, fixedClock);
+        accountService = new AccountService(users, fixedClock, passwordEncoder);
     }
 
     @Test
@@ -84,6 +89,94 @@ class AccountServiceTest {
                 () -> accountService.getProfile(42L));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, error.getErrorCode());
+    }
+
+    @Test
+    void changePasswordEncodesNewPasswordAfterValidatingCurrentPassword() {
+        User user = createSampleUser(42L);
+        user.setPassword(passwordEncoder.encode("OldPass123"));
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+
+        accountService.changePassword(42L, passwordChange("OldPass123", "NewPass456", "NewPass456"));
+
+        assertTrue(passwordEncoder.matches("NewPass456", user.getPassword()));
+        assertNotEquals("NewPass456", user.getPassword());
+        verify(users).save(user);
+    }
+
+    @Test
+    void changePasswordRejectsIncorrectCurrentPasswordWithoutSaving() {
+        User user = createSampleUser(42L);
+        String originalHash = passwordEncoder.encode("OldPass123");
+        user.setPassword(originalHash);
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("WrongPass1", "NewPass456", "NewPass456")));
+
+        assertEquals(ErrorCode.CURRENT_PASSWORD_INVALID, error.getErrorCode());
+        assertEquals(originalHash, user.getPassword());
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void changePasswordRejectsGoogleAccountWithoutPassword() {
+        User user = createSampleUser(42L);
+        user.setPassword(null);
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("OldPass123", "NewPass456", "NewPass456")));
+
+        assertEquals(ErrorCode.GOOGLE_PASSWORD_NOT_SET, error.getErrorCode());
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void changePasswordRejectsWeakOrMismatchedValuesWithoutSaving() {
+        User user = createSampleUser(42L);
+        user.setPassword(passwordEncoder.encode("OldPass123"));
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+
+        BusinessException weak = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("OldPass123", "weakpass", "weakpass")));
+        assertEquals(ErrorCode.VALIDATION_ERROR, weak.getErrorCode());
+        assertEquals("newPassword", weak.field());
+
+        String shortUnicodePassword = "😀😀😀Aa1";
+        BusinessException shortUnicode = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L,
+                        passwordChange("OldPass123", shortUnicodePassword, shortUnicodePassword)));
+        assertEquals("newPassword", shortUnicode.field());
+
+        BusinessException mismatch = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("OldPass123", "NewPass456", "NewPass457")));
+        assertEquals(ErrorCode.VALIDATION_ERROR, mismatch.getErrorCode());
+        assertEquals("confirmPassword", mismatch.field());
+        verify(users, never()).save(any());
+    }
+
+    @Test
+    void changePasswordRejectsPasswordsAboveBcryptUtf8ByteLimit() {
+        User user = createSampleUser(42L);
+        user.setPassword(passwordEncoder.encode("OldPass123"));
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+        String overLimit = "Aa1" + "é".repeat(35); // 73 UTF-8 bytes
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("OldPass123", overLimit, overLimit)));
+
+        assertEquals(ErrorCode.VALIDATION_ERROR, error.getErrorCode());
+        assertEquals("newPassword", error.field());
+        verify(users, never()).save(any());
+    }
+
+    private ChangePasswordRequest passwordChange(String current, String next, String confirmation) {
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setCurrentPassword(current);
+        request.setNewPassword(next);
+        request.setConfirmPassword(confirmation);
+        return request;
     }
 
     @Test

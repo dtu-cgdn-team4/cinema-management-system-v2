@@ -1,45 +1,43 @@
 package com.cgdn.cinema.modules.user.service;
 
-import com.cgdn.cinema.common.constants.AppConstants;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.user.dto.request.ChangePasswordRequest;
 import com.cgdn.cinema.modules.user.dto.request.UpdateAccountProfileRequest;
 import com.cgdn.cinema.modules.user.dto.response.AccountProfileResponse;
 import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Locale;
 
 /**
- * Quản lý việc đọc và cập nhật hồ sơ cá nhân của người dùng.
+ * Quản lý hồ sơ cá nhân và thông tin xác thực của người dùng hiện tại.
  */
 @Service
 public class AccountService {
 
     private final UserRepository userRepository;
     private final Clock clock;
+    private final PasswordEncoder passwordEncoder;
 
     /**
-     * Tạo dịch vụ hồ sơ với kho người dùng và đồng hồ hệ thống.
+     * Tạo dịch vụ tài khoản với kho người dùng, đồng hồ ứng dụng và encoder cấu hình.
      *
      * @param userRepository kho truy vấn và lưu người dùng
      * @param clock đồng hồ dùng để tính tuổi nhất quán
+     * @param passwordEncoder encoder đang cấu hình cho xác thực
      */
-    @Autowired
-    public AccountService(UserRepository userRepository, Clock clock) {
+    public AccountService(UserRepository userRepository, Clock clock, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.clock = clock;
-    }
-
-    /** Tạo dịch vụ dùng múi giờ mặc định của ứng dụng. */
-    public AccountService(UserRepository userRepository) {
-        this(userRepository, Clock.system(AppConstants.ZONE));
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -82,6 +80,60 @@ public class AccountService {
 
         User saved = userRepository.save(user);
         return toProfileResponse(saved);
+    }
+
+    /**
+     * Đổi mật khẩu cho tài khoản có ID lấy từ Security Principal.
+     *
+     * <p>Thứ tự kiểm tra được giữ rõ ràng: từ chối trường ngoài hợp đồng, xác định tài khoản,
+     * xử lý tài khoản Google chưa có mật khẩu, xác minh mật khẩu hiện tại rồi mới kiểm tra
+     * mật khẩu mới và xác nhận. Entity chỉ được sửa và lưu sau khi mọi kiểm tra đều thành công,
+     * vì vậy các lỗi nghiệp vụ không làm thay đổi hash đang lưu.</p>
+     *
+     * <p>Mật khẩu mới được giới hạn 72 byte UTF-8 để tránh giới hạn cắt đầu vào của BCrypt;
+     * số ký tự được đếm theo Unicode code point thay vì số đơn vị UTF-16 của Java String.</p>
+     *
+     * @param userId ID của tài khoản hiện tại lấy từ JWT principal, không lấy từ request body
+     * @param request mật khẩu hiện tại, mật khẩu mới và giá trị xác nhận do client gửi
+     * @throws BusinessException nếu request, thông tin xác thực hoặc chính sách mật khẩu không hợp lệ
+     */
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        if (request == null || !request.getUnknownFields().isEmpty()) {
+            // Từ chối userId và mọi trường ngoài hợp đồng để client không thể chọn tài khoản đích.
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (user.getPassword() == null) {
+            // Google account chưa có mật khẩu không được thiết lập lần đầu qua API đổi mật khẩu.
+            throw new BusinessException(ErrorCode.GOOGLE_PASSWORD_NOT_SET);
+        }
+        // Xác minh mật khẩu hiện tại bằng encoder đang dùng cho đăng nhập; không so sánh hash thủ công.
+        if (request.getCurrentPassword() == null
+                || !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.CURRENT_PASSWORD_INVALID);
+        }
+
+        String newPassword = request.getNewPassword();
+        // Giữ nguyên mật khẩu client gửi; không trim hoặc chuẩn hóa vì việc đó sẽ đổi credential.
+        if (newPassword == null || newPassword.codePointCount(0, newPassword.length()) < 8
+                || !newPassword.matches(".*[a-z].*")
+                || !newPassword.matches(".*[A-Z].*")
+                || !newPassword.matches(".*[0-9].*")
+                // BCrypt chỉ dùng tối đa 72 byte đầu vào; kiểm tra UTF-8 để giới hạn đúng cả Unicode.
+                || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "newPassword",
+                    "Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, chữ số và tối đa 72 byte UTF-8.");
+        }
+        if (!newPassword.equals(request.getConfirmPassword())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "confirmPassword",
+                    "Mật khẩu xác nhận không khớp.");
+        }
+
+        // Chỉ lưu hash sau khi mọi kiểm tra qua; không ghi mật khẩu rõ hoặc hash ra log/response.
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     /** Cập nhật từng trường được phép, chỉ khi trường đó có mặt trong JSON. */
