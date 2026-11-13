@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/* Màu và font lấy từ Figma "[DTU-Team4] Quản lý rạp chiếu phim" */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+
+  --color-page: #08090c;
+  --color-surface: #12141b;
+  --color-card: #1a1c27;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-brand: #ea384d;
+  --color-brand-dark: #dc2626;
+  --color-muted: #a1a1aa;
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-info: #60a5fa;
+}
+
+body {
+  @apply bg-page font-sans text-white antialiased;
+}
