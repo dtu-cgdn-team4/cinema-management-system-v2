@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -134,5 +135,154 @@ class MovieListApiTest {
                 .andExpect(jsonPath("$.data[0].id").value(900))
                 .andExpect(jsonPath("$.data[0].genres", hasSize(2)))
                 .andExpect(jsonPath("$.data[0].duration").value(120));
+    }
+
+    @Test
+    void nameSearchIgnoresCaseAndTrimsWhitespace() throws Exception {
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "  MOVIE 900  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(900));
+    }
+
+    @Test
+    void keywordCombinesWithGenreAndPagination() throws Exception {
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "test movie")
+                        .param("genreId", "900").param("size", "1").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].id").value(901))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.totalPages").value(2));
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "900").param("genreId", "901"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].genres", hasSize(2)));
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "901").param("genreId", "901"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(0)));
+    }
+
+    @Test
+    void comingSoonSearchKeepsDateFilter() throws Exception {
+        mvc.perform(get("/api/v1/movies/coming-soon").param("keyword", "MOVIE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(902));
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "902"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(0)));
+    }
+
+    @Test
+    void globalSearchExcludesEndedAndDeletedMovies() throws Exception {
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "TEST MOVIE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[*].id", containsInAnyOrder(900, 901, 902)))
+                .andExpect(jsonPath("$.data.totalElements").value(3));
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "movie")
+                        .param("size", "1").param("genreId", "901"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].id").value(900))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    void blankListKeywordMeansNoSearchButGlobalSearchRequiresKeyword() throws Exception {
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "   "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2));
+        mvc.perform(get("/api/v1/movies/search"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "   "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void unmatchedKeywordReturnsEmptyPage() throws Exception {
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "No matching title"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(0)))
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
+    @Test
+    void searchMatchesFullAndPartialMovieTitle() throws Exception {
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "Test movie 900"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(900));
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "movie 90"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[*].id", containsInAnyOrder(900, 901, 902)));
+    }
+
+    @Test
+    void searchMatchesDirectorAndIndividualActorNamesIgnoringCase() throws Exception {
+        jdbc.update("UPDATE phim SET dao_dien = 'Christopher Nolan', dien_vien = 'Cillian Murphy, Emily Blunt' WHERE id = 900");
+        for (String keyword : new String[]{"Christopher Nolan", "  NoLaN  ", "Cillian Murphy", "murph", "Emily Blunt"}) {
+            mvc.perform(get("/api/v1/movies/search").param("keyword", keyword))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content", hasSize(1)))
+                    .andExpect(jsonPath("$.data.content[0].id").value(900));
+        }
+    }
+
+    @Test
+    void personSearchKeepsScreeningDatesAndSoftDeleteFilters() throws Exception {
+        jdbc.update("UPDATE phim SET dao_dien = 'Christopher Nolan', dien_vien = 'Cillian Murphy'");
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "nolan"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[*].id", containsInAnyOrder(900, 901, 902)))
+                .andExpect(jsonPath("$.data.totalElements").value(3));
+        mvc.perform(get("/api/v1/movies/now-showing").param("keyword", "nolan"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[*].id", containsInAnyOrder(900, 901)));
+        mvc.perform(get("/api/v1/movies/coming-soon").param("keyword", "murphy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(902));
+    }
+
+    @Test
+    void matchesAcrossFieldsAreNotDuplicatedAndRespectGenreAndPageCounts() throws Exception {
+        jdbc.update("UPDATE phim SET ten_phim = 'Nolan movie', dao_dien = 'Nolan', dien_vien = 'Nolan' WHERE id = 900");
+        jdbc.update("UPDATE phim SET dien_vien = 'Nolan, Other actor' WHERE id = 901");
+        jdbc.update("UPDATE phim SET dao_dien = 'Nolan' WHERE id = 902");
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "nolan")
+                        .param("genreId", "900").param("size", "1").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(900))
+                .andExpect(jsonPath("$.data.totalElements").value(3))
+                .andExpect(jsonPath("$.data.totalPages").value(3));
+        mvc.perform(get("/api/v1/movies/search").param("keyword", "nolan").param("genreId", "901"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].id").value(900))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+    }
+
+    @Test
+    void personSearchTreatsLikeWildcardsAsLiteralCharacters() throws Exception {
+        jdbc.update("UPDATE phim SET dao_dien = 'Director_100%!', dien_vien = 'Actor_50%!' WHERE id = 900");
+        jdbc.update("UPDATE phim SET dao_dien = 'DirectorA1000', dien_vien = 'ActorA500' WHERE id = 901");
+        for (String keyword : new String[]{"Director_100%", "Actor_50%", "%", "_", "!"}) {
+            mvc.perform(get("/api/v1/movies/search").param("keyword", keyword))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content", hasSize(1)))
+                    .andExpect(jsonPath("$.data.content[0].id").value(900));
+        }
+    }
+
+    @Test
+    void searchTreatsLikeWildcardsAsLiteralCharacters() throws Exception {
+        jdbc.update("UPDATE phim SET ten_phim = '100% Movie_One!' WHERE id = 900");
+        jdbc.update("UPDATE phim SET ten_phim = '1000 MovieAOne' WHERE id = 901");
+        for (String keyword : new String[]{"%", "_", "!", "100%", "Movie_One"}) {
+            mvc.perform(get("/api/v1/movies/search").param("keyword", keyword))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content", hasSize(1)))
+                    .andExpect(jsonPath("$.data.content[0].id").value(900));
+        }
     }
 }

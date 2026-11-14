@@ -54,16 +54,36 @@ public class MovieService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MOVIE_NOT_FOUND));
     }
 
-    public PageResponse<MovieResponse> getNowShowingMovies(int page, int size, Long genreId) {
+    public PageResponse<MovieResponse> getNowShowingMovies(int page, int size, Long genreId, String keyword) {
         Page<Movie> movies = movieRepository.findShowing(LocalDate.now(clock), AppConstants.STATUS_ACTIVE,
-                genreId, moviePageRequest(page, size, Sort.Direction.DESC));
+                genreId, keywordPattern(keyword), moviePageRequest(page, size, Sort.Direction.DESC));
         return PageResponse.from(movies.map(MovieMapper::toResponse));
     }
 
-    public PageResponse<MovieResponse> getComingSoonMovies(int page, int size, Long genreId) {
+    public PageResponse<MovieResponse> getComingSoonMovies(int page, int size, Long genreId, String keyword) {
         Page<Movie> movies = movieRepository.findComingSoon(LocalDate.now(clock), AppConstants.STATUS_ACTIVE,
-                genreId, moviePageRequest(page, size, Sort.Direction.ASC));
+                genreId, keywordPattern(keyword), moviePageRequest(page, size, Sort.Direction.ASC));
         return PageResponse.from(movies.map(MovieMapper::toResponse));
+    }
+
+    public PageResponse<MovieResponse> searchMovies(String keyword, int page, int size, Long genreId) {
+        String pattern = keywordPattern(keyword);
+        if (pattern == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Vui lòng nhập từ khóa tìm phim");
+        }
+        Page<Movie> movies = movieRepository.searchVisible(LocalDate.now(clock), AppConstants.STATUS_ACTIVE,
+                genreId, pattern, moviePageRequest(page, size, Sort.Direction.DESC));
+        return PageResponse.from(movies.map(MovieMapper::toResponse));
+    }
+
+    private String keywordPattern(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+        // Tìm chuỗi con; %, _ và ! trong từ khóa được xem là ký tự thông thường.
+        String normalized = keyword.strip().toLowerCase(Locale.ROOT)
+                .replace("!", "!!").replace("%", "!%").replace("_", "!_");
+        return "%" + normalized + "%";
     }
 
     public List<MovieRepository.GenreOption> getGenres() {

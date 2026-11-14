@@ -17,6 +17,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     String SHOWING = "m.status = :status and m.releaseDate <= :today and m.endDate >= :today";
     String GENRE_FILTER = "(:genreId IS NULL OR EXISTS (SELECT 1 FROM m.genres g WHERE g.id = :genreId))";
     String COMING_SOON = "m.status = :status and m.releaseDate > :today";
+    String KEYWORD_FILTER = """
+            (:keywordPattern IS NULL
+             OR LOWER(m.title) LIKE :keywordPattern ESCAPE '!'
+             OR LOWER(m.director) LIKE :keywordPattern ESCAPE '!'
+             OR LOWER(m.actors) LIKE :keywordPattern ESCAPE '!')
+            """;
+    String VISIBLE = "m.status = :status and m.endDate >= :today";
 
     interface GenreOption {
         Long getId();
@@ -34,15 +41,20 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     Optional<Movie> findShowingById(@Param("id") Long id, @Param("today") LocalDate today, @Param("status") int status);
 
     // Không fetch collection trong truy vấn phân trang để phân trang tại database.
-    @Query(value = "SELECT m FROM Movie m WHERE " + SHOWING + " AND " + GENRE_FILTER,
-            countQuery = "SELECT COUNT(m) FROM Movie m WHERE " + SHOWING + " AND " + GENRE_FILTER)
+    @Query(value = "SELECT m FROM Movie m WHERE " + SHOWING + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER,
+            countQuery = "SELECT COUNT(m) FROM Movie m WHERE " + SHOWING + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER)
     Page<Movie> findShowing(@Param("today") LocalDate today, @Param("status") int status,
-                           @Param("genreId") Long genreId, Pageable pageable);
+                           @Param("genreId") Long genreId, @Param("keywordPattern") String keywordPattern, Pageable pageable);
 
-    @Query(value = "SELECT m FROM Movie m WHERE " + COMING_SOON + " AND " + GENRE_FILTER,
-            countQuery = "SELECT COUNT(m) FROM Movie m WHERE " + COMING_SOON + " AND " + GENRE_FILTER)
+    @Query(value = "SELECT m FROM Movie m WHERE " + COMING_SOON + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER,
+            countQuery = "SELECT COUNT(m) FROM Movie m WHERE " + COMING_SOON + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER)
     Page<Movie> findComingSoon(@Param("today") LocalDate today, @Param("status") int status,
-                              @Param("genreId") Long genreId, Pageable pageable);
+                              @Param("genreId") Long genreId, @Param("keywordPattern") String keywordPattern, Pageable pageable);
+
+    @Query(value = "SELECT m FROM Movie m WHERE " + VISIBLE + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER,
+            countQuery = "SELECT COUNT(m) FROM Movie m WHERE " + VISIBLE + " AND " + GENRE_FILTER + " AND " + KEYWORD_FILTER)
+    Page<Movie> searchVisible(@Param("today") LocalDate today, @Param("status") int status,
+                             @Param("genreId") Long genreId, @Param("keywordPattern") String keywordPattern, Pageable pageable);
 
     /** Đếm số suất chiếu liên kết với phim theo khóa ngoại phim_id trong bảng suat_chieu. */
     @Query(value = "SELECT COUNT(*) FROM suat_chieu WHERE phim_id = :movieId", nativeQuery = true)

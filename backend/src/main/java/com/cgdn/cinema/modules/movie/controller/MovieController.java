@@ -32,18 +32,30 @@ public class MovieController {
     public ApiResponse<PageResponse<MovieResponse>> getNowShowing(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long genreId) {
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) String keyword) {
         return ApiResponse.success("Lấy danh sách phim đang chiếu thành công",
-                movieService.getNowShowingMovies(page, size, genreId));
+                movieService.getNowShowingMovies(page, size, genreId, keyword));
     }
 
     @GetMapping("/coming-soon")
     public ApiResponse<PageResponse<MovieResponse>> getComingSoon(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Long genreId) {
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) String keyword) {
         return ApiResponse.success("Lấy danh sách phim sắp chiếu thành công",
-                movieService.getComingSoonMovies(page, size, genreId));
+                movieService.getComingSoonMovies(page, size, genreId, keyword));
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<PageResponse<MovieResponse>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long genreId) {
+        return ApiResponse.success("Tìm kiếm phim thành công",
+                movieService.searchMovies(keyword, page, size, genreId));
     }
 
     @GetMapping("/genres")
