@@ -1,9 +1,3 @@
-import type {
-  ChangeEventHandler,
-  Dispatch,
-  FormEventHandler,
-  SetStateAction,
-} from 'react';
 import { Link } from 'react-router-dom';
 import imgMail from '@/assets/auth/mail.svg';
 import imgLockKeyhole from '@/assets/auth/lock-keyhole.svg';
@@ -11,19 +5,6 @@ import imgEyeOff from '@/assets/auth/eye-off.svg';
 import imgCheck from '@/assets/auth/check.svg';
 import imgArrowRight from '@/assets/auth/arrow-right.svg';
 import { Eye } from 'lucide-react';
-import type { LoginFormData, LoginFormErrors } from '@/types/auth';
-
-interface LoginFormProps {
-  formData: LoginFormData;
-  showPassword: boolean;
-  setShowPassword: Dispatch<SetStateAction<boolean>>;
-  errors: LoginFormErrors;
-  isSubmitting: boolean;
-  isGoogleLoading: boolean;
-  handleChange: ChangeEventHandler<HTMLInputElement>;
-  handleSubmit: FormEventHandler<HTMLFormElement>;
-  handleGoogleLogin: () => Promise<void>;
-}
 
 /**
  * Biểu mẫu đăng nhập người dùng tối ưu hóa kích thước vừa khít viewport không gây scrollbar
@@ -38,7 +19,7 @@ export const LoginForm = ({
   handleChange,
   handleSubmit,
   handleGoogleLogin,
-}: LoginFormProps) => {
+}) => {
   return (
     <div
       className="flex flex-col gap-4 lg:gap-5 w-full max-w-[408px] mx-auto select-none"

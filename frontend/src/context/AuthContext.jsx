@@ -1,26 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type PropsWithChildren,
-} from 'react';
-import type { LoginPayload, UserInfo } from '@/types/auth';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-export interface AuthContextValue {
-  user: UserInfo | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (loginData: LoginPayload, rememberMe?: boolean) => void;
-  logout: () => void;
-}
+export const AuthContext = createContext(null);
 
-export const AuthContext = createContext<AuthContextValue | null>(null);
-
-export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -35,8 +19,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (savedToken && savedUser) {
       try {
         setToken(savedToken);
-        setUser(JSON.parse(savedUser) as UserInfo);
-      } catch (error: unknown) {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
         console.error('Lỗi phân tích dữ liệu user đã lưu:', error);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('currentUser');
@@ -47,7 +31,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setIsLoading(false);
   }, []);
 
-  const handleLogin = (loginData: LoginPayload, rememberMe = true) => {
+  const handleLogin = (loginData, rememberMe = true) => {
     const { accessToken, user: userInfo } = loginData;
     const storage = rememberMe ? localStorage : sessionStorage;
 
@@ -68,7 +52,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setUser(null);
   };
 
-  const value: AuthContextValue = {
+  const value = {
     user,
     token,
     isAuthenticated: Boolean(token),
@@ -89,4 +73,3 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
-

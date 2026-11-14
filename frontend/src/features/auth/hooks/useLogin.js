@@ -1,29 +1,22 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import authApi from '../api/authApi';
-import type { LoginFormData, LoginFormErrors } from '@/types/auth';
-import type { ApiClientError } from '@/services/apiClient';
-
-interface LoginNavigationState {
-  from?: {
-    pathname?: string;
-  };
-}
+import { errorMessage } from '@/services/apiClient';
 
 export const useLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
 
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState({
     username: '',
     password: '',
     rememberMe: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -37,7 +30,7 @@ export const useLogin = () => {
     return () => window.removeEventListener('pageshow', resetPendingState);
   }, []);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event) => {
     const { name, value, type, checked } = event.currentTarget;
     if (name === 'rememberMe' && type === 'checkbox') {
       setFormData((prev) => ({ ...prev, rememberMe: checked }));
@@ -55,7 +48,7 @@ export const useLogin = () => {
   };
 
   const validate = () => {
-    const newErrors: LoginFormErrors = {};
+    const newErrors = {};
     if (!formData.username.trim()) {
       newErrors.username = 'Tài khoản hoặc email không được để trống';
     }
@@ -66,7 +59,7 @@ export const useLogin = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!validate()) {
@@ -82,24 +75,22 @@ export const useLogin = () => {
         password: formData.password,
       });
 
-      if (response && response.data) {
+      const loginData = response?.data || response;
+      if (loginData?.accessToken && loginData?.user) {
         // Lưu token và thông tin người dùng vào AuthContext & Storage
-        login(response.data, formData.rememberMe);
+        login(loginData, formData.rememberMe);
 
         // Chuyển hướng theo role hoặc trang đích ban đầu
-        const navigationState = location.state as LoginNavigationState | null;
-        const from = navigationState?.from?.pathname || '/';
+        const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
       }
-    } catch (error: unknown) {
-      const apiError = error as ApiClientError;
-      if (apiError.fieldErrors) {
-        setErrors(apiError.fieldErrors as LoginFormErrors);
+    } catch (error) {
+      const fieldErrors = error?.response?.data?.data;
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        setErrors(fieldErrors);
       } else {
         setErrors({
-          general:
-            (error instanceof Error && error.message) ||
-            'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.',
+          general: errorMessage(error),
         });
       }
     } finally {
@@ -113,24 +104,21 @@ export const useLogin = () => {
       setErrors({});
 
       const res = await authApi.getGoogleAuthUrl();
-      // Khớp chính xác trường authorizationUrl từ Backend Spring Boot GoogleAuthUrlResponse
-      const redirectUrl = res.data?.authorizationUrl || res.data?.authUrl;
+      const redirectUrl = res?.authorizationUrl || res?.authUrl || res?.data?.authorizationUrl;
 
       if (redirectUrl) {
         sessionStorage.setItem(
           'googleLoginReturnTo',
-          (location.state as LoginNavigationState | null)?.from?.pathname || '/'
+          location.state?.from?.pathname || '/'
         );
         sessionStorage.setItem('googleLoginRememberMe', String(formData.rememberMe));
         window.location.href = redirectUrl;
       } else {
         throw new Error('Không nhận được đường dẫn xác thực Google từ máy chủ.');
       }
-    } catch (error: unknown) {
+    } catch (error) {
       setErrors({
-        general:
-          (error instanceof Error && error.message) ||
-          'Không thể khởi tạo đăng nhập Google. Vui lòng thử lại.',
+        general: errorMessage(error) || 'Không thể khởi tạo đăng nhập Google. Vui lòng thử lại.',
       });
       setIsGoogleLoading(false);
     }
