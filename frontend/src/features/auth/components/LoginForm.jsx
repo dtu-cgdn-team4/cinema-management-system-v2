@@ -309,7 +309,7 @@ export const LoginForm = ({
       >
         <span className="font-normal text-[#9d9ea5]">Chưa có tài khoản?</span>
         <Link
-          to="/register"
+          to="/dang-ky"
           className="font-semibold text-[#e04445] hover:text-[#ca3538] hover:underline transition-colors"
         >
           Đăng ký ngay

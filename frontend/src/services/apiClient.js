@@ -13,7 +13,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Backend trả ApiResponse<T>: lấy thẳng phần data
+// Chuẩn hóa response để màn hình nhận trực tiếp payload backend trả trong trường data.
 apiClient.interceptors.response.use((res) => res.data?.data ?? res.data);
 
 /** Thông báo tiếng Việt từ ApiResponse lỗi, hoặc câu chung khi không gọi được server. */
