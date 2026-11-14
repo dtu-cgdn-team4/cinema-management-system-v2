@@ -1,10 +1,15 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import RegisterPage from '../features/auth/pages/RegisterPage';
 import ShowtimeSelectionPage from '../features/booking/pages/ShowtimeSelectionPage';
 import CustomerLayout from '../layouts/CustomerLayout';
 
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Trang đăng ký dùng bố cục độc lập với layout khách hàng chung. */}
+      <Route path="/dang-ky" element={<RegisterPage />} />
+
+      {/* Các trang chính thuộc luồng trải nghiệm khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<Navigate to="/lich-chieu" replace />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
