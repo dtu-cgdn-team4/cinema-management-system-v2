@@ -29,7 +29,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -51,14 +58,13 @@ public class AuthController {
     private final AuthService authService;
     private final GoogleProperties googleProperties;
     private final RegistrationService registration;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AuthController(AuthService authService, GoogleProperties googleProperties,
-                          RegistrationService registration) {
+    public AuthController(AuthService authService, GoogleProperties googleProperties,RegistrationService registration) {
         this.authService = authService;
         this.googleProperties = googleProperties;
         this.registration = registration;
     }
-
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
@@ -89,18 +95,57 @@ public class AuthController {
     }
 
     @GetMapping("/google/callback")
-    public ResponseEntity<ApiResponse<LoginResponse>> loginWithGoogleCallback(
+    public Object loginWithGoogleCallback(
             @RequestParam("code") String code,
             @RequestParam(value = "state", required = false) String state,
             @CookieValue(value = GOOGLE_STATE_COOKIE, required = false) String expectedState,
-            HttpServletResponse servletResponse) {
+            @RequestHeader(value = HttpHeaders.ACCEPT, required = false) String acceptHeader,
+            @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
+            HttpServletResponse servletResponse) throws IOException {
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, createStateCookie("", Duration.ZERO).toString());
+
+        boolean isBrowser = (acceptHeader != null && acceptHeader.contains(MediaType.TEXT_HTML_VALUE))
+                || (userAgent != null && (userAgent.contains("Mozilla") || userAgent.contains("Chrome") || userAgent.contains("Safari")));
+
         if (!matchesState(expectedState, state)) {
+            if (isBrowser) {
+                String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                        .queryParam("error", URLEncoder.encode("Trạng thái xác thực không hợp lệ hoặc đã hết hạn.", StandardCharsets.UTF_8))
+                        .build(true)
+                        .toUriString();
+                servletResponse.sendRedirect(errorRedirect);
+                return null;
+            }
             throw new BusinessException(ErrorCode.INVALID_GOOGLE_STATE);
         }
 
-        LoginResponse response = authService.loginWithGoogleCode(code);
-        return ResponseEntity.ok(ApiResponse.success("Đăng nhập Google thành công", response));
+        try {
+            LoginResponse response = authService.loginWithGoogleCode(code);
+
+            if (isBrowser) {
+                String userInfoJson = objectMapper.writeValueAsString(response.user());
+                String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                        .queryParam("accessToken", response.accessToken())
+                        .queryParam("user", URLEncoder.encode(userInfoJson, StandardCharsets.UTF_8))
+                        .build(true)
+                        .toUriString();
+                servletResponse.sendRedirect(redirectUrl);
+                return null;
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Đăng nhập Google thành công", response));
+        } catch (Exception ex) {
+            if (isBrowser) {
+                String errorMsg = ex.getMessage() != null ? ex.getMessage() : "Đăng nhập Google thất bại.";
+                String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                        .queryParam("error", URLEncoder.encode(errorMsg, StandardCharsets.UTF_8))
+                        .build(true)
+                        .toUriString();
+                servletResponse.sendRedirect(errorRedirect);
+                return null;
+            }
+            throw ex;
+        }
     }
 
     private String createState() {

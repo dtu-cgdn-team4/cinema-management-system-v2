@@ -125,6 +125,9 @@ public class AuthServiceImpl implements AuthService {
         Optional<User> existingByGoogleId = userRepository.findByGoogleId(claims.googleId());
         if (existingByGoogleId.isPresent()) {
             User user = existingByGoogleId.get();
+            if (StringUtils.hasText(claims.picture())) {
+                user.setAvatarUrl(claims.picture());
+            }
             ensureAccountActive(user);
             boolean unlocked = ensureAccountUnlockedOrAutoUnlock(user);
             return issueLoginResponse(user, unlocked);
@@ -142,18 +145,22 @@ public class AuthServiceImpl implements AuthService {
             } else if (!user.getGoogleId().equals(claims.googleId())) {
                 throw new BusinessException(ErrorCode.GOOGLE_ACCOUNT_MISMATCH);
             }
+            if (StringUtils.hasText(claims.picture()) && user.getAvatarUrl() == null) {
+                user.setAvatarUrl(claims.picture());
+            }
             return issueLoginResponse(user, unlocked);
         }
 
-        User newUser = registerGoogleCustomer(claims.googleId(), normalizedEmail, claims.fullName());
+        User newUser = registerGoogleCustomer(claims.googleId(), normalizedEmail, claims.fullName(), claims.picture());
         return issueLoginResponse(newUser, false);
     }
 
-    private User registerGoogleCustomer(String googleId, String email, String fullName) {
+    private User registerGoogleCustomer(String googleId, String email, String fullName, String avatarUrl) {
         User user = new User();
         user.setUsername(generateUniqueUsername(email));
         user.setEmail(email);
         user.setFullName(resolveFullName(fullName, email));
+        user.setAvatarUrl(avatarUrl);
         user.setGoogleId(googleId);
         user.setRole(Role.KHACH_HANG);
         user.setStatus(RecordStatus.ACTIVE.getCode());
