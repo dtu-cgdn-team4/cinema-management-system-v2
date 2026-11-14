@@ -62,6 +62,7 @@ public class GoogleJwtTokenVerifier implements GoogleTokenVerifier {
         String email = jwt.getClaimAsString("email");
         Object emailVerifiedClaim = jwt.getClaim("email_verified");
         String name = jwt.getClaimAsString("name");
+        String picture = jwt.getClaimAsString("picture");
 
         if (!StringUtils.hasText(googleId) || !StringUtils.hasText(email)) {
             throw new BusinessException(ErrorCode.INVALID_GOOGLE_TOKEN);
@@ -73,7 +74,7 @@ public class GoogleJwtTokenVerifier implements GoogleTokenVerifier {
             throw new BusinessException(ErrorCode.GOOGLE_EMAIL_UNVERIFIED);
         }
 
-        return new GoogleUserClaims(googleId, email, name);
+        return new GoogleUserClaims(googleId, email, name, picture);
     }
 
     @Override

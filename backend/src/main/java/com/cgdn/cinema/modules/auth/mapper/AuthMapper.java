@@ -13,6 +13,7 @@ public class AuthMapper {
     public LoginResponse toLoginResponse(String accessToken, long expiresInMs, User user) {
         return new LoginResponse(accessToken, "Bearer", expiresInMs, toUserInfoResponse(user));
     }
+
     public LoginResponse.UserInfoResponse toUserInfoResponse(User user) {
         return new LoginResponse.UserInfoResponse(
                 user.getId(),
@@ -20,6 +21,7 @@ public class AuthMapper {
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhoneNumber(),
+                user.getAvatarUrl(),
                 user.getRole(),
                 user.getRole().getSecurityRole(),
                 user.getCinemaId(),

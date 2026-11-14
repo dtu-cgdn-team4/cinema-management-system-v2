@@ -17,10 +17,24 @@ public record LoginResponse(
             String fullName,
             String email,
             String phoneNumber,
+            String avatarUrl,
             Role role,
             String roleCode,
             Long cinemaId,
             Integer loyaltyPoints
     ) {
+        public UserInfoResponse(
+                Long id,
+                String username,
+                String fullName,
+                String email,
+                String phoneNumber,
+                Role role,
+                String roleCode,
+                Long cinemaId,
+                Integer loyaltyPoints
+        ) {
+            this(id, username, fullName, email, phoneNumber, null, role, roleCode, cinemaId, loyaltyPoints);
+        }
     }
 }
