@@ -20,6 +20,8 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +52,30 @@ public class MovieService {
         return movieRepository.findById(id)
                 .map(MovieMapper::toResponse)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MOVIE_NOT_FOUND));
+    }
+
+    public PageResponse<MovieResponse> getNowShowingMovies(int page, int size, Long genreId) {
+        Page<Movie> movies = movieRepository.findShowing(LocalDate.now(clock), AppConstants.STATUS_ACTIVE,
+                genreId, moviePageRequest(page, size, Sort.Direction.DESC));
+        return PageResponse.from(movies.map(MovieMapper::toResponse));
+    }
+
+    public PageResponse<MovieResponse> getComingSoonMovies(int page, int size, Long genreId) {
+        Page<Movie> movies = movieRepository.findComingSoon(LocalDate.now(clock), AppConstants.STATUS_ACTIVE,
+                genreId, moviePageRequest(page, size, Sort.Direction.ASC));
+        return PageResponse.from(movies.map(MovieMapper::toResponse));
+    }
+
+    public List<MovieRepository.GenreOption> getGenres() {
+        return movieRepository.findGenreOptions();
+    }
+
+    private Pageable moviePageRequest(int page, int size, Sort.Direction direction) {
+        if (page < 0) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+        int pageSize = size < 1 ? 10 : Math.min(size, 100);
+        return PageRequest.of(page, pageSize, Sort.by(direction, "releaseDate").and(Sort.by("id")));
     }
 
     /**
