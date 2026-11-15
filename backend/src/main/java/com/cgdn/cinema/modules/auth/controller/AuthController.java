@@ -5,9 +5,11 @@ import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.modules.auth.dto.request.GoogleLoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.LoginRequest;
+import com.cgdn.cinema.modules.auth.dto.request.RegisterAvailabilityRequest;
 import com.cgdn.cinema.modules.auth.dto.request.RegisterRequest;
 import com.cgdn.cinema.modules.auth.dto.response.GoogleAuthUrlResponse;
 import com.cgdn.cinema.modules.auth.dto.response.LoginResponse;
+import com.cgdn.cinema.modules.auth.dto.response.RegisterAvailabilityResponse;
 import com.cgdn.cinema.modules.auth.dto.response.RegisterResponse;
 import com.cgdn.cinema.modules.auth.service.AuthService;
 import com.cgdn.cinema.modules.auth.service.RegistrationService;
@@ -63,6 +65,13 @@ public class AuthController {
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
                 HttpStatus.CREATED.value(), "Đăng ký thành công.", registration.register(request)));
+    }
+
+    @PostMapping("/register/availability")
+    public ResponseEntity<ApiResponse<RegisterAvailabilityResponse>> checkRegisterAvailability(
+            @Valid @RequestBody RegisterAvailabilityRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Đã kiểm tra thông tin đăng ký.", registration.checkAvailability(request)));
     }
 
     @PostMapping("/login")
