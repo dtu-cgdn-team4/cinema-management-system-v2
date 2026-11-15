@@ -6,7 +6,10 @@ package com.cgdn.cinema.security;
 public record GoogleUserClaims(
         String googleId,
         String email,
-        String fullName
+        String fullName,
+        String picture
 ) {
+    public GoogleUserClaims(String googleId, String email, String fullName) {
+        this(googleId, email, fullName, null);
+    }
 }
-
