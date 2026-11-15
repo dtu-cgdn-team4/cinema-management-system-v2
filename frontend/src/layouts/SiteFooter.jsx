@@ -15,7 +15,7 @@ export default function SiteFooter() {
       <div className="mx-auto flex max-w-304 flex-col gap-9 px-4 pt-11.75 pb-7 xl:px-0">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[360px_repeat(3,1fr)] lg:gap-x-18">
           <div className="flex flex-col gap-4">
-            <BrandLogo />
+            <BrandLogo className="h-10 md:w-36.25" />
             <p className="text-xs leading-4 text-muted">
               Mỗi bộ phim, một thế giới mới.
               <br />

@@ -13,7 +13,7 @@ export default function SiteHeader() {
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex h-21.75 max-w-304 items-center justify-between gap-6 px-4 xl:px-0">
-        <BrandLogo />
+        <BrandLogo className="h-10 md:w-36.25" />
         <nav className="hidden gap-7.5 md:flex">
           {NAV.map(([to, label]) => (
             <NavLink

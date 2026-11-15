@@ -10,7 +10,7 @@ function ShowtimeButton({ showtime, onSelect }) {
     <button
       type="button"
       disabled={seats === 0}
-      onClick={() => onSelect(showtime.id)}
+      onClick={() => onSelect(showtime)}
       className="flex w-29 flex-col gap-0.5 rounded-xl border border-line bg-card px-3.5 py-2.5 text-left transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line"
     >
       <span className="text-base leading-5 font-extrabold">{formatTime(showtime.startTime)}</span>
