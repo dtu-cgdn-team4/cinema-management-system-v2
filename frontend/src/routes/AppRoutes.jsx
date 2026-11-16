@@ -3,6 +3,7 @@ import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import GoogleCallbackPage from '@/features/auth/pages/GoogleCallbackPage';
 import CustomerLayout from '@/layouts/CustomerLayout';
+import SeatSelectionPage from '@/features/booking/pages/SeatSelectionPage';
 import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage';
 import { useAuth } from '@/context/AuthContext';
 
@@ -92,15 +93,17 @@ export default function AppRoutes() {
       <Route path="/dang-nhap" element={<LoginPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
+      {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
+      <Route path="/dat-ve/suat-chieu/:showtimeId/chon-ghe" element={<SeatSelectionPage />} />
+
       {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<Navigate to="/lich-chieu" replace />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
         <Route path="/tai-khoan" element={<AccountPage />} />
-        {/* ponytail: chưa chặn đăng nhập (business-rules: phải đăng nhập mới đặt vé); thêm PrivateRoute khi có AuthContext */}
         <Route
-          path="/dat-ve/suat-chieu/:showtimeId/chon-ghe"
-          element={<p className="py-24 text-center text-muted">Màn hình chọn ghế: làm ở task 6.2.1.2.</p>}
+          path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
+          element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
         />
         <Route path="*" element={<p className="py-24 text-center text-muted">Trang đang được xây dựng.</p>} />
       </Route>
