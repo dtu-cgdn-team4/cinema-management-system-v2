@@ -4,14 +4,18 @@ import com.cgdn.cinema.common.enums.Role;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
 import com.cgdn.cinema.infrastructure.sms.FirebasePhoneVerifier;
+import com.cgdn.cinema.modules.auth.dto.request.RegisterAvailabilityRequest;
 import com.cgdn.cinema.modules.auth.dto.request.RegisterRequest;
+import com.cgdn.cinema.modules.auth.dto.response.RegisterAvailabilityResponse;
 import com.cgdn.cinema.modules.auth.dto.response.RegisterResponse;
 import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +30,12 @@ public class RegistrationService {
     public RegistrationService(UserRepository users, FirebasePhoneVerifier phoneVerifier) {
         this.users = users;
         this.phoneVerifier = phoneVerifier;
+    }
+
+    public RegisterAvailabilityResponse checkAvailability(RegisterAvailabilityRequest request) {
+        Map<String, String> errors = findRegistrationConflicts(
+                request.username(), request.email(), request.phoneNumber());
+        return new RegisterAvailabilityResponse(errors.isEmpty(), errors);
     }
 
     public RegisterResponse register(RegisterRequest request) {
@@ -93,14 +103,33 @@ public class RegistrationService {
     }
 
     private void ensureNotRegistered(String username, String email, String phoneNumber) {
-        if (users.existsByUsername(username)) {
+        Map<String, String> conflicts = findRegistrationConflicts(username, email, phoneNumber);
+        if (conflicts.containsKey("username")) {
             throw BusinessException.forField(ErrorCode.USERNAME_EXISTS, "username");
         }
-        if (users.existsByEmail(email)) {
+        if (conflicts.containsKey("email")) {
             throw BusinessException.forField(ErrorCode.EMAIL_EXISTS, "email");
         }
-        if (users.existsByPhoneNumber(phoneNumber)) {
+        if (conflicts.containsKey("phoneNumber")) {
             throw BusinessException.forField(ErrorCode.PHONE_EXISTS, "phoneNumber");
         }
+    }
+
+    private Map<String, String> findRegistrationConflicts(String username, String email, String phoneNumber) {
+        String normalizedUsername = username.trim();
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        String normalizedPhone = phoneNumber.trim();
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (users.existsByUsername(normalizedUsername)) {
+            errors.put("username", ErrorCode.USERNAME_EXISTS.getDefaultMessage());
+        }
+        if (users.existsByEmail(normalizedEmail)) {
+            errors.put("email", ErrorCode.EMAIL_EXISTS.getDefaultMessage());
+        }
+        if (users.existsByPhoneNumber(normalizedPhone)) {
+            errors.put("phoneNumber", ErrorCode.PHONE_EXISTS.getDefaultMessage());
+        }
+        return errors;
     }
 }

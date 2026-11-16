@@ -5,7 +5,7 @@ import {
   getUtf8ByteLength,
   validateRegisterForm,
 } from './registerValidation.js';
-import { toE164VietnamesePhone, formatDisplayPhone } from './phoneUtils.js';
+import { toE164VietnamesePhone, formatDisplayPhone, maskPhoneNumber } from './phoneUtils.js';
 
 test('calculateAge tính tuổi chính xác cho cả ISO và DD / MM / YYYY', () => {
   const ref = new Date(2026, 10, 13); // 2026-11-13
@@ -30,6 +30,8 @@ test('toE164VietnamesePhone chuyển đổi đúng số điện thoại', () => 
   assert.equal(toE164VietnamesePhone('+84901234567'), '+84901234567');
   assert.equal(toE164VietnamesePhone(''), '');
   assert.equal(formatDisplayPhone('0901234567'), '0901 234 567');
+  assert.equal(maskPhoneNumber('0901234521'), '09******21');
+  assert.equal(maskPhoneNumber('+84901234521'), '09******21');
 });
 
 test('validateRegisterForm trả về lỗi cho các trường bắt buộc bị bỏ trống', () => {

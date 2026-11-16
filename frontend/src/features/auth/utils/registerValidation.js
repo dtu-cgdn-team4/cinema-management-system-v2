@@ -42,6 +42,25 @@ export function calculateAge(dateOfBirthString, referenceDate = new Date()) {
 }
 
 /**
+ * Chuẩn hóa chuỗi ngày sinh ('DD / MM / YYYY' hoặc 'DD/MM/YYYY') sang định dạng ISO 'YYYY-MM-DD'
+ * để tương thích với Jackson LocalDate trên backend API.
+ */
+export function toIsoDateString(dateString) {
+  if (!dateString || typeof dateString !== 'string') return '';
+  const trimmed = dateString.trim();
+  if (trimmed.includes('/')) {
+    const parts = trimmed.split('/').map((p) => p.trim());
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+  }
+  return trimmed;
+}
+
+/**
  * Đếm số byte UTF-8 của chuỗi ký tự.
  * BCrypt backend giới hạn tối đa 72 byte.
  */

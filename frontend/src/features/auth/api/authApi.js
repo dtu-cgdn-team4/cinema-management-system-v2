@@ -1,5 +1,12 @@
 import apiClient from '../../../services/apiClient';
 
+export const checkRegisterAvailability = ({ username, email, phoneNumber }) =>
+  apiClient.post('/auth/register/availability', {
+    username: username?.trim(),
+    email: email?.trim().toLowerCase(),
+    phoneNumber: phoneNumber?.trim(),
+  });
+
 /**
  * Gửi dữ liệu đã chuẩn hóa đến endpoint đăng ký khách hàng.
  * confirmPassword và termsAccepted chỉ phục vụ kiểm tra ở trình duyệt; idCard/address chỉ gửi khi có giá trị.
