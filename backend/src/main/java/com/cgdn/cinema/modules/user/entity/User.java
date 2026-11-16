@@ -39,6 +39,9 @@ public class User {
     @Column(name = "ho_ten", nullable = false, length = 255)
     private String fullName;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
@@ -143,6 +146,14 @@ public class User {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public String getEmail() {

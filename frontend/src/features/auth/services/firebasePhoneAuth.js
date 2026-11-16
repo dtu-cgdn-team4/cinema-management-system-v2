@@ -62,6 +62,8 @@ export function formatFirebasePhoneError(error) {
       return 'Quá nhiều yêu cầu gửi mã trong thời gian ngắn. Vui lòng đợi ít phút trước khi thử lại.';
     case 'auth/invalid-verification-code':
       return 'Mã OTP không chính xác. Vui lòng kiểm tra và nhập lại.';
+    case 'auth/invalid-verification-id':
+      return 'Phiên xác thực OTP không còn hợp lệ. Vui lòng gửi lại mã mới.';
     case 'auth/code-expired':
       return 'Mã OTP đã hết hạn. Vui lòng bấm "Gửi lại mã" để nhận mã mới.';
     case 'auth/quota-exceeded':

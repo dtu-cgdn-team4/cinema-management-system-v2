@@ -1,8 +1,9 @@
 import { Client } from '@stomp/stompjs';
 import { API_BASE_URL } from './apiClient';
 
-// http://localhost:8080/api/v1 -> ws://localhost:8080/api/v1/showtimes/ws (WebSocketConfig.ENDPOINT ở backend)
-const WS_URL = `${API_BASE_URL.replace(/^http/, 'ws')}/showtimes/ws`;
+// http://localhost:8080/api/v1 -> ws://localhost:8080/api/v1/showtimes/ws (WebSocketConfig.ENDPOINT ở backend);
+// base tương đối /api/v1 (bản build) thì lấy host của trang, https -> wss
+const WS_URL = new URL(`${API_BASE_URL}/showtimes/ws`, window.location.href).href.replace(/^http/, 'ws');
 
 /**
  * Đăng ký một kênh STOMP của backend, tự kết nối lại khi rớt mạng.

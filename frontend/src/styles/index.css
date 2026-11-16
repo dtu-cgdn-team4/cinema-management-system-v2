@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
-/* Màu và font lấy từ Figma "[DTU-Team4] Quản lý rạp chiếu phim" */
+/* Palette and type used by the Galaxy Cinema screens. */
 @theme {
-  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
 
@@ -18,8 +18,36 @@
   --color-info: #60a5fa;
 }
 
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
 body {
   @apply bg-page font-sans text-white antialiased;
+}
+
+/* Keep Chrome and Edge autofill fields on the dark login palette. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #17181b inset !important;
+  -webkit-text-fill-color: #f5f2ed !important;
+  caret-color: #f5f2ed !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Tùy chỉnh input date để khớp thiết kế Figma (tránh hiển thị 2 icon lịch) */

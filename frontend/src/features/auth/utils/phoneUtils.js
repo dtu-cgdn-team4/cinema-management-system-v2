@@ -25,3 +25,23 @@ export function formatDisplayPhone(phoneNumber) {
   }
   return phoneNumber;
 }
+/**
+ * Che số điện thoại theo định dạng chuẩn hiển thị OTP từ Figma: 09******21
+ * Giữ 2 chữ số đầu, che bằng 6 dấu sao và giữ 2 chữ số cuối (cho số 10 chữ số).
+ * @param {string} phoneNumber
+ * @returns {string}
+ */
+export function maskPhoneNumber(phoneNumber) {
+  if (!phoneNumber) return '';
+  let digits = String(phoneNumber).replace(/\D/g, '');
+  if (digits.startsWith('84') && digits.length === 11) {
+    digits = '0' + digits.slice(2);
+  }
+  if (digits.length >= 10) {
+    const firstTwo = digits.slice(0, 2);
+    const lastTwo = digits.slice(-2);
+    const stars = '*'.repeat(Math.max(4, digits.length - 4));
+    return `${firstTwo}${stars}${lastTwo}`;
+  }
+  return phoneNumber;
+}
