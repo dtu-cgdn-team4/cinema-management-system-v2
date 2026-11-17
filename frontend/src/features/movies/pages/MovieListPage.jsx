@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, LayoutGrid, List, HelpCircle } from 'lucide-react';
 import { errorMessage } from '@/services/apiClient';
 import { movieApi } from '../api/movieApi';
+import { mockGenres, searchMockMovies, shouldUseMockMovies } from '../api/mockMovies';
 import MovieFilters from '../components/MovieFilters';
 import MovieResults from '../components/MovieResults';
 
@@ -27,6 +28,9 @@ export default function MovieListPage() {
   const [availableGenres, setAvailableGenres] = useState(GENRE_OPTIONS); //
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [usingMock, setUsingMock] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const genreOptions = usingMock ? [...GENRE_OPTIONS, ...mockGenres] : availableGenres;
 
   useEffect(() => {
     if (searchParams.get('focus') === 'search') {
@@ -68,6 +72,7 @@ export default function MovieListPage() {
           movieApi.getComingSoonMovies(searchQuery, controller.signal),
         ]);
         if (!controller.signal.aborted) {
+          setUsingMock(false);
           setApiMovies([
             ...showing.map((movie) => ({ ...movie, status: 'NOW_SHOWING' })),
             ...coming.map((movie) => ({ ...movie, status: 'COMING_SOON' })),
@@ -75,15 +80,17 @@ export default function MovieListPage() {
         }
       } catch (err) {
         if (!controller.signal.aborted) {
-          setApiMovies([]);
-          setError(errorMessage(err));
+          const fallback = shouldUseMockMovies(err);
+          setUsingMock(fallback);
+          setApiMovies(fallback ? searchMockMovies(searchQuery) : []);
+          if (!fallback) setError(errorMessage(err));
         }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [searchQuery]);
+  }, [searchQuery, reloadKey]);
 
 
   const updateUrlParams = (newParams) => {
@@ -208,7 +215,7 @@ export default function MovieListPage() {
         countComingSoon={countComingSoon}
         selectedGenre={selectedGenre}
         handleGenreChange={handleGenreChange}
-        availableGenres={availableGenres}
+        availableGenres={genreOptions}
         sortBy={sortBy}
         handleSortChange={handleSortChange}
       />
@@ -263,6 +270,14 @@ export default function MovieListPage() {
         </div>
       </div>
 
+      {usingMock && !loading && (
+        <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+          Không kết nối được API. Đang hiển thị dữ liệu mẫu để xem thử giao diện; đây không phải lịch chiếu thực tế.
+          <button type="button" onClick={() => setReloadKey((key) => key + 1)} className="ml-3 underline font-semibold">
+            Thử kết nối lại
+          </button>
+        </div>
+      )}
       <MovieResults
         loading={loading}
         error={error}

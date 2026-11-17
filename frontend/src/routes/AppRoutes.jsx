@@ -1,12 +1,51 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import GoogleCallbackPage from '@/features/auth/pages/GoogleCallbackPage';
 import CustomerLayout from '@/layouts/CustomerLayout';
 import SeatSelectionPage from '@/features/booking/pages/SeatSelectionPage';
 import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage';
+import AdminMovieListPage from '@/features/admin/pages/AdminMovieListPage';
 import { useAuth } from '@/context/AuthContext';
 import MovieListPage from '@/features/movies/pages/MovieListPage';
+
+/** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
+const AdminRoute = ({ children }) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0d0e10] text-sm text-[#9d9ea5]">
+        Đang kiểm tra phiên đăng nhập...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  const isAdmin = user?.role === 'ADMIN' || user?.roleCode === 'ADMIN';
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#0d0e10] px-6 text-center text-[#f5f2ed]">
+        <h1 className="text-xl font-bold">Không có quyền truy cập</h1>
+        <p className="text-sm text-[#9d9ea5]">
+          Khu vực quản trị chỉ dành cho tài khoản Quản trị viên (ADMIN).
+        </p>
+        <Link
+          to="/lich-chieu"
+          className="rounded-lg bg-[#ca3538] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#b02e31]"
+        >
+          Về trang lịch chiếu
+        </Link>
+      </div>
+    );
+  }
+
+  return children;
+};
 
 /**
  * Trang thông tin tài khoản hiển thị hồ sơ cá nhân, avatar và điểm tích lũy
@@ -96,6 +135,16 @@ export default function AppRoutes() {
 
       {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
       <Route path="/dat-ve/suat-chieu/:showtimeId/chon-ghe" element={<SeatSelectionPage />} />
+
+      {/* Tuyến đường phân hệ Quản lý phim dành cho Quản trị viên */}
+      <Route
+        path="/admin/movies"
+        element={
+          <AdminRoute>
+            <AdminMovieListPage />
+          </AdminRoute>
+        }
+      />
 
       {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
