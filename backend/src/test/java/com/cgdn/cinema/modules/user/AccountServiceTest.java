@@ -171,6 +171,21 @@ class AccountServiceTest {
         verify(users, never()).save(any());
     }
 
+    @Test
+    void changePasswordRejectsNewPasswordMatchingCurrentPassword() {
+        User user = createSampleUser(42L);
+        user.setPassword(passwordEncoder.encode("OldPass123"));
+        when(users.findById(42L)).thenReturn(Optional.of(user));
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.changePassword(42L, passwordChange("OldPass123", "OldPass123", "OldPass123")));
+
+        assertEquals(ErrorCode.VALIDATION_ERROR, error.getErrorCode());
+        assertEquals("newPassword", error.field());
+        assertEquals("Mật khẩu mới không được trùng với mật khẩu hiện tại.", error.getMessage());
+        verify(users, never()).save(any());
+    }
+
     private ChangePasswordRequest passwordChange(String current, String next, String confirmation) {
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setCurrentPassword(current);

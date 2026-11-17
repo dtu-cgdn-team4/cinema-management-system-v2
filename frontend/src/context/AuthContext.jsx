@@ -52,6 +52,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const handleUpdateUser = (newUserData) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...newUserData };
+      // Ghi vào đúng nơi đã lưu phiên để vẫn giữ lựa chọn "Ghi nhớ đăng nhập".
+      const storage = localStorage.getItem('currentUser') ? localStorage : sessionStorage;
+      storage.setItem('currentUser', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const value = {
     user,
     token,
@@ -59,6 +69,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login: handleLogin,
     logout: handleLogout,
+    updateUser: handleUpdateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

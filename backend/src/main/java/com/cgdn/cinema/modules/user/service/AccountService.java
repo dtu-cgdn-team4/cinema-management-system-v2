@@ -126,6 +126,11 @@ public class AccountService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "newPassword",
                     "Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, chữ số và tối đa 72 byte UTF-8.");
         }
+        // BCrypt dùng matches để so sánh mật khẩu mới với hash hiện tại, không so trực tiếp chuỗi.
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "newPassword",
+                    "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+        }
         if (!newPassword.equals(request.getConfirmPassword())) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "confirmPassword",
                     "Mật khẩu xác nhận không khớp.");
