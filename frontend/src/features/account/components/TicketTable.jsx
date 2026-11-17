@@ -70,7 +70,7 @@ export default function TicketTable({ tickets, isLoading, error }) {
 }
 
 function TicketRow({ ticket }) {
-  const { bookingCode, movie, showtime, bookedAt, totalAmount, bookingStatus } = ticket;
+  const { bookingCode, movie, showtime, bookedAt, totalAmount, bookingStatus, collectedAt } = ticket;
 
   // Ghép chuỗi giờ chiếu: 14:30 · 04/11/2026 · Phòng 01
   const showtimeText = showtime?.startsAt
@@ -141,11 +141,13 @@ function TicketRow({ ticket }) {
 
       {/* Cột 5: Trạng thái & nút Xem vé */}
       <div className="flex items-center justify-between lg:justify-start gap-5">
-        <TicketStatusBadge status={bookingStatus} />
+        <div className="w-[128px] shrink-0">
+          <TicketStatusBadge status={bookingStatus} collectedAt={collectedAt} />
+        </div>
         <button
           type="button"
           onClick={handleViewTicket}
-          className="text-xs font-semibold text-[#ea384d] hover:text-[#ff4d6d] transition cursor-pointer"
+          className="text-xs font-semibold text-[#ea384d] hover:text-[#ff4d6d] transition cursor-pointer shrink-0"
         >
           Xem vé
         </button>
