@@ -35,7 +35,7 @@ INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, n
     (3, 'Mai (2024)', 131, 'T18', '2026-02-10', '2026-12-31', 'Trấn Thành', 'Phương Anh Đào, Tuấn Trần, Trấn Thành, Hồng Đào, Uyển Ân', 'CJ HK Entertainment', 'https://www.youtube.com/watch?v=d_kFvP35mO8', 'https://images.unsplash.com/photo-1518676599649-7c7e30d31efb?w=800', 'Mai là một phụ nữ ngoài 30 tuổi làm nghề mát-xa chịu nhiều định kiến xã hội. Cuộc đời cô rẽ sang trang mới khi gặp Dương, chàng trai trẻ phong lưu hết lòng theo đuổi cô.', 1),
     (4, 'Quật Mộ Trùng Ma', 134, 'T18', '2026-03-15', '2026-12-31', 'Jang Jae-hyun', 'Choi Min-sik, Kim Go-eun, Yoo Hae-jin, Lee Do-hyun', 'Showbox', 'https://www.youtube.com/watch?v=kYJ0i-f5r-Y', 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=800', 'Hai pháp sư, một thầy phong thủy và một chuyên gia tang lễ nhận lời khai quật một ngôi mộ cổ bí ẩn tại vùng hẻo lánh, vô tình giải phóng một thế lực tà ác cổ xưa.', 1),
     (5, 'Oppenheimer: Kẻ Huỷ Diệt', 180, 'T18', '2026-08-11', '2026-12-31', 'Christopher Nolan', 'Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr., Florence Pugh', 'Universal Pictures', 'https://www.youtube.com/watch?v=uYPbbksJxIg', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800', 'Câu chuyện chân thực về nhà vật lý lý thuyết J. Robert Oppenheimer, người đứng đầu Dự án Manhattan khai sinh ra quả bom nguyên tử đầu tiên trong lịch sử nhân loại.', 1),
-    (6, 'Lật Mặt 7: Một Điều Ước', 138, 'K', '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên, Trâm Anh', 'Lý Hải Production', 'https://www.youtube.com/watch?v=QfV7b_5sXbE', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800', 'Bà Hai 73 tuổi sống một mình tại làng quê Lâm Đồng. Biến cố xảy ra khi bà bị tai nạn gãy chân, đặt 5 người con trưởng thành vào bài toán ai sẽ là người chăm sóc mẹ già.', 1),
+    (6, 'Lật Mặt 7: Một Điều Ước', 138, 'K', '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên, Trâm Anh', 'Lý Hải Production', 'https://www.youtube.com/watch?v=QfV7b_5sXbE', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800', 'Bà Hai 73 tuổi sống một mình tại làng quê Lâm Đồng. Biến cố xảy ra khi bà bị tai nạn gãy chân, đặt 5 người con trưởng thành vào bài toán ai sẽ là người chăm sóc mẹ già.', 1);
 
 -- PHIM SAP CHIEU DEMO
 -- Lịch chiếu giả lập để test danh sách/tìm kiếm, không phải lịch phát hành thực tế.
@@ -106,7 +106,10 @@ INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, n
     (4, 'hoangnam', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
 
     -- Khách hàng mẫu 2 (rap_id bắt buộc NULL theo CHECK constraint)
-    (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1)
+    (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1),
+
+    -- Khách hàng mẫu 3 (Tâm Dũ - TV0000006)
+    (6, 'tamdu', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Tâm Dũ', 'tamdu@gmail.com', '0905666777', '2000-01-01', 'Nam', '048099006677', 'Đà Nẵng', 'KHACH_HANG', NULL, 1250, 1)
 ON DUPLICATE KEY UPDATE mat_khau = VALUES(mat_khau), so_lan_dang_nhap_sai = 0, bi_khoa = FALSE;
 
 -- ------------------------------------------------------------------------------
@@ -157,3 +160,40 @@ INSERT IGNORE INTO suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc, t
     (5, 1, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 10:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 13:00:00'), 1),
     (6, 6, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 14:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 16:40:00'), 1),
     (7, 2, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 19:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 21:30:00'), 1);
+
+-- ------------------------------------------------------------------------------
+-- 11. ĐƠN ĐẶT VÉ MẪU (dat_ve, ghe_suat_chieu, thanh_toan)
+-- Phục vụ màn hình Quản lý vé thành viên (Figma: GLX-0411-2826, GLX-0211-1940, GLX-2810-0715)
+-- ------------------------------------------------------------------------------
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    -- Đơn 1: Dune 2 (Đã thanh toán) cho user 6
+    (1, 'GLX-0411-2826', 6, 1, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 320000, 0, 320000, 'DA_THANH_TOAN', '2026-11-04 14:30:00', NULL, '2026-11-04 14:25:00'),
+    -- Đơn 2: Mai (Đã thanh toán) cho user 6
+    (2, 'GLX-0211-1940', 6, 3, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 190000, 0, 190000, 'DA_THANH_TOAN', '2026-11-02 19:00:00', NULL, '2026-11-02 18:55:00'),
+    -- Đơn 3: Deadpool & Wolverine (Đã nhận vé) cho user 6
+    (3, 'GLX-2810-0715', 6, 2, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 255000, 0, 255000, 'DA_THANH_TOAN', '2026-10-27 20:10:00', '2026-10-28 20:10:00', '2026-10-27 20:00:00'),
+
+    -- Đơn mẫu cho user 4 (Lê Hoàng Nam)
+    (4, 'GLX-0411-2827', 4, 1, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 320000, 0, 320000, 'DA_THANH_TOAN', '2026-11-04 14:30:00', NULL, '2026-11-04 14:25:00'),
+    (5, 'GLX-0211-1941', 4, 3, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 190000, 0, 190000, 'DA_THANH_TOAN', '2026-11-02 19:00:00', NULL, '2026-11-02 18:55:00'),
+    (6, 'GLX-2810-0716', 4, 2, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 255000, 0, 255000, 'DA_THANH_TOAN', '2026-10-27 20:10:00', '2026-10-28 20:10:00', '2026-10-27 20:00:00');
+
+-- Ghế cho các đơn đặt vé (Đảm bảo không trùng uq_ghe_suat_chieu)
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe) VALUES
+    (1, 1, 6, 1, 160000, 'DA_THANH_TOAN'),
+    (1, 2, 6, 1, 160000, 'DA_THANH_TOAN'),
+    (3, 3, 6, 2, 190000, 'DA_THANH_TOAN'),
+    (2, 4, 6, 3, 255000, 'DA_THANH_TOAN'),
+    (1, 5, 4, 4, 160000, 'DA_THANH_TOAN'),
+    (1, 6, 4, 4, 160000, 'DA_THANH_TOAN'),
+    (3, 7, 4, 5, 190000, 'DA_THANH_TOAN'),
+    (2, 8, 4, 6, 255000, 'DA_THANH_TOAN');
+
+-- Giao dịch thanh toán
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (1, 1, 'VNPAY', 320000, 'TXN_20261104_001', 'THANH_CONG', '2026-11-04 14:30:00'),
+    (2, 2, 'MOMO', 190000, 'TXN_20261102_002', 'THANH_CONG', '2026-11-02 19:00:00'),
+    (3, 3, 'ZALOPAY', 255000, 'TXN_20261027_003', 'THANH_CONG', '2026-10-27 20:10:00'),
+    (4, 4, 'VNPAY', 320000, 'TXN_20261104_004', 'THANH_CONG', '2026-11-04 14:30:00'),
+    (5, 5, 'MOMO', 190000, 'TXN_20261102_005', 'THANH_CONG', '2026-11-02 19:00:00'),
+    (6, 6, 'ZALOPAY', 255000, 'TXN_20261027_006', 'THANH_CONG', '2026-10-27 20:10:00');

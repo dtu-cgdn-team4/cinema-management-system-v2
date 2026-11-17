@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   ChevronRight,
@@ -30,6 +30,7 @@ import { formatDate } from '@/utils/format';
  * Thiết kế đối chiếu Figma node 1159:2 (1440x1160px).
  */
 export default function AccountPage() {
+  const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: authLoading, logout, updateUser } = useAuth();
   const dateInputRef = useRef(null);
 
@@ -428,7 +429,7 @@ export default function AccountPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => alert('Chức năng Vé đã đặt đang được phát triển.')}
+                  onClick={() => navigate('/tai-khoan/ve-da-dat')}
                   className="w-full text-zinc-300 hover:text-white hover:bg-white/[0.04] font-medium text-[13px] rounded-[10px] px-4 py-3.25 text-left transition-colors cursor-pointer"
                 >
                   Vé đã đặt

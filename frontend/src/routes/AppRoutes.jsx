@@ -9,6 +9,7 @@ import AccountPage from '@/features/account/pages/AccountPage';
 import AdminMovieListPage from '@/features/admin/pages/AdminMovieListPage';
 import { useAuth } from '@/context/AuthContext';
 import MovieListPage from '@/features/movies/pages/MovieListPage';
+import MemberTicketsPage from '@/features/account/pages/MemberTicketsPage';
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
 const AdminRoute = ({ children }) => {
@@ -81,6 +82,7 @@ export default function AppRoutes() {
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
         <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
         <Route path="/tai-khoan" element={<AccountPage />} />
+        <Route path="/tai-khoan/ve-da-dat" element={<MemberTicketsPage />} />
         <Route
           path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
           element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
