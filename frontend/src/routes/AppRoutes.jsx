@@ -6,6 +6,7 @@ import CustomerLayout from '@/layouts/CustomerLayout';
 import SeatSelectionPage from '@/features/booking/pages/SeatSelectionPage';
 import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage';
 import { useAuth } from '@/context/AuthContext';
+import MovieListPage from '@/features/movies/pages/MovieListPage';
 
 /**
  * Trang thông tin tài khoản hiển thị hồ sơ cá nhân, avatar và điểm tích lũy
@@ -98,14 +99,33 @@ export default function AppRoutes() {
 
       {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
-        <Route path="/" element={<Navigate to="/lich-chieu" replace />} />
+        <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+        <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
+        <Route path="/phim" element={<MovieListPage />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
+        <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
         <Route path="/tai-khoan" element={<AccountPage />} />
         <Route
           path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
           element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
         />
-        <Route path="*" element={<p className="py-24 text-center text-muted">Trang đang được xây dựng.</p>} />
+        <Route path="*" element={
+          <div className="py-24 text-center max-w-md mx-auto space-y-4">
+            <h2 className="text-4xl font-extrabold text-galaxy-red">404</h2>
+            <p className="text-base font-semibold text-white">Trang không tồn tại</p>
+            <p className="text-xs text-slate-400">
+              Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
+            </p>
+            <div>
+              <a
+                href="/trang-chu"
+                className="inline-block px-5 py-2 rounded-lg text-xs font-semibold text-white bg-galaxy-red hover:bg-galaxy-red/80 transition-colors"
+              >
+                Về trang chủ phim
+              </a>
+            </div>
+          </div>
+        } />
       </Route>
     </Routes>
   );
