@@ -1,3 +1,8 @@
+const vnd = new Intl.NumberFormat('vi-VN');
+
+/** 130000 -> "130.000 đ" */
+export const formatVnd = (amount) => `${vnd.format(amount)} đ`;
+
 /** Date -> "14:30" */
 export const formatTime = (date) =>
   new Date(date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });

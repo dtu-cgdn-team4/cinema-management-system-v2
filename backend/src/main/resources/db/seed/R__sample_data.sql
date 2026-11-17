@@ -35,11 +35,12 @@ INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, n
     (3, 'Mai (2024)', 131, 'T18', '2026-02-10', '2026-12-31', 'Trấn Thành', 'Phương Anh Đào, Tuấn Trần, Trấn Thành, Hồng Đào, Uyển Ân', 'CJ HK Entertainment', 'https://www.youtube.com/watch?v=d_kFvP35mO8', 'https://images.unsplash.com/photo-1518676599649-7c7e30d31efb?w=800', 'Mai là một phụ nữ ngoài 30 tuổi làm nghề mát-xa chịu nhiều định kiến xã hội. Cuộc đời cô rẽ sang trang mới khi gặp Dương, chàng trai trẻ phong lưu hết lòng theo đuổi cô.', 1),
     (4, 'Quật Mộ Trùng Ma', 134, 'T18', '2026-03-15', '2026-12-31', 'Jang Jae-hyun', 'Choi Min-sik, Kim Go-eun, Yoo Hae-jin, Lee Do-hyun', 'Showbox', 'https://www.youtube.com/watch?v=kYJ0i-f5r-Y', 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=800', 'Hai pháp sư, một thầy phong thủy và một chuyên gia tang lễ nhận lời khai quật một ngôi mộ cổ bí ẩn tại vùng hẻo lánh, vô tình giải phóng một thế lực tà ác cổ xưa.', 1),
     (5, 'Oppenheimer: Kẻ Huỷ Diệt', 180, 'T18', '2026-08-11', '2026-12-31', 'Christopher Nolan', 'Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr., Florence Pugh', 'Universal Pictures', 'https://www.youtube.com/watch?v=uYPbbksJxIg', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800', 'Câu chuyện chân thực về nhà vật lý lý thuyết J. Robert Oppenheimer, người đứng đầu Dự án Manhattan khai sinh ra quả bom nguyên tử đầu tiên trong lịch sử nhân loại.', 1),
-    (6, 'Lật Mặt 7: Một Điều Ước', 138, 'K', '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên, Trâm Anh', 'Lý Hải Production', 'https://www.youtube.com/watch?v=QfV7b_5sXbE', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800', 'Bà Hai 73 tuổi sống một mình tại làng quê Lâm Đồng. Biến cố xảy ra khi bà bị tai nạn gãy chân, đặt 5 người con trưởng thành vào bài toán ai sẽ là người chăm sóc mẹ già.', 1);
+    (6, 'Lật Mặt 7: Một Điều Ước', 138, 'K', '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên, Trâm Anh', 'Lý Hải Production', 'https://www.youtube.com/watch?v=QfV7b_5sXbE', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800', 'Bà Hai 73 tuổi sống một mình tại làng quê Lâm Đồng. Biến cố xảy ra khi bà bị tai nạn gãy chân, đặt 5 người con trưởng thành vào bài toán ai sẽ là người chăm sóc mẹ già.', 1),
 
 -- PHIM SAP CHIEU DEMO
 -- Lịch chiếu giả lập để test danh sách/tìm kiếm, không phải lịch phát hành thực tế.
 -- INSERT IGNORE giữ nguyên dữ liệu đã có, ngày chỉ được đặt lúc thêm lần đầu.
+INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, ngay_ket_thuc, dao_dien, dien_vien, hang_san_xuat, trailer_url, poster_url, noi_dung, trang_thai) VALUES
     (7, 'Interstellar (Demo)', 169, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 90 DAY), 'Christopher Nolan', 'Matthew McConaughey, Anne Hathaway, Jessica Chastain', 'Paramount Pictures', 'https://www.youtube.com/watch?v=zSWdZVtXT7E', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800', 'Dữ liệu demo cho danh sách phim sắp chiếu. Một nhóm phi hành gia tìm kiếm ngôi nhà mới cho nhân loại. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1),
     (8, 'Inception (Demo)', 148, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 14 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 100 DAY), 'Christopher Nolan', 'Leonardo DiCaprio, Joseph Gordon-Levitt, Cillian Murphy', 'Warner Bros. Pictures', 'https://www.youtube.com/watch?v=YoHD9XEInc0', 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800', 'Dữ liệu demo cho tìm kiếm theo đạo diễn và diễn viên. Một nhóm chuyên gia xâm nhập giấc mơ để thực hiện nhiệm vụ đặc biệt. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1),
     (9, 'Arrival (Demo)', 116, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 21 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 110 DAY), 'Denis Villeneuve', 'Amy Adams, Jeremy Renner, Forest Whitaker', 'Paramount Pictures', 'https://www.youtube.com/watch?v=tFMo3UJ4B4g', 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', 'Dữ liệu demo cho lọc thể loại và phân trang. Một nhà ngôn ngữ học tìm cách giao tiếp với những vị khách ngoài hành tinh. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1);
@@ -53,7 +54,7 @@ INSERT IGNORE INTO phim_the_loai (phim_id, the_loai_id) VALUES
     (3, 4), (3, 7), -- Mai: Tâm lý, Tình cảm
     (4, 5), (4, 1), -- Quật Mộ Trùng Ma: Kinh dị, Hành động
     (5, 4), (5, 2), -- Oppenheimer: Tâm lý, Khoa học viễn tưởng
-    (6, 4), (6, 3); -- Lật Mặt 7: Tâm lý, Hài hước
+    (6, 4), (6, 3), -- Lật Mặt 7: Tâm lý, Hài hước
     (7, 2), (7, 8),
     (8, 1), (8, 2),
     (9, 2), (9, 4);
@@ -89,23 +90,24 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 
 -- ------------------------------------------------------------------------------
 -- 7. TÀI KHOẢN NGƯỜI DÙNG (nguoi_dung) - Mật khẩu mặc định: 123456
--- Chuẩn BCrypt hash: $2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW
+-- Chuẩn BCrypt hash của '123456': $2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe
 -- ------------------------------------------------------------------------------
-INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
+INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
-    (1, 'admin', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
+    (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
 
     -- Nhân viên rạp Lumière Landmark 81 (rap_id bắt buộc = 1 theo CHECK constraint)
-    (2, 'staff_landmark', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Trần Văn Long', 'longtv@lumiere.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
+    (2, 'staff_landmark', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Trần Văn Long', 'longtv@lumiere.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
 
     -- Nhân viên rạp Lumière Đà Nẵng Center (rap_id bắt buộc = 3 theo CHECK constraint)
-    (3, 'staff_danang', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Vinh Hà', 'hanv@lumiere.vn', '0905333444', '2003-11-10', 'Nam', '048099003344', 'Sơn Trà, TP. Đà Nẵng', 'NHAN_VIEN', 3, 0, 1),
+    (3, 'staff_danang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Vinh Hà', 'hanv@lumiere.vn', '0905333444', '2003-11-10', 'Nam', '048099003344', 'Sơn Trà, TP. Đà Nẵng', 'NHAN_VIEN', 3, 0, 1),
 
     -- Khách hàng mẫu 1 (rap_id bắt buộc NULL theo CHECK constraint)
-    (4, 'hoangnam', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
+    (4, 'hoangnam', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
 
     -- Khách hàng mẫu 2 (rap_id bắt buộc NULL theo CHECK constraint)
-    (5, 'thanhhang', '$2a$10$GRLdNijSQMUvl/au9ofL.eDwmoohzzS7.rmNSJZ.0FxO/BTk76klW', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1);
+    (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1)
+ON DUPLICATE KEY UPDATE mat_khau = VALUES(mat_khau), so_lan_dang_nhap_sai = 0, bi_khoa = FALSE;
 
 -- ------------------------------------------------------------------------------
 -- 8. PHÒNG CHIẾU (phong_chieu)

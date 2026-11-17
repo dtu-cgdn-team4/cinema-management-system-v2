@@ -4,6 +4,7 @@ import BrandLogo from '../components/common/BrandLogo';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV = [
+  ['/trang-chu', 'Trang chủ'],
   ['/phim', 'Phim'],
   ['/lich-chieu', 'Lịch chiếu'],
   ['/rap-chieu', 'Rạp chiếu'],
@@ -16,7 +17,7 @@ export default function SiteHeader() {
   return (
     <header className="border-b border-line">
       <div className="mx-auto flex h-21.75 max-w-304 items-center justify-between gap-6 px-4 xl:px-0">
-        <BrandLogo />
+        <BrandLogo className="h-10 md:w-36.25" />
         <nav className="hidden gap-7.5 md:flex">
           {NAV.map(([to, label]) => (
             <NavLink
@@ -31,10 +32,10 @@ export default function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-6">
-          <Link to="/phim" aria-label="Tìm phim" className="text-muted transition hover:text-white">
+          <Link to="/phim?focus=search" aria-label="Tìm phim" className="text-muted transition hover:text-white">
             <Search size={20} strokeWidth={1.6} absoluteStrokeWidth />
           </Link>
-
+          
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link

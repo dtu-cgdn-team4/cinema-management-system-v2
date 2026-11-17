@@ -100,7 +100,9 @@ export default function ShowtimeSelectionPage() {
               key={movie.id}
               movie={movie}
               showtimes={showtimes}
-              onSelect={(showtimeId) => navigate(`/dat-ve/suat-chieu/${showtimeId}/chon-ghe`)}
+              onSelect={(showtime) =>
+                navigate(`/dat-ve/suat-chieu/${showtime.id}/chon-ghe`, { state: { movie, showtime } })
+              }
             />
           ))}
         </div>
