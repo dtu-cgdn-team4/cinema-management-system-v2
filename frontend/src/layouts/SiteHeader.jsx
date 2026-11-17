@@ -4,6 +4,7 @@ import BrandLogo from '../components/common/BrandLogo';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV = [
+  ['/trang-chu', 'Trang chủ'],
   ['/phim', 'Phim'],
   ['/lich-chieu', 'Lịch chiếu'],
   ['/rap-chieu', 'Rạp chiếu'],
@@ -31,10 +32,10 @@ export default function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-6">
-          <Link to="/phim" aria-label="Tìm phim" className="text-muted transition hover:text-white">
+          <Link to="/phim?focus=search" aria-label="Tìm phim" className="text-muted transition hover:text-white">
             <Search size={20} strokeWidth={1.6} absoluteStrokeWidth />
           </Link>
-
+          
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link

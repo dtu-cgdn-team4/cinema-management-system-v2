@@ -11,7 +11,7 @@ export default function BrandLogo({ className = '' }) {
       <span>
         <span className="block font-display text-base leading-4 font-bold tracking-widest">GALAXY</span>
         <span className="mt-0.5 block text-[8px] leading-3 font-semibold tracking-[0.25em] text-brand uppercase">
-          Lumière
+          CINEMA
         </span>
       </span>
     </Link>
