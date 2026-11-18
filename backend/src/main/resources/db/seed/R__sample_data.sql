@@ -221,3 +221,22 @@ INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich
     (4, 4, 'VNPAY', 320000, 'TXN_20261104_004', 'THANH_CONG', '2026-11-04 14:30:00'),
     (5, 5, 'MOMO', 190000, 'TXN_20261102_005', 'THANH_CONG', '2026-11-02 19:00:00'),
     (6, 6, 'ZALOPAY', 255000, 'TXN_20261027_006', 'THANH_CONG', '2026-10-27 20:10:00');
+
+-- Extra paid bookings for the seeded Tâm Dũ account (user 6), for the member tickets page.
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    (7, 'GLX-DEMO-20261118-01', 6, 5, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 100000, 0, 100000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (8, 'GLX-DEMO-20261118-02', 6, 6, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (9, 'GLX-DEMO-20261118-03', 6, 7, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP);
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe) VALUES
+    (5, 9, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (5, 10, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (6, 11, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (6, 12, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (7, 13, 6, 9, 65000, 'DA_THANH_TOAN'),
+    (7, 14, 6, 9, 65000, 'DA_THANH_TOAN');
+
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (7, 7, 'VNPAY', 100000, 'TXN_DEMO_TAMDU_007', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (8, 8, 'MOMO', 130000, 'TXN_DEMO_TAMDU_008', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (9, 9, 'ZALOPAY', 130000, 'TXN_DEMO_TAMDU_009', 'THANH_CONG', CURRENT_TIMESTAMP);
