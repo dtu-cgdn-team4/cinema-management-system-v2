@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import {
   ChevronRight, Clock, Calendar, Play, X, Ticket,
   MapPin, Film, ChevronLeft, ChevronRight as ChevronRightIcon,
