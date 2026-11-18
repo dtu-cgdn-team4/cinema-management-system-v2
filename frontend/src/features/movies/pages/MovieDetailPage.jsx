@@ -133,14 +133,14 @@ function HeroSection({ movie, onWatchTrailer, onBookNow }) {
         </nav>
 
         {/* Poster + Thông tin */}
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-10 items-start">
-          {/* Poster */}
-          <div className="shrink-0 w-28 sm:w-44 md:w-56 self-center sm:self-start">
-            <div className="aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-xl sm:shadow-2xl shadow-black/80">
+        <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 md:gap-10 items-start">
+          {/* Poster: to rõ, dài xuống trên mobile, 2 bên không bị khoảng đen quá rộng */}
+          <div className="shrink-0 w-[68%] max-w-[280px] sm:w-48 md:w-56 self-center sm:self-start mx-auto sm:mx-0">
+            <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/15 shadow-2xl shadow-black/90">
               {movie.posterUrl ? (
                 <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-slate-800 flex items-center justify-center"><Film className="w-8 h-8 sm:w-10 sm:h-10 text-slate-600" /></div>
+                <div className="w-full h-full bg-slate-800 flex items-center justify-center"><Film className="w-10 h-10 text-slate-600" /></div>
               )}
             </div>
           </div>
