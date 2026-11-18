@@ -8,7 +8,9 @@ import { fetchMemberTickets } from '../api/memberTicketApi';
 export default function useMemberTickets() {
   const [tickets, setTickets] = useState([]);
   const [counts, setCounts] = useState({ all: 0, upcoming: 0, history: 0 });
-  const [pagination, setPagination] = useState({ page: 0, size: 10, totalPages: 0, totalElements: 0 });
+  // Load the maximum page size supported by the API so every ticket can be
+  // reached with the list's internal scrollbar.
+  const [pagination, setPagination] = useState({ page: 0, size: 100, totalPages: 0, totalElements: 0 });
   const [view, setView] = useState('ALL');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,7 +37,7 @@ export default function useMemberTickets() {
   }, [view]);
 
   useEffect(() => {
-    load(0, pagination.size, view);
+    load(0, 100, view);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 

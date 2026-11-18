@@ -40,6 +40,7 @@ INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, n
 -- PHIM SAP CHIEU DEMO
 -- Lịch chiếu giả lập để test danh sách/tìm kiếm, không phải lịch phát hành thực tế.
 -- INSERT IGNORE giữ nguyên dữ liệu đã có, ngày chỉ được đặt lúc thêm lần đầu.
+INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, ngay_ket_thuc, dao_dien, dien_vien, hang_san_xuat, trailer_url, poster_url, noi_dung, trang_thai) VALUES
     (7, 'Interstellar (Demo)', 169, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 90 DAY), 'Christopher Nolan', 'Matthew McConaughey, Anne Hathaway, Jessica Chastain', 'Paramount Pictures', 'https://www.youtube.com/watch?v=zSWdZVtXT7E', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800', 'Dữ liệu demo cho danh sách phim sắp chiếu. Một nhóm phi hành gia tìm kiếm ngôi nhà mới cho nhân loại. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1),
     (8, 'Inception (Demo)', 148, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 14 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 100 DAY), 'Christopher Nolan', 'Leonardo DiCaprio, Joseph Gordon-Levitt, Cillian Murphy', 'Warner Bros. Pictures', 'https://www.youtube.com/watch?v=YoHD9XEInc0', 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800', 'Dữ liệu demo cho tìm kiếm theo đạo diễn và diễn viên. Một nhóm chuyên gia xâm nhập giấc mơ để thực hiện nhiệm vụ đặc biệt. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1),
     (9, 'Arrival (Demo)', 116, 'T13', DATE_ADD(CURRENT_DATE(), INTERVAL 21 DAY), DATE_ADD(CURRENT_DATE(), INTERVAL 110 DAY), 'Denis Villeneuve', 'Amy Adams, Jeremy Renner, Forest Whitaker', 'Paramount Pictures', 'https://www.youtube.com/watch?v=tFMo3UJ4B4g', 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', 'Dữ liệu demo cho lọc thể loại và phân trang. Một nhà ngôn ngữ học tìm cách giao tiếp với những vị khách ngoài hành tinh. Ngày chiếu và nhãn tuổi chỉ phục vụ kiểm thử.', 1);
@@ -221,3 +222,22 @@ INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich
     (4, 4, 'VNPAY', 320000, 'TXN_20261104_004', 'THANH_CONG', '2026-11-04 14:30:00'),
     (5, 5, 'MOMO', 190000, 'TXN_20261102_005', 'THANH_CONG', '2026-11-02 19:00:00'),
     (6, 6, 'ZALOPAY', 255000, 'TXN_20261027_006', 'THANH_CONG', '2026-10-27 20:10:00');
+
+-- Extra paid bookings for the seeded Tâm Dũ account (user 6), for the member tickets page.
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    (7, 'GLX-DEMO-20261118-01', 6, 5, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 100000, 0, 100000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (8, 'GLX-DEMO-20261118-02', 6, 6, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (9, 'GLX-DEMO-20261118-03', 6, 7, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP);
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe) VALUES
+    (5, 9, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (5, 10, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (6, 11, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (6, 12, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (7, 13, 6, 9, 65000, 'DA_THANH_TOAN'),
+    (7, 14, 6, 9, 65000, 'DA_THANH_TOAN');
+
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (7, 7, 'VNPAY', 100000, 'TXN_DEMO_TAMDU_007', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (8, 8, 'MOMO', 130000, 'TXN_DEMO_TAMDU_008', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (9, 9, 'ZALOPAY', 130000, 'TXN_DEMO_TAMDU_009', 'THANH_CONG', CURRENT_TIMESTAMP);

@@ -45,7 +45,7 @@ export default function TicketTable({ tickets, isLoading, error }) {
       {/* Bảng vé */}
       <div className="rounded-2xl border border-white/5 bg-[#12141c] overflow-hidden shadow-xl">
         {/* Header các cột */}
-        <div className="hidden lg:grid grid-cols-[160px_1fr_130px_130px_220px] items-center border-b border-white/5 px-7 py-4 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+        <div className="hidden lg:grid grid-cols-[160px_1fr_130px_130px_220px] items-center border-b border-white/5 bg-[#12141c] gap-x-[10px] px-7 py-4 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
           <span>MÃ ĐẶT VÉ</span>
           <span>PHIM</span>
           <span>NGÀY ĐẶT</span>
@@ -54,7 +54,7 @@ export default function TicketTable({ tickets, isLoading, error }) {
         </div>
 
         {/* Danh sách các vé */}
-        <div className="divide-y divide-white/5">
+        <div className="max-h-[624px] overflow-y-auto overscroll-contain divide-y divide-white/5 [scrollbar-gutter:stable]">
           {tickets.map((ticket) => (
             <TicketRow key={ticket.bookingCode} ticket={ticket} />
           ))}
@@ -82,13 +82,13 @@ function TicketRow({ ticket }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[160px_1fr_130px_130px_220px] items-center gap-4 lg:gap-0 px-7 py-5 hover:bg-white/[0.02] transition">
+    <div className="min-h-[104px] grid grid-cols-1 lg:grid-cols-[160px_1fr_130px_130px_220px] items-center gap-4 lg:gap-x-[10px] px-7 py-5 hover:bg-white/[0.02] transition">
       {/* Cột 1: Mã đặt vé */}
       <div>
         <span className="text-[11px] font-bold uppercase text-zinc-400 lg:hidden block mb-1">
           Mã đặt vé:
         </span>
-        <span className="text-sm font-medium text-white tracking-wide">
+        <span className="block break-words pr-2 text-sm font-medium text-white tracking-wide [overflow-wrap:anywhere]">
           {bookingCode}
         </span>
       </div>
