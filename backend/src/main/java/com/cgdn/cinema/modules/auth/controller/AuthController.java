@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -60,6 +61,8 @@ public class AuthController {
     private final AuthService authService;
     private final GoogleProperties googleProperties;
     private final RegistrationService registration;
+    @Value("${app.frontend-url:http://localhost:5174}")
+    private String frontendUrl = "http://localhost:5174";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AuthController(AuthService authService, GoogleProperties googleProperties,RegistrationService registration) {
@@ -118,7 +121,7 @@ public class AuthController {
 
         if (!matchesState(expectedState, state)) {
             if (isBrowser) {
-                String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                String errorRedirect = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/google/callback")
                         .queryParam("error", URLEncoder.encode("Trạng thái xác thực không hợp lệ hoặc đã hết hạn.", StandardCharsets.UTF_8))
                         .build(true)
                         .toUriString();
@@ -133,7 +136,7 @@ public class AuthController {
 
             if (isBrowser) {
                 String userInfoJson = objectMapper.writeValueAsString(response.user());
-                String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/google/callback")
                         .queryParam("accessToken", response.accessToken())
                         .queryParam("user", URLEncoder.encode(userInfoJson, StandardCharsets.UTF_8))
                         .build(true)
@@ -146,7 +149,7 @@ public class AuthController {
         } catch (Exception ex) {
             if (isBrowser) {
                 String errorMsg = ex.getMessage() != null ? ex.getMessage() : "Đăng nhập Google thất bại.";
-                String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
+                String errorRedirect = UriComponentsBuilder.fromUriString(frontendUrl + "/auth/google/callback")
                         .queryParam("error", URLEncoder.encode(errorMsg, StandardCharsets.UTF_8))
                         .build(true)
                         .toUriString();

@@ -44,6 +44,8 @@ export default function AccountPage() {
   // Form Thông tin cá nhân (gender mặc định null nếu API không trả về)
   const [profileForm, setProfileForm] = useState({
     fullName: '',
+    email: '',
+    phoneNumber: '',
     dateOfBirth: '',
     gender: null,
     citizenId: '',
@@ -81,6 +83,8 @@ export default function AccountPage() {
       setProfileData(data);
       setProfileForm({
         fullName: data?.fullName || '',
+        email: data?.email || '',
+        phoneNumber: data?.phoneNumber || '',
         dateOfBirth: data?.dateOfBirth || '',
         gender: data?.gender || null,
         citizenId: data?.citizenId || '',
@@ -152,29 +156,55 @@ export default function AccountPage() {
     setProfileSubmitting(true);
 
     try {
-      // Chỉ gửi 5 trường hồ sơ được phép cập nhật; email, số điện thoại và mã tài khoản là chỉ đọc.
-      const updated = await updateAccountProfile({
+      // Chỉ gửi email và số điện thoại khi có thay đổi.
+      const payload = {
         fullName: profileForm.fullName,
         dateOfBirth: profileForm.dateOfBirth,
         gender: profileForm.gender,
         citizenId: profileForm.citizenId,
         address: profileForm.address,
-      });
+      };
+
+      if (profileForm.email !== profileData?.email) {
+        payload.email = profileForm.email;
+      }
+
+      if (profileForm.phoneNumber !== profileData?.phoneNumber) {
+        payload.phoneNumber = profileForm.phoneNumber;
+      }
+
+      const updated = await updateAccountProfile(payload);
 
       const data = updated?.data ?? updated;
-      setProfileData((prev) => ({
-        ...prev,
+      const savedFields = {
+        email: data?.email ?? profileForm.email,
+        phoneNumber: data?.phoneNumber ?? profileForm.phoneNumber,
         fullName: data?.fullName ?? profileForm.fullName,
         dateOfBirth: data?.dateOfBirth ?? profileForm.dateOfBirth,
         gender: data?.gender !== undefined ? data.gender : profileForm.gender,
         citizenId: data?.citizenId ?? profileForm.citizenId,
         address: data?.address ?? profileForm.address,
+      };
+
+      setProfileData((prev) => ({
+        ...prev,
+        ...data,
+        ...savedFields,
       }));
 
-      // Cập nhật tên trong phiên đăng nhập để Header đổi theo mà không cần tải lại trang.
+      setProfileForm((prev) => ({
+        ...prev,
+        ...savedFields,
+      }));
+
+      setDisplayDob(isoToDmy(savedFields.dateOfBirth));
+
+      // Cập nhật thông tin trong phiên đăng nhập để Header và toàn ứng dụng đổi theo
       if (updateUser) {
         updateUser({
-          fullName: data?.fullName ?? profileForm.fullName,
+          fullName: savedFields.fullName,
+          email: savedFields.email,
+          phoneNumber: savedFields.phoneNumber,
         });
       }
 
@@ -182,8 +212,18 @@ export default function AccountPage() {
     } catch (err) {
       // An toàn: Không log đối tượng nhạy cảm
       const resData = err?.response?.data;
+      const fieldErrors = {};
       if (resData?.errors && typeof resData.errors === 'object') {
-        setProfileErrors(resData.errors);
+        Object.assign(fieldErrors, resData.errors);
+      }
+      if (resData?.errorCode === 'EMAIL_EXISTS' && !fieldErrors.email) {
+        fieldErrors.email = resData.message || 'Email đã tồn tại.';
+      }
+      if (resData?.errorCode === 'PHONE_EXISTS' && !fieldErrors.phoneNumber) {
+        fieldErrors.phoneNumber = resData.message || 'Số điện thoại đã tồn tại.';
+      }
+      if (Object.keys(fieldErrors).length > 0) {
+        setProfileErrors(fieldErrors);
       }
       const msg =
         resData?.message ||
@@ -610,7 +650,7 @@ export default function AccountPage() {
                   </p>
                 </div>
 
-                <form onSubmit={handleProfileSubmit} className="flex flex-col gap-[18px]">
+                <form onSubmit={handleProfileSubmit} noValidate className="flex flex-col gap-[18px]">
                   {/* Hàng 1: Họ tên & Ngày sinh */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
@@ -691,7 +731,7 @@ export default function AccountPage() {
                     </div>
                   </div>
 
-                  {/* Hàng 2: Giới tính & Email (Email chỉ đọc theo yêu cầu) */}
+                  {/* Hàng 2: Giới tính & Email */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-medium text-zinc-300">
@@ -745,16 +785,26 @@ export default function AccountPage() {
                       <label className="text-xs font-medium text-zinc-300">
                         Email <span className="text-brand">*</span>
                       </label>
-                      <div
-                        className="bg-white/[0.04] border border-line rounded-[10px] px-4 py-3.25 text-[13px] text-muted select-none cursor-not-allowed"
-                        title="Email được bảo vệ và không thể thay đổi trực tiếp"
-                      >
-                        {profileData?.email || user?.email || 'Chưa cập nhật'}
-                      </div>
+                      <input
+                        type="email"
+                        name="email"
+                        value={profileForm.email}
+                        onChange={handleProfileChange}
+                        placeholder="nguyenvanan@gmail.com"
+                        maxLength={254}
+                        className={`w-full bg-card border rounded-[10px] px-4 py-3.25 text-[13px] text-white placeholder-zinc-500 transition-colors focus:outline-none ${
+                          profileErrors.email
+                            ? 'border-brand'
+                            : 'border-line focus:border-brand'
+                        }`}
+                      />
+                      {profileErrors.email && (
+                        <p className="text-xs text-brand">{profileErrors.email}</p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Hàng 3: CMND / CCCD & Số điện thoại (SĐT chỉ đọc theo yêu cầu) */}
+                  {/* Hàng 3: CMND / CCCD & Số điện thoại */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-medium text-zinc-300">
@@ -782,12 +832,22 @@ export default function AccountPage() {
                       <label className="text-xs font-medium text-zinc-300">
                         Số điện thoại <span className="text-brand">*</span>
                       </label>
-                      <div
-                        className="bg-white/[0.04] border border-line rounded-[10px] px-4 py-3.25 text-[13px] text-muted select-none cursor-not-allowed"
-                        title="Số điện thoại được bảo vệ bằng OTP và không thể thay đổi trực tiếp"
-                      >
-                        {profileData?.phoneNumber || user?.phoneNumber || 'Chưa cập nhật'}
-                      </div>
+                      <input
+                        type="tel"
+                        name="phoneNumber"
+                        value={profileForm.phoneNumber}
+                        onChange={handleProfileChange}
+                        placeholder="0905 123 456"
+                        maxLength={10}
+                        className={`w-full bg-card border rounded-[10px] px-4 py-3.25 text-[13px] text-white placeholder-zinc-500 transition-colors focus:outline-none ${
+                          profileErrors.phoneNumber
+                            ? 'border-brand'
+                            : 'border-line focus:border-brand'
+                        }`}
+                      />
+                      {profileErrors.phoneNumber && (
+                        <p className="text-xs text-brand">{profileErrors.phoneNumber}</p>
+                      )}
                     </div>
                   </div>
 
