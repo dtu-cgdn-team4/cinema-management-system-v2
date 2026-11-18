@@ -29,9 +29,9 @@ jobs:
       - name: Kiểm tra và Build Backend
         run: |
           if [ -f "backend/pom.xml" ]; then
-            echo "Phát hiện backend/pom.xml. Bắt đầu build và chạy test..."
+            echo "Phát hiện backend/pom.xml. Bắt đầu build, chạy test và quét mã nguồn (Checkstyle & SpotBugs)..."
             cd backend
-            mvn -B clean test
+            mvn -B clean test checkstyle:check spotbugs:check
           else
             echo "Chưa có file backend/pom.xml. Bỏ qua bước kiểm tra biên dịch Java."
           fi
@@ -55,13 +55,14 @@ jobs:
       - name: Kiểm tra và Build Frontend
         run: |
           if [ -f "frontend/package.json" ]; then
-            echo "Phát hiện frontend/package.json. Bắt đầu cài thư viện và build..."
+            echo "Phát hiện frontend/package.json. Bắt đầu cài thư viện, kiểm tra lint và build..."
             cd frontend
             if [ -f "package-lock.json" ]; then
               npm ci
             else
               npm install
             fi
+            npm run lint
             npm run build
           else
             echo "Chưa có file frontend/package.json. Bỏ qua bước kiểm tra biên dịch React."
