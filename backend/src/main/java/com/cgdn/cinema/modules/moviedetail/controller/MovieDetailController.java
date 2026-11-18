@@ -26,14 +26,14 @@ public class MovieDetailController {
 
     private final MovieDetailService movieDetailService;
 
-    @GetMapping("/api/movies/{movieId}")
+    @GetMapping("/api/v1/movies/{movieId}")
     @Operation(summary = "Lấy chi tiết phim và các suất chiếu chưa bắt đầu")
     public ApiResponse<MovieDetailResponse> getMovieDetail(
             @PathVariable("movieId") @Positive Long movieId) {
         return ApiResponse.success(movieDetailService.getMovieDetail(movieId));
     }
 
-    @GetMapping("/api/movies/{movieId}/showtimes")
+    @GetMapping("/api/v1/movies/{movieId}/schedule")
     @Operation(summary = "Lịch chiếu theo ngày, khu vực, rạp; giá vé và số ghế còn trống theo phòng")
     public ApiResponse<MovieShowtimesResponse> getShowtimes(
             @PathVariable("movieId") @Positive Long movieId,
@@ -43,7 +43,7 @@ public class MovieDetailController {
         return ApiResponse.success(movieDetailService.getShowtimes(movieId, date, city, cinemaId));
     }
 
-    @GetMapping("/api/movies/{movieId}/related")
+    @GetMapping("/api/v1/movies/{movieId}/related")
     @Operation(summary = "Phim liên quan, ưu tiên số thể loại chung rồi ngày khởi chiếu mới nhất")
     public ApiResponse<List<MovieSummaryResponse>> getRelatedMovies(
             @PathVariable("movieId") @Positive Long movieId,
