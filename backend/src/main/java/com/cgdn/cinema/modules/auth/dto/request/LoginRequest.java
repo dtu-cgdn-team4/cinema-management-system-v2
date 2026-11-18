@@ -10,7 +10,13 @@ public record LoginRequest(
         String username,
 
         @NotBlank(message = "Mật khẩu không được để trống")
-        String password
+        String password,
+
+        Boolean rememberMe
 ) {
+
+    public LoginRequest(String username, String password) {
+        this(username, password, true);
+    }
 }
 

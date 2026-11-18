@@ -34,6 +34,7 @@ import java.util.Map;
 public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     private static final String REGISTRATION_PATH = "/api/v1/auth/register";
+    private static final String COMPLETE_PROFILE_PATH = "/api/v1/auth/complete-profile";
     private static final String REGISTRATION_VALIDATION_MESSAGE = "Dữ liệu đăng ký không hợp lệ.";
     private final ObjectMapper objectMapper;
 
@@ -61,6 +62,11 @@ public class GlobalExceptionHandler implements AuthenticationEntryPoint, AccessD
                     .body(ApiResponse.error(400, REGISTRATION_VALIDATION_MESSAGE, fieldErrors));
         }
         ErrorCode code = ErrorCode.VALIDATION_ERROR;
+        if (COMPLETE_PROFILE_PATH.equals(request.getRequestURI())) {
+            return ResponseEntity.status(code.getStatus())
+                    .body(ApiResponse.errorWithErrors(
+                            code.getStatus().value(), code.getCode(), code.getMessage(), fieldErrors));
+        }
         return ResponseEntity.status(code.getStatus())
                 .body(ApiResponse.error(code.getStatus().value(), code.getCode(), code.getMessage(), fieldErrors));
     }

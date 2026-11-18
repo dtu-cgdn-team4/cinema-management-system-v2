@@ -9,8 +9,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class JwtProperties {
 
     private String secret;
-    private long expirationMs = 86400000L;
+    private long expirationMs = 900000L;
     private long refreshExpirationMs = 604800000L;
+    private boolean refreshCookieSecure;
 
     public String getSecret() {
         return secret;
@@ -34,6 +35,14 @@ public class JwtProperties {
 
     public void setRefreshExpirationMs(long refreshExpirationMs) {
         this.refreshExpirationMs = refreshExpirationMs;
+    }
+
+    public boolean isRefreshCookieSecure() {
+        return refreshCookieSecure;
+    }
+
+    public void setRefreshCookieSecure(boolean refreshCookieSecure) {
+        this.refreshCookieSecure = refreshCookieSecure;
     }
 }
 
