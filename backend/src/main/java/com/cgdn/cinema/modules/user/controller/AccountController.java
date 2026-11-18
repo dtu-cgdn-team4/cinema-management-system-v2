@@ -53,10 +53,13 @@ public class AccountController {
 
     /**
      * Cập nhật các trường hồ sơ được phép của tài khoản hiện tại.
+     * Email và số điện thoại có thể được gửi riêng hoặc cùng lúc; service chỉ áp dụng trường
+     * xuất hiện trong JSON và kiểm tra định dạng, tính duy nhất. Đổi số điện thoại qua API này
+     * không có bước OTP. Mọi trường chọn tài khoản đích trong body đều bị DTO/service từ chối.
      *
      * @param userDetails thông tin người dùng được xác thực trong Security Context
      * @param request các trường hồ sơ cần cập nhật
-     * @return hồ sơ sau khi cập nhật
+     * @return hồ sơ sau khi cập nhật, không chứa mật khẩu hoặc hash
      * @throws BusinessException nếu không có người dùng đã xác thực hoặc dữ liệu không hợp lệ
      */
     @Operation(summary = "Cập nhật thông tin hồ sơ cá nhân của tài khoản đang đăng nhập")
