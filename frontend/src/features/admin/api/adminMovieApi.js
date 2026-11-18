@@ -30,7 +30,7 @@ async function getApiModule() {
  */
 async function getAdminHttpClient() {
   if (cachedAdminClient) return cachedAdminClient;
-  const [{ default: axios }, { API_BASE_URL }] = await Promise.all([
+  const [{ default: axios }, { API_BASE_URL, applyRefreshInterceptor }] = await Promise.all([
     import('axios'),
     getApiModule(),
   ]);
@@ -48,7 +48,7 @@ async function getAdminHttpClient() {
     }
     return config;
   });
-  client.interceptors.response.use((res) => res.data?.data ?? res.data);
+  applyRefreshInterceptor(client);
   cachedAdminClient = client;
   return cachedAdminClient;
 }

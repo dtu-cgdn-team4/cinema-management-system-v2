@@ -73,6 +73,7 @@ export const useLogin = () => {
       const response = await authApi.login({
         username: formData.username.trim(),
         password: formData.password,
+        rememberMe: formData.rememberMe,
       });
 
       const loginData = response?.data || response;
@@ -103,7 +104,7 @@ export const useLogin = () => {
       setIsGoogleLoading(true);
       setErrors({});
 
-      const res = await authApi.getGoogleAuthUrl();
+      const res = await authApi.getGoogleAuthUrl(formData.rememberMe);
       const redirectUrl = res?.authorizationUrl || res?.authUrl || res?.data?.authorizationUrl;
 
       if (redirectUrl) {

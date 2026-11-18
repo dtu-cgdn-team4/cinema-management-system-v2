@@ -3,10 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Globe, ChevronDown, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import RegisterCinematicHero from '../components/RegisterCinematicHero';
+import authApi from '../api/authApi';
 
 /**
  * Trang xử lý callback xác thực từ Google OAuth2
- * Nhận accessToken và user từ URL query params sau khi Backend chuyển hướng về.
+ * Nhận phiên đăng nhập từ refresh cookie HttpOnly sau khi Backend chuyển hướng về.
  * - Nếu tài khoản Google thiếu SĐT, ngày sinh hoặc giới tính:
  *   Chuyển hướng về trang đăng nhập (/dang-nhap?step=complete-profile) để form bên phải đổi sang nhập thông tin còn thiếu.
  * - Nếu tài khoản đã đủ thông tin: Chuyển về trang trước đó hoặc trang chủ.
@@ -22,7 +23,7 @@ export const GoogleCallbackPage = () => {
     if (started.current) return;
     started.current = true;
 
-    const finishGoogleLogin = () => {
+    const finishGoogleLogin = async () => {
       try {
         // 1. Kiểm tra nếu có lỗi từ Backend hoặc Google chuyển về
         const errorParam = searchParams.get('error') || searchParams.get('message');
@@ -30,19 +31,11 @@ export const GoogleCallbackPage = () => {
           throw new Error(decodeURIComponent(errorParam));
         }
 
-        // 2. Lấy accessToken và user từ URL query parameters
-        const accessToken = searchParams.get('accessToken');
-        const userParam = searchParams.get('user');
-
-        if (!accessToken || !userParam) {
+        // Exchange the HttpOnly refresh cookie for a short-lived access token.
+        const loginData = await authApi.exchangeGoogleLogin();
+        const { accessToken, user } = loginData || {};
+        if (!accessToken || !user) {
           throw new Error('Không nhận được thông tin xác thực từ Google. Vui lòng thử lại.');
-        }
-
-        let user;
-        try {
-          user = JSON.parse(userParam);
-        } catch {
-          user = JSON.parse(decodeURIComponent(userParam));
         }
 
         const rememberMe = sessionStorage.getItem('googleLoginRememberMe') !== 'false';
