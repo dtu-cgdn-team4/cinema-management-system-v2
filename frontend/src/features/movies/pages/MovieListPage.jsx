@@ -163,18 +163,10 @@ export default function MovieListPage() {
     return result;
   }, [dataSource, matchedBySearch, activeTab, sortBy]);
 
-  const handleBooking = (title) => {
-    alert(`Chuyển đến chọn suất chiếu cho phim: ${title}`);
-  };
-
-  const handleDetail = (title) => {
-    alert(`Xem chi tiết phim: ${title}`);
-  };
-
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-7">
+    <div className="py-5 sm:py-8 px-4 sm:px-6 lg:px-8 w-full min-w-0 max-w-7xl mx-auto space-y-5 sm:space-y-7">
 
-      <nav className="flex items-center gap-2 text-xs text-slate-400">
+      <nav className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
         <Link to="/trang-chu" className="hover:text-white transition-colors">
           Trang chủ
         </Link>
@@ -220,12 +212,12 @@ export default function MovieListPage() {
         handleSortChange={handleSortChange}
       />
 
-      <div className="flex items-center justify-between text-xs sm:text-sm text-slate-400 border-b border-slate-800/80 pb-3">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-slate-400 border-b border-slate-800/80 pb-3">
         <div>
           {searchQuery.trim() ? (
             <span>
               Tìm thấy <strong className="text-white font-bold">{displayMovies.length}</strong> kết quả cho "
-              <span className="text-brand font-semibold">{searchQuery}</span>"
+              <span className="text-brand font-semibold break-all">{searchQuery}</span>"
             </span>
           ) : (
             <span>
@@ -242,11 +234,11 @@ export default function MovieListPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 bg-[#131B2A] p-1 rounded-lg border border-[#222E42]">
+        <div className="flex shrink-0 self-end sm:self-auto items-center gap-1 bg-[#131B2A] p-1 rounded-lg border border-[#222E42]">
           <button
             onClick={() => setViewMode('grid')}
             type="button"
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`flex size-11 items-center justify-center rounded-md transition-colors ${
               viewMode === 'grid'
                 ? 'bg-brand text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
@@ -258,7 +250,7 @@ export default function MovieListPage() {
           <button
             onClick={() => setViewMode('list')}
             type="button"
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`flex size-11 items-center justify-center rounded-md transition-colors ${
               viewMode === 'list'
                 ? 'bg-brand text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
@@ -273,7 +265,7 @@ export default function MovieListPage() {
       {usingMock && !loading && (
         <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
           Không kết nối được API. Đang hiển thị dữ liệu mẫu để xem thử giao diện; đây không phải lịch chiếu thực tế.
-          <button type="button" onClick={() => setReloadKey((key) => key + 1)} className="ml-3 underline font-semibold">
+          <button type="button" onClick={() => setReloadKey((key) => key + 1)} className="mt-2 flex min-h-11 items-center underline font-semibold sm:mt-0 sm:inline-flex sm:ml-3">
             Thử kết nối lại
           </button>
         </div>
@@ -285,11 +277,9 @@ export default function MovieListPage() {
         viewMode={viewMode}
         searchQuery={searchQuery}
         handleResetFilters={handleResetFilters}
-        handleDetail={handleDetail}
-        handleBooking={handleBooking}
       />
 
-      <div className="p-4 rounded-xl bg-[#101726] border border-[#1E293B] flex items-center gap-3 text-xs text-slate-400">
+      <div className="p-4 rounded-xl bg-[#101726] border border-[#1E293B] flex items-start gap-3 leading-relaxed text-xs text-slate-400">
         <HelpCircle className="w-4 h-4 text-brand shrink-0" />
         <span>
           Không tìm thấy phim bạn muốn? Vui lòng thử lại với từ khóa khác hoặc liên hệ bộ phận hỗ trợ rạp Galaxy Cinema qua hotline{' '}
