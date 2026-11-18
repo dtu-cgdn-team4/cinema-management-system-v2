@@ -43,7 +43,7 @@ import {
   MOVIE_STATUS_META,
 } from '../api/mockMoviesData';
 import MovieDetailModal from '../components/MovieDetailModal';
-// Hộp thoại xóa mềm sẽ được tích hợp ở Đợt 2 (PR 2)
+import SoftDeleteMovieModal from '../components/SoftDeleteMovieModal';
 
 const STATUS_TABS = [
   { key: 'ALL', label: 'Tất cả phim' },
@@ -798,16 +798,11 @@ export default function AdminMovieListPage() {
                               <button
                                 type="button"
                                 disabled={isStopped}
-                                onClick={() =>
-                                  showToast(
-                                    'info',
-                                    'Chức năng ngừng phát hành (xóa mềm) sẽ được kích hoạt ở Đợt 2 (PR 2).',
-                                  )
-                                }
+                                onClick={() => setMovieToDelete(movie)}
                                 title={
                                   isStopped
                                     ? 'Phim đã ở trạng thái Ngừng chiếu'
-                                    : 'Ngừng phát hành phim (Xóa mềm - Đợt 2)'
+                                    : 'Ngừng phát hành phim'
                                 }
                                 aria-label={`Ngừng phát hành phim ${movie.title}`}
                                 className={`rounded-full p-1.5 transition ${
@@ -917,12 +912,19 @@ export default function AdminMovieListPage() {
         movie={movieForDetail}
         isOpen={Boolean(movieForDetail)}
         onClose={() => setMovieForDetail(null)}
-        onRequestStopRelease={() =>
-          showToast(
-            'info',
-            'Chức năng ngừng phát hành (xóa mềm) sẽ được kích hoạt ở Đợt 2 (PR 2).',
-          )
-        }
+        onRequestStopRelease={(movie) => {
+          setMovieForDetail(null);
+          setMovieToDelete(movie);
+        }}
+      />
+
+      {/* Hộp thoại xác nhận xóa mềm phim (ngừng phát hành) */}
+      <SoftDeleteMovieModal
+        movie={movieToDelete}
+        isOpen={Boolean(movieToDelete)}
+        isSubmitting={isDeleting}
+        onClose={() => setMovieToDelete(null)}
+        onConfirm={handleConfirmSoftDelete}
       />
     </div>
   );
