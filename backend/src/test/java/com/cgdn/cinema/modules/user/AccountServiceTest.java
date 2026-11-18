@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -206,20 +207,24 @@ class AccountServiceTest {
         assertFalse(req1.isFullNamePresent());
         assertFalse(req1.hasUnknownFields());
 
-        // Trường không trong hợp đồng kể cả gửi null cũng bị bắt vào unknownFields
+        // Trường email gửi null vẫn được ghi nhận là có mặt
         UpdateAccountProfileRequest req2 = mapper.readValue("{\"email\": null}", UpdateAccountProfileRequest.class);
-        assertTrue(req2.hasUnknownFields());
-        assertTrue(req2.getUnknownFields().containsKey("email"));
+        assertTrue(req2.isEmailPresent());
+        assertNull(req2.getEmail());
+        assertFalse(req2.hasUnknownFields());
 
-        // Trường không trong hợp đồng gửi có giá trị
+        // Trường phoneNumber gửi có giá trị
         UpdateAccountProfileRequest req3 = mapper.readValue("{\"phoneNumber\": \"0901234567\"}", UpdateAccountProfileRequest.class);
-        assertTrue(req3.hasUnknownFields());
-        assertTrue(req3.getUnknownFields().containsKey("phoneNumber"));
+        assertTrue(req3.isPhoneNumberPresent());
+        assertEquals("0901234567", req3.getPhoneNumber());
+        assertFalse(req3.hasUnknownFields());
 
         // Body rỗng -> không có trường nào present, không có trường lạ
         UpdateAccountProfileRequest req4 = mapper.readValue("{}", UpdateAccountProfileRequest.class);
         assertFalse(req4.isFullNamePresent());
         assertFalse(req4.isAddressPresent());
+        assertFalse(req4.isEmailPresent());
+        assertFalse(req4.isPhoneNumberPresent());
         assertFalse(req4.hasUnknownFields());
     }
 
@@ -227,7 +232,7 @@ class AccountServiceTest {
     void updateProfile_partialUpdate_updatesOnlyProvidedFieldsAndPreservesOthers() {
         User user = createSampleUser(10L);
         when(users.findById(10L)).thenReturn(Optional.of(user));
-        when(users.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+        when(users.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
         request.setFullName("Nguyễn Văn Mới");
@@ -248,7 +253,7 @@ class AccountServiceTest {
     void updateProfile_clearsOptionalFieldsWhenNull() {
         User user = createSampleUser(10L);
         when(users.findById(10L)).thenReturn(Optional.of(user));
-        when(users.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+        when(users.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
         request.setDateOfBirth(null);
@@ -269,7 +274,7 @@ class AccountServiceTest {
     void updateProfile_clearsCitizenIdAndAddressWhenBlank() {
         User user = createSampleUser(10L);
         when(users.findById(10L)).thenReturn(Optional.of(user));
-        when(users.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+        when(users.saveAndFlush(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
         request.setCitizenId("   ");
@@ -284,12 +289,42 @@ class AccountServiceTest {
     @Test
     void updateProfile_rejectsUnknownOrReadOnlyFields() {
         UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
-        request.handleUnknown("email", null);
+        request.handleUnknown("userId", null);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> accountService.updateProfile(10L, request));
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
-        verify(users, never()).save(any());
+        verify(users, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void updateProfile_mapsConcurrentEmailConstraintViolationToConflict() {
+        User user = createSampleUser(10L);
+        when(users.findById(10L)).thenReturn(Optional.of(user));
+        when(users.saveAndFlush(user)).thenThrow(new DataIntegrityViolationException("duplicate email"));
+        UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
+        request.setEmail("new@example.com");
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.updateProfile(10L, request));
+
+        assertEquals(ErrorCode.EMAIL_EXISTS, error.getErrorCode());
+        assertEquals("email", error.field());
+    }
+
+    @Test
+    void updateProfile_mapsConcurrentPhoneConstraintViolationToConflict() {
+        User user = createSampleUser(10L);
+        when(users.findById(10L)).thenReturn(Optional.of(user));
+        when(users.saveAndFlush(user)).thenThrow(new DataIntegrityViolationException("duplicate so_dien_thoai"));
+        UpdateAccountProfileRequest request = new UpdateAccountProfileRequest();
+        request.setPhoneNumber("0391234567");
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> accountService.updateProfile(10L, request));
+
+        assertEquals(ErrorCode.PHONE_EXISTS, error.getErrorCode());
+        assertEquals("phoneNumber", error.field());
     }
 
     @Test

@@ -450,6 +450,89 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void updateAccountProfile_updatesContactsForPrincipalOnly() throws Exception {
+        User other = userRepository.save(createUser("khachhang02", "khach02@cinema.vn", "0909876543",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode()));
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"New@Example.com\",\"phoneNumber\":\"0391234567\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("new@example.com"))
+                .andExpect(jsonPath("$.data.phoneNumber").value("0391234567"))
+                .andExpect(jsonPath("$.data.password").doesNotExist());
+        assertThat(userRepository.findById(activeCustomer.getId()).orElseThrow().getEmail()).isEqualTo("new@example.com");
+        assertThat(userRepository.findById(activeCustomer.getId()).orElseThrow().getPhoneNumber()).isEqualTo("0391234567");
+        assertThat(userRepository.findById(other.getId()).orElseThrow().getEmail()).isEqualTo("khach02@cinema.vn");
+        assertThat(userRepository.findById(other.getId()).orElseThrow().getPhoneNumber()).isEqualTo("0909876543");
+    }
+
+    @Test
+    void updateAccountProfile_updatesEachContactIndependentlyAndAcceptsOwnValues() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+        String originalPhone = activeCustomer.getPhoneNumber();
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"other@example.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.phoneNumber").value(originalPhone));
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":\"0351234567\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("other@example.com"));
+        mockMvc.perform(patch("/api/v1/account/me")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"OTHER@EXAMPLE.COM\",\"phoneNumber\":\"0351234567\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("other@example.com"));
+        User saved = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        assertThat(saved.getEmail()).isEqualTo("other@example.com");
+        assertThat(saved.getPhoneNumber()).isEqualTo("0351234567");
+    }
+
+    @Test
+    void updateAccountProfile_rejectsInvalidContacts() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+        for (String body : new String[]{"{\"email\":null}", "{\"email\":\"\"}", "{\"email\":\"bad\"}", "{\"email\":\" new@example.com \"}"}) {
+            mockMvc.perform(patch("/api/v1/account/me").header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.email").exists());
+        }
+        for (String body : new String[]{"{\"phoneNumber\":null}", "{\"phoneNumber\":\"\"}", "{\"phoneNumber\":\"123\"}", "{\"phoneNumber\":\" 0391234567 \"}"}) {
+            mockMvc.perform(patch("/api/v1/account/me").header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.phoneNumber").exists());
+        }
+        User saved = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        assertThat(saved.getEmail()).isEqualTo(activeCustomer.getEmail());
+        assertThat(saved.getPhoneNumber()).isEqualTo(activeCustomer.getPhoneNumber());
+    }
+
+    @Test
+    void updateAccountProfile_rejectsContactsOwnedByAnotherUser() throws Exception {
+        User other = userRepository.save(createUser("khachhang02", "khach02@cinema.vn", "0909876543",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode()));
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+        mockMvc.perform(patch("/api/v1/account/me").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"khach02@cinema.vn\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors.email").value("Email đã tồn tại."));
+        mockMvc.perform(patch("/api/v1/account/me").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"phoneNumber\":\"0909876543\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors.phoneNumber").value("Số điện thoại đã tồn tại."));
+        assertThat(userRepository.findById(activeCustomer.getId()).orElseThrow().getEmail()).isEqualTo(activeCustomer.getEmail());
+        assertThat(userRepository.findById(other.getId()).orElseThrow().getPhoneNumber()).isEqualTo("0909876543");
+    }
+
+    @Test
     void updateAccountProfile_partialUpdate_preservesAbsentFields() throws Exception {
         activeCustomer.setCitizenId("048202001234");
         activeCustomer.setAddress("Đà Nẵng");
@@ -550,38 +633,6 @@ class AuthControllerIntegrationTest {
     @Test
     void updateAccountProfile_rejectsUnknownAndReadOnlyFields() throws Exception {
         String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
-
-        // email có giá trị
-        mockMvc.perform(patch("/api/v1/account/me")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"hacker@cinema.vn\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
-
-        // email có giá trị null
-        mockMvc.perform(patch("/api/v1/account/me")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":null}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
-
-        // phoneNumber có giá trị null
-        mockMvc.perform(patch("/api/v1/account/me")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"phoneNumber\":null}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
-
-        // phoneNumber có giá trị
-        mockMvc.perform(patch("/api/v1/account/me")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"phoneNumber\":\"0909999999\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
 
         // role
         mockMvc.perform(patch("/api/v1/account/me")
