@@ -10,5 +10,6 @@ public record CinemaResponse(
         String phone,
         LocalTime openTime,
         LocalTime closeTime,
-        String imageUrl) {
+        String imageUrl,
+        int roomCount) {
 }

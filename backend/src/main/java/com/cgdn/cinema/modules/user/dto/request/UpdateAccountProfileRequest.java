@@ -15,12 +15,15 @@ import java.util.Set;
 
 /**
  * Dữ liệu nhận cho PATCH /api/v1/account/me.
- * Chỉ cho phép fullName, dateOfBirth, gender, citizenId và address.
- * Tập presentFields phân biệt trường bị bỏ qua với trường được gửi rõ ràng là null;
- * unknownFields lưu các thuộc tính ngoài hợp đồng để service từ chối request.
+ * Chỉ cho phép email, phoneNumber, fullName, dateOfBirth, gender, citizenId và address.
+ * Một giá trị null trong Java có thể đến từ JSON null hoặc từ trường vắng mặt; presentFields
+ * phân biệt hai trường hợp này để PATCH chỉ xử lý những trường client thực sự gửi.
+ * unknownFields giữ cả thuộc tính lạ có giá trị null để service từ chối toàn bộ request.
  */
 public class UpdateAccountProfileRequest {
 
+    private String email;
+    private String phoneNumber;
     private String fullName;
     private LocalDate dateOfBirth;
     private String gender;
@@ -35,6 +38,42 @@ public class UpdateAccountProfileRequest {
 
     /** Tạo DTO rỗng để Jackson nạp các trường từ JSON. */
     public UpdateAccountProfileRequest() {
+    }
+
+    /** @return email được gửi lên; có thể null khi JSON ghi rõ null hoặc không có trường này */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * Ghi nhận email đã xuất hiện trong JSON, kể cả khi giá trị là null.
+     * Service sẽ từ chối null/rỗng vì cột email trong CSDL là bắt buộc.
+     *
+     * @param email email do client gửi lên
+     */
+    @JsonProperty("email")
+    @JsonSetter(nulls = Nulls.SET)
+    public void setEmail(String email) {
+        this.email = email;
+        this.presentFields.add("email");
+    }
+
+    /** @return số điện thoại được gửi lên; có thể null khi JSON ghi rõ null hoặc không có trường này */
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    /**
+     * Ghi nhận số điện thoại đã xuất hiện trong JSON, kể cả khi giá trị là null.
+     * Việc theo dõi sự hiện diện của trường không đồng nghĩa với xác minh số điện thoại.
+     *
+     * @param phoneNumber số điện thoại do client gửi lên
+     */
+    @JsonProperty("phoneNumber")
+    @JsonSetter(nulls = Nulls.SET)
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+        this.presentFields.add("phoneNumber");
     }
 
     /** @return họ và tên nếu request có cung cấp */
@@ -123,8 +162,10 @@ public class UpdateAccountProfileRequest {
         this.presentFields.add("address");
     }
 
-    /** Lưu thuộc tính ngoài hợp đồng, bao gồm cả các trường chỉ đọc. */
-    // @JsonAnySetter bắt email, phoneNumber, role, userId và mọi trường lạ để service trả HTTP 400.
+    /**
+     * Lưu thuộc tính ngoài hợp đồng để service từ chối, bao gồm cả các trường chỉ đọc
+     * như userId, username và role. Không bỏ qua thuộc tính lạ dù client gửi null.
+     */
     @JsonAnySetter
     public void handleUnknown(String name, Object value) {
         unknownFields.put(name, value);
@@ -133,6 +174,16 @@ public class UpdateAccountProfileRequest {
     /** @return true nếu JSON có chứa fullName */
     public boolean isFullNamePresent() {
         return presentFields.contains("fullName");
+    }
+
+    /** @return true nếu JSON có chứa email, kể cả khi giá trị là null */
+    public boolean isEmailPresent() {
+        return presentFields.contains("email");
+    }
+
+    /** @return true nếu JSON có chứa phoneNumber, kể cả khi giá trị là null */
+    public boolean isPhoneNumberPresent() {
+        return presentFields.contains("phoneNumber");
     }
 
     /** @return true nếu JSON có chứa dateOfBirth */
