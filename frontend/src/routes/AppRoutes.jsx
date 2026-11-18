@@ -48,62 +48,93 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+/**
+ * Guard bảo vệ: Nếu tài khoản đã xác thực qua Google nhưng chưa hoàn tất thông tin
+ * (thiếu SĐT / ngày sinh / giới tính), ngăn chặn truy cập vào bất kỳ trang nào khác
+ * và tự động điều hướng về /dang-nhap?step=complete-profile.
+ */
+const CompleteProfileGuard = ({ children }) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return children;
+  }
+
+  const isProfileIncomplete = Boolean(
+    isAuthenticated && user && (!user.phoneNumber || !user.dateOfBirth || !user.gender)
+  );
+
+  const isAuthRoute =
+    location.pathname === '/dang-nhap' ||
+    location.pathname === '/login' ||
+    location.pathname === '/auth/google/callback';
+
+  if (isProfileIncomplete && !isAuthRoute) {
+    return <Navigate to="/dang-nhap?step=complete-profile" replace />;
+  }
+
+  return children;
+};
+
 export default function AppRoutes() {
   return (
-    <Routes>
-      {/* Trang đăng ký độc lập */}
-      <Route path="/dang-ky" element={<RegisterPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <CompleteProfileGuard>
+      <Routes>
+        {/* Trang đăng ký độc lập */}
+        <Route path="/dang-ky" element={<RegisterPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      {/* Trang đăng nhập & xác thực Google */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/dang-nhap" element={<LoginPage />} />
-      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+        {/* Trang đăng nhập & xác thực Google */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dang-nhap" element={<LoginPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-      {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
-      <Route path="/dat-ve/suat-chieu/:showtimeId/chon-ghe" element={<SeatSelectionPage />} />
+        {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
+        <Route path="/dat-ve/suat-chieu/:showtimeId/chon-ghe" element={<SeatSelectionPage />} />
 
-      {/* Tuyến đường phân hệ Quản lý phim dành cho Quản trị viên */}
-      <Route
-        path="/admin/movies"
-        element={
-          <AdminRoute>
-            <AdminMovieListPage />
-          </AdminRoute>
-        }
-      />
-
-      {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
-      <Route element={<CustomerLayout />}>
-        <Route path="/" element={<Navigate to="/trang-chu" replace />} />
-        <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
-        <Route path="/phim" element={<MovieListPage />} />
-        <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
-        <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
-        <Route path="/tai-khoan" element={<AccountPage />} />
+        {/* Tuyến đường phân hệ Quản lý phim dành cho Quản trị viên */}
         <Route
-          path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
-          element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
+          path="/admin/movies"
+          element={
+            <AdminRoute>
+              <AdminMovieListPage />
+            </AdminRoute>
+          }
         />
-        <Route path="*" element={
-          <div className="py-24 text-center max-w-md mx-auto space-y-4">
-            <h2 className="text-4xl font-extrabold text-galaxy-red">404</h2>
-            <p className="text-base font-semibold text-white">Trang không tồn tại</p>
-            <p className="text-xs text-slate-400">
-              Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
-            </p>
-            <div>
-              <a
-                href="/trang-chu"
-                className="inline-block px-5 py-2 rounded-lg text-xs font-semibold text-white bg-galaxy-red hover:bg-galaxy-red/80 transition-colors"
-              >
-                Về trang chủ phim
-              </a>
+
+        {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
+        <Route element={<CustomerLayout />}>
+          <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+          <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
+          <Route path="/phim" element={<MovieListPage />} />
+          <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
+          <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
+          <Route path="/tai-khoan" element={<AccountPage />} />
+          <Route
+            path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
+            element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
+          />
+          <Route path="*" element={
+            <div className="py-24 text-center max-w-md mx-auto space-y-4">
+              <h2 className="text-4xl font-extrabold text-galaxy-red">404</h2>
+              <p className="text-base font-semibold text-white">Trang không tồn tại</p>
+              <p className="text-xs text-slate-400">
+                Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
+              </p>
+              <div>
+                <a
+                  href="/trang-chu"
+                  className="inline-block px-5 py-2 rounded-lg text-xs font-semibold text-white bg-galaxy-red hover:bg-galaxy-red/80 transition-colors"
+                >
+                  Về trang chủ phim
+                </a>
+              </div>
             </div>
-          </div>
-        } />
-      </Route>
-    </Routes>
+          } />
+        </Route>
+      </Routes>
+    </CompleteProfileGuard>
   );
 }
 

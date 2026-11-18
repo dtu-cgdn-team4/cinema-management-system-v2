@@ -83,6 +83,17 @@ export const authApi = {
   getCurrentUser: () => {
     return apiClient.get('/auth/me');
   },
+
+  /**
+   * Bổ sung thông tin bắt buộc (SĐT, Ngày sinh, Giới tính) cho tài khoản
+   */
+  completeProfile: (data) => {
+    return apiClient.post('/auth/complete-profile', data);
+  },
+};
+
+export const completeProfile = (data) => {
+  return apiClient.post('/auth/complete-profile', data);
 };
 
 export default authApi;

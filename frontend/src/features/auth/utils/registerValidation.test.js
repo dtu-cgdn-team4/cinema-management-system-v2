@@ -4,6 +4,7 @@ import {
   calculateAge,
   getUtf8ByteLength,
   validateRegisterForm,
+  validateCompleteProfileForm,
 } from './registerValidation.js';
 import { toE164VietnamesePhone, formatDisplayPhone, maskPhoneNumber } from './phoneUtils.js';
 
@@ -106,4 +107,31 @@ test('Dữ liệu hợp lệ: không có lỗi validation', () => {
 
   assert.equal(result.isValid, true);
   assert.deepEqual(result.errors, {});
+});
+
+test('validateCompleteProfileForm: bắt buộc SĐT, ngày sinh, giới tính; không yêu cầu mật khẩu/OTP', () => {
+  const invalid = validateCompleteProfileForm({
+    fullName: '',
+    phoneNumber: '',
+    dateOfBirth: '',
+    gender: '',
+  });
+  assert.equal(invalid.isValid, false);
+  assert.equal(invalid.errors.fullName, 'Vui lòng nhập họ và tên.');
+  assert.equal(invalid.errors.phoneNumber, 'Vui lòng nhập SĐT.');
+  assert.equal(invalid.errors.dateOfBirth, 'Vui lòng nhập ngày sinh.');
+  assert.equal(invalid.errors.gender, 'Vui lòng chọn giới tính.');
+  assert.equal(invalid.errors.password, undefined);
+  assert.equal(invalid.errors.termsAccepted, undefined);
+
+  const valid = validateCompleteProfileForm({
+    fullName: 'Nguyễn Văn Google',
+    phoneNumber: '0901234567',
+    dateOfBirth: '20 / 10 / 1998',
+    gender: 'FEMALE',
+    idCard: '012345678901',
+    address: 'Hà Nội',
+  });
+  assert.equal(valid.isValid, true);
+  assert.deepEqual(valid.errors, {});
 });
