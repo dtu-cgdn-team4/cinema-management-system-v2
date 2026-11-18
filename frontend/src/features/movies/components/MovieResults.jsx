@@ -86,7 +86,8 @@ export default function MovieResults({ loading, error, displayMovies, viewMode, 
                   </div>
 
                   <div className="mt-4 lg:mt-0 col-span-2 grid grid-cols-1 gap-2 lg:flex lg:justify-end">
-<Link to={`/phim/${movie.id}`}
+                    <Link
+                      to={`/phim/${movie.id}`}
                       className="flex items-center justify-center min-h-11 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-brand to-[#FF4D6D] hover:from-[#E61E43] hover:to-brand shadow-md shadow-brand/20 transition-all hover:scale-105"
                     >
                       Đặt vé

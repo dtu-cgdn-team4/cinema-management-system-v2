@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { ChevronRight, LayoutGrid, List, HelpCircle } from 'lucide-react';
 import { errorMessage } from '@/services/apiClient';
 import { movieApi } from '../api/movieApi';
@@ -12,6 +12,7 @@ const GENRE_OPTIONS = ['Tất cả thể loại'];
 export default function MovieListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const queryQ = searchParams.get('q') || '';
   const queryStatus = searchParams.get('status') || 'ALL';
