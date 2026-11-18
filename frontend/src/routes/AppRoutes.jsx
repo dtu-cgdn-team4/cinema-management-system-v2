@@ -5,6 +5,7 @@ import GoogleCallbackPage from '@/features/auth/pages/GoogleCallbackPage';
 import CustomerLayout from '@/layouts/CustomerLayout';
 import SeatSelectionPage from '@/features/booking/pages/SeatSelectionPage';
 import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage';
+import CinemaSelectionPage from '@/features/cinemas/pages/CinemaSelectionPage';
 import AccountPage from '@/features/account/pages/AccountPage';
 import AdminMovieListPage from '@/features/admin/pages/AdminMovieListPage';
 import { useAuth } from '@/context/AuthContext';
@@ -81,7 +82,7 @@ export default function AppRoutes() {
         <Route path="/phim" element={<MovieListPage />} />
         <Route path="/phim/:movieId" element={<MovieDetailPage />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
-        <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
+        <Route path="/rap-chieu" element={<CinemaSelectionPage />} />
         <Route path="/tai-khoan" element={<AccountPage />} />
         <Route
           path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
