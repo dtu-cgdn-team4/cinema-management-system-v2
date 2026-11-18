@@ -75,7 +75,7 @@ export default function AppRoutes() {
 
       {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
-        <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+        <Route path="/" element={<Navigate to="/phim" replace />} />
         <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
         <Route path="/phim" element={<MovieListPage />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
@@ -87,8 +87,7 @@ export default function AppRoutes() {
         />
         <Route path="*" element={
           <div className="py-24 text-center max-w-md mx-auto space-y-4">
-            <h2 className="text-4xl font-extrabold text-galaxy-red">404</h2>
-            <p className="text-base font-semibold text-white">Trang không tồn tại</p>
+            <h1 className="text-4xl font-extrabold text-galaxy-red">Rất tiếc! Trang này không tồn tại.</h1>
             <p className="text-xs text-slate-400">
               Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
             </p>
