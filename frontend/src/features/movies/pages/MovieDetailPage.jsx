@@ -68,7 +68,9 @@ function TrailerModal({ url, title, onClose }) {
         if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&rel=0`;
       }
       if (u.hostname === 'youtu.be') return `https://www.youtube.com/embed/${u.pathname.slice(1)}?autoplay=1&rel=0`;
-    } catch {}
+    } catch {
+      // If the URL is not parseable, keep it as-is for the iframe fallback below.
+    }
     return url;
   })();
 
