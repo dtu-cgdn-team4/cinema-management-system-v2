@@ -92,7 +92,7 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 -- 7. TÀI KHOẢN NGƯỜI DÙNG (nguoi_dung) - Mật khẩu mặc định: 123456
 -- Chuẩn BCrypt hash của '123456': $2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe
 -- ------------------------------------------------------------------------------
-INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
+INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
     (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
 
@@ -109,8 +109,7 @@ INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, n
     (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1),
 
     -- Khách hàng mẫu 3 (Tâm Dũ - TV0000006)
-    (6, 'tamdu', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Tâm Dũ', 'tamdu@gmail.com', '0905666777', '2000-01-01', 'Nam', '048099006677', 'Đà Nẵng', 'KHACH_HANG', NULL, 1250, 1)
-ON DUPLICATE KEY UPDATE mat_khau = VALUES(mat_khau), so_lan_dang_nhap_sai = 0, bi_khoa = FALSE;
+    (6, 'tamdu', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Tâm Dũ', 'tamdu@gmail.com', '0905666777', '2000-01-01', 'Nam', '048099006677', 'Đà Nẵng', 'KHACH_HANG', NULL, 1250, 1);
 
 -- ------------------------------------------------------------------------------
 -- 8. PHÒNG CHIẾU (phong_chieu)
