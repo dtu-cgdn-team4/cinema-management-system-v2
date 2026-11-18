@@ -1,4 +1,5 @@
 import { formatVnd, formatDate, formatTime } from '@/utils/format';
+import { Link } from 'react-router-dom';
 import TicketStatusBadge from './TicketStatusBadge';
 import { Ticket as TicketIcon } from 'lucide-react';
 
@@ -77,10 +78,6 @@ function TicketRow({ ticket }) {
     ? `${formatTime(showtime.startsAt)} · ${formatDate(showtime.startsAt)} · ${showtime.roomName || ''}`
     : '';
 
-  const handleViewTicket = () => {
-    alert(`Chức năng chi tiết vé (${bookingCode}) đang được phát triển.`);
-  };
-
   return (
     <div className="min-h-[104px] grid grid-cols-1 lg:grid-cols-[160px_1fr_130px_130px_220px] items-center gap-4 lg:gap-x-[10px] px-7 py-5 hover:bg-white/[0.02] transition">
       {/* Cột 1: Mã đặt vé */}
@@ -144,13 +141,12 @@ function TicketRow({ ticket }) {
         <div className="w-[128px] shrink-0">
           <TicketStatusBadge status={bookingStatus} collectedAt={collectedAt} />
         </div>
-        <button
-          type="button"
-          onClick={handleViewTicket}
+        <Link
+          to={`/tai-khoan/ve-da-dat/${encodeURIComponent(bookingCode)}`}
           className="text-xs font-semibold text-[#ea384d] hover:text-[#ff4d6d] transition cursor-pointer shrink-0"
         >
           Xem vé
-        </button>
+        </Link>
       </div>
     </div>
   );
