@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronRight, LayoutGrid, List, HelpCircle } from 'lucide-react';
 import { errorMessage } from '@/services/apiClient';
@@ -161,7 +161,7 @@ export default function MovieListPage() {
     }
 
     return result;
-  }, [dataSource, matchedBySearch, activeTab, sortBy]);
+  }, [matchedBySearch, activeTab, sortBy]);
 
   return (
     <div className="py-5 sm:py-8 px-4 sm:px-6 lg:px-8 w-full min-w-0 max-w-7xl mx-auto space-y-5 sm:space-y-7">

@@ -9,6 +9,7 @@ import AccountPage from '@/features/account/pages/AccountPage';
 import AdminMovieListPage from '@/features/admin/pages/AdminMovieListPage';
 import { useAuth } from '@/context/AuthContext';
 import MovieListPage from '@/features/movies/pages/MovieListPage';
+import MovieDetailPage from '@/features/movies/pages/MovieDetailPage';
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
 const AdminRoute = ({ children }) => {
@@ -78,6 +79,7 @@ export default function AppRoutes() {
         <Route path="/" element={<Navigate to="/phim" replace />} />
         <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
         <Route path="/phim" element={<MovieListPage />} />
+        <Route path="/phim/:movieId" element={<MovieDetailPage />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
         <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
         <Route path="/tai-khoan" element={<AccountPage />} />
