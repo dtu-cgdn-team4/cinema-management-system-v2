@@ -26,7 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     /** Nằm dưới GET /api/v1/showtimes/** mà SecurityConfig cho xem không cần đăng nhập. */
     public static final String ENDPOINT = "/api/v1/showtimes/ws";
 
-    @Value("${app.websocket.allowed-origins:http://localhost:5173}")
+    @Value("${app.websocket.allowed-origins:http://localhost:5174}")
     private String[] allowedOrigins;
 
     @Override

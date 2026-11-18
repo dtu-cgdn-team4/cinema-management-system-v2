@@ -8,10 +8,12 @@ export const getAccountProfile = () => apiClient.get('/account/me');
 
 /**
  * Cập nhật thông tin hồ sơ cá nhân.
- * Hợp đồng API chỉ cho phép: fullName, dateOfBirth, gender, citizenId, address.
- * Tuyệt đối không gửi email, phoneNumber, userId hoặc các trường ngoài hợp đồng.
+ * Hợp đồng API cho phép: email, phoneNumber, fullName, dateOfBirth, gender, citizenId, address.
+ * Tuyệt đối không gửi userId, username, loyaltyPoints hoặc các trường ngoài hợp đồng.
  *
  * @param {Object} data
+ * @param {string} [data.email]
+ * @param {string} [data.phoneNumber]
  * @param {string} [data.fullName]
  * @param {string|null} [data.dateOfBirth]
  * @param {string|null} [data.gender]
@@ -20,9 +22,15 @@ export const getAccountProfile = () => apiClient.get('/account/me');
  * @returns {Promise<import('../types').AccountProfile>}
  */
 export const updateAccountProfile = (data) => {
-  // Chỉ gửi các trường API cho phép; email, số điện thoại và mã tài khoản là chỉ đọc.
+  // Chỉ gửi các trường API cho phép khi được cung cấp; bỏ qua trường không truyền lên.
   const payload = {};
 
+  if (data.email !== undefined) {
+    payload.email = data.email;
+  }
+  if (data.phoneNumber !== undefined) {
+    payload.phoneNumber = data.phoneNumber;
+  }
   if (data.fullName !== undefined) {
     payload.fullName = data.fullName.trim();
   }

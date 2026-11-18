@@ -1,14 +1,17 @@
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import LoginPage from '@/features/auth/pages/LoginPage';
-import RegisterPage from '@/features/auth/pages/RegisterPage';
-import GoogleCallbackPage from '@/features/auth/pages/GoogleCallbackPage';
-import CustomerLayout from '@/layouts/CustomerLayout';
-import SeatSelectionPage from '@/features/booking/pages/SeatSelectionPage';
-import ShowtimeSelectionPage from '@/features/booking/pages/ShowtimeSelectionPage';
-import AccountPage from '@/features/account/pages/AccountPage';
-import AdminMovieListPage from '@/features/admin/pages/AdminMovieListPage';
-import { useAuth } from '@/context/AuthContext';
-import MovieListPage from '@/features/movies/pages/MovieListPage';
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import RegisterPage from "@/features/auth/pages/RegisterPage";
+import GoogleCallbackPage from "@/features/auth/pages/GoogleCallbackPage";
+import CustomerLayout from "@/layouts/CustomerLayout";
+import SeatSelectionPage from "@/features/booking/pages/SeatSelectionPage";
+import ShowtimeSelectionPage from "@/features/booking/pages/ShowtimeSelectionPage";
+import CinemaSelectionPage from "@/features/cinemas/pages/CinemaSelectionPage";
+import AccountPage from "@/features/account/pages/AccountPage";
+import AdminMovieListPage from "@/features/admin/pages/AdminMovieListPage";
+import { useAuth } from "@/context/AuthContext";
+import MovieListPage from "@/features/movies/pages/MovieListPage";
+import MemberTicketsPage from "@/features/account/pages/MemberTicketsPage";
+import MovieDetailPage from "@/features/movies/pages/MovieDetailPage";
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
 const AdminRoute = ({ children }) => {
@@ -27,7 +30,7 @@ const AdminRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const isAdmin = user?.role === 'ADMIN' || user?.roleCode === 'ADMIN';
+  const isAdmin = user?.role === "ADMIN" || user?.roleCode === "ADMIN";
   if (!isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#0d0e10] px-6 text-center text-[#f5f2ed]">
@@ -48,77 +51,81 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-/**
- * Guard bảo vệ: Nếu tài khoản đã xác thực qua Google nhưng chưa hoàn tất thông tin
- * (thiếu SĐT / ngày sinh / giới tính), ngăn chặn truy cập vào bất kỳ trang nào khác
- * và tự động điều hướng về /dang-nhap?step=complete-profile.
- */
-const CompleteProfileGuard = ({ children }) => {
+export default function AppRoutes() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-
-  if (isLoading) {
-    return children;
-  }
-
   const isProfileIncomplete = Boolean(
     isAuthenticated && user && (!user.phoneNumber || !user.dateOfBirth || !user.gender)
   );
+  const isAuthRoute = [
+    "/dang-nhap",
+    "/login",
+    "/auth/google/callback",
+  ].includes(location.pathname);
 
-  const isAuthRoute =
-    location.pathname === '/dang-nhap' ||
-    location.pathname === '/login' ||
-    location.pathname === '/auth/google/callback';
-
-  if (isProfileIncomplete && !isAuthRoute) {
+  if (!isLoading && isProfileIncomplete && !isAuthRoute) {
     return <Navigate to="/dang-nhap?step=complete-profile" replace />;
   }
 
-  return children;
-};
-
-export default function AppRoutes() {
   return (
-    <CompleteProfileGuard>
-      <Routes>
-        {/* Trang đăng ký độc lập */}
-        <Route path="/dang-ky" element={<RegisterPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <Routes>
+      {/* Trang đăng ký độc lập */}
+      <Route path="/dang-ky" element={<RegisterPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-        {/* Trang đăng nhập & xác thực Google */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dang-nhap" element={<LoginPage />} />
-        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+      {/* Trang đăng nhập & xác thực Google */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dang-nhap" element={<LoginPage />} />
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-        {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
-        <Route path="/dat-ve/suat-chieu/:showtimeId/chon-ghe" element={<SeatSelectionPage />} />
+      {/* Các bước đặt vé dùng thanh điều hướng đặt vé riêng, không có footer (Figma "Trang chọn ghế") */}
+      <Route
+        path="/dat-ve/suat-chieu/:showtimeId/chon-ghe"
+        element={<SeatSelectionPage />}
+      />
 
-        {/* Tuyến đường phân hệ Quản lý phim dành cho Quản trị viên */}
+      {/* Tuyến đường phân hệ Quản lý phim dành cho Quản trị viên */}
+      <Route
+        path="/admin/movies"
+        element={
+          <AdminRoute>
+            <AdminMovieListPage />
+          </AdminRoute>
+        }
+      />
+
+      {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
+      <Route element={<CustomerLayout />}>
+        <Route path="/" element={<Navigate to="/phim" replace />} />
         <Route
-          path="/admin/movies"
+          path="/trang-chu"
           element={
-            <AdminRoute>
-              <AdminMovieListPage />
-            </AdminRoute>
+            <p className="py-24 text-center text-muted">
+              Trang chủ đang được xây dựng.
+            </p>
           }
         />
-
-        {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
-        <Route element={<CustomerLayout />}>
-          <Route path="/" element={<Navigate to="/trang-chu" replace />} />
-          <Route path="/trang-chu" element={<p className="py-24 text-center text-muted">Trang chủ đang được xây dựng.</p>} />
-          <Route path="/phim" element={<MovieListPage />} />
-          <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
-          <Route path="/rap-chieu" element={<p className="py-24 text-center text-muted">Trang rạp chiếu đang được xây dựng.</p>} />
-          <Route path="/tai-khoan" element={<AccountPage />} />
-          <Route
-            path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
-            element={<p className="py-24 text-center text-muted">Đã giữ ghế. Màn hình thanh toán làm ở task sau.</p>}
-          />
-          <Route path="*" element={
+        <Route path="/phim" element={<MovieListPage />} />
+        <Route path="/phim/:movieId" element={<MovieDetailPage />} />
+        <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
+        <Route path="/rap-chieu" element={<CinemaSelectionPage />} />
+        <Route path="/tai-khoan" element={<AccountPage />} />
+        <Route path="/tai-khoan/ve-da-dat" element={<MemberTicketsPage />} />
+        <Route
+          path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
+          element={
+            <p className="py-24 text-center text-muted">
+              Đã giữ ghế. Màn hình thanh toán làm ở task sau.
+            </p>
+          }
+        />
+        <Route
+          path="*"
+          element={
             <div className="py-24 text-center max-w-md mx-auto space-y-4">
-              <h2 className="text-4xl font-extrabold text-galaxy-red">404</h2>
-              <p className="text-base font-semibold text-white">Trang không tồn tại</p>
+              <h1 className="text-4xl font-extrabold text-galaxy-red">
+                Rất tiếc! Trang này không tồn tại.
+              </h1>
               <p className="text-xs text-slate-400">
                 Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
               </p>
@@ -131,10 +138,10 @@ export default function AppRoutes() {
                 </a>
               </div>
             </div>
-          } />
-        </Route>
-      </Routes>
-    </CompleteProfileGuard>
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
 

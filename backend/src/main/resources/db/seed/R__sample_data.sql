@@ -92,7 +92,7 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 -- 7. TÀI KHOẢN NGƯỜI DÙNG (nguoi_dung) - Mật khẩu mặc định: 123456
 -- Chuẩn BCrypt hash của '123456': $2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe
 -- ------------------------------------------------------------------------------
-INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
+INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
     (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
 
@@ -106,8 +106,10 @@ INSERT INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, n
     (4, 'hoangnam', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
 
     -- Khách hàng mẫu 2 (rap_id bắt buộc NULL theo CHECK constraint)
-    (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1)
-ON DUPLICATE KEY UPDATE mat_khau = VALUES(mat_khau), so_lan_dang_nhap_sai = 0, bi_khoa = FALSE;
+    (5, 'thanhhang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Thị Thanh Hằng', 'thanhhang@gmail.com', '0988777888', '2004-09-12', 'Nữ', '048099005566', 'Hải Châu, TP. Đà Nẵng', 'KHACH_HANG', NULL, 50, 1),
+
+    -- Khách hàng mẫu 3 (Tâm Dũ - TV0000006)
+    (6, 'tamdu', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Tâm Dũ', 'tamdu@gmail.com', '0905666777', '2000-01-01', 'Nam', '048099006677', 'Đà Nẵng', 'KHACH_HANG', NULL, 1250, 1);
 
 -- ------------------------------------------------------------------------------
 -- 8. PHÒNG CHIẾU (phong_chieu)
@@ -156,4 +158,85 @@ INSERT IGNORE INTO suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc, t
     -- Ngày mai: Lịch chiếu tiếp theo
     (5, 1, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 10:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 13:00:00'), 1),
     (6, 6, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 14:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 16:40:00'), 1),
-    (7, 2, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 19:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 21:30:00'), 1);
+    (7, 2, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 19:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 21:30:00'), 1),
+
+    -- Phim 5 (Oppenheimer) - Hôm nay tại Phòng 1 & Phòng 2 (Landmark 81)
+    (8,  5, 1, CONCAT(CURRENT_DATE(), ' 10:30:00'), CONCAT(CURRENT_DATE(), ' 13:30:00'), 1),
+    (9,  5, 2, CONCAT(CURRENT_DATE(), ' 14:30:00'), CONCAT(CURRENT_DATE(), ' 17:30:00'), 1),
+    (10, 5, 1, CONCAT(CURRENT_DATE(), ' 19:30:00'), CONCAT(CURRENT_DATE(), ' 22:30:00'), 1),
+    -- Phim 5 - Ngày mai
+    (11, 5, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 09:30:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 12:30:00'), 1),
+    (12, 5, 2, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 15:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 18:00:00'), 1),
+    (13, 5, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 20:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 23:00:00'), 1),
+    -- Phim 5 - Ngày kia
+    (14, 5, 2, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 11:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 14:00:00'), 1),
+    (15, 5, 1, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 18:30:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 21:30:00'), 1),
+
+    -- Phim 6 (Lật Mặt 7) - Hôm nay tại Phòng 2 & Phòng 3
+    (16, 6, 2, CONCAT(CURRENT_DATE(), ' 10:00:00'), CONCAT(CURRENT_DATE(), ' 12:40:00'), 1),
+    (17, 6, 3, CONCAT(CURRENT_DATE(), ' 15:00:00'), CONCAT(CURRENT_DATE(), ' 17:40:00'), 1),
+    (18, 6, 2, CONCAT(CURRENT_DATE(), ' 20:00:00'), CONCAT(CURRENT_DATE(), ' 22:40:00'), 1),
+    -- Phim 6 - Ngày mai (thêm phòng 4 Đà Nẵng)
+    (19, 6, 4, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 10:30:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 13:10:00'), 1),
+    (20, 6, 2, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 16:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 18:40:00'), 1),
+    (21, 6, 3, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 20:30:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY), ' 23:10:00'), 1),
+
+    -- Phim 3 (Mai) & Phim 4 (Quật Mộ Trùng Ma) - Ngày kia bổ sung
+    (22, 3, 3, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 13:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 15:30:00'), 1),
+    (23, 4, 4, CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 19:00:00'), CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY), ' 21:30:00'), 1);
+
+-- ------------------------------------------------------------------------------
+-- 11. ĐƠN ĐẶT VÉ MẪU (dat_ve, ghe_suat_chieu, thanh_toan)
+-- Phục vụ màn hình Quản lý vé thành viên (Figma: GLX-0411-2826, GLX-0211-1940, GLX-2810-0715)
+-- ------------------------------------------------------------------------------
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    -- Đơn 1: Dune 2 (Đã thanh toán) cho user 6
+    (1, 'GLX-0411-2826', 6, 1, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 320000, 0, 320000, 'DA_THANH_TOAN', '2026-11-04 14:30:00', NULL, '2026-11-04 14:25:00'),
+    -- Đơn 2: Mai (Đã thanh toán) cho user 6
+    (2, 'GLX-0211-1940', 6, 3, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 190000, 0, 190000, 'DA_THANH_TOAN', '2026-11-02 19:00:00', NULL, '2026-11-02 18:55:00'),
+    -- Đơn 3: Deadpool & Wolverine (Đã nhận vé) cho user 6
+    (3, 'GLX-2810-0715', 6, 2, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 255000, 0, 255000, 'DA_THANH_TOAN', '2026-10-27 20:10:00', '2026-10-28 20:10:00', '2026-10-27 20:00:00'),
+
+    -- Đơn mẫu cho user 4 (Lê Hoàng Nam)
+    (4, 'GLX-0411-2827', 4, 1, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 320000, 0, 320000, 'DA_THANH_TOAN', '2026-11-04 14:30:00', NULL, '2026-11-04 14:25:00'),
+    (5, 'GLX-0211-1941', 4, 3, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 190000, 0, 190000, 'DA_THANH_TOAN', '2026-11-02 19:00:00', NULL, '2026-11-02 18:55:00'),
+    (6, 'GLX-2810-0716', 4, 2, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 255000, 0, 255000, 'DA_THANH_TOAN', '2026-10-27 20:10:00', '2026-10-28 20:10:00', '2026-10-27 20:00:00');
+
+-- Ghế cho các đơn đặt vé (Đảm bảo không trùng uq_ghe_suat_chieu)
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe) VALUES
+    (1, 1, 6, 1, 160000, 'DA_THANH_TOAN'),
+    (1, 2, 6, 1, 160000, 'DA_THANH_TOAN'),
+    (3, 3, 6, 2, 190000, 'DA_THANH_TOAN'),
+    (2, 4, 6, 3, 255000, 'DA_THANH_TOAN'),
+    (1, 5, 4, 4, 160000, 'DA_THANH_TOAN'),
+    (1, 6, 4, 4, 160000, 'DA_THANH_TOAN'),
+    (3, 7, 4, 5, 190000, 'DA_THANH_TOAN'),
+    (2, 8, 4, 6, 255000, 'DA_THANH_TOAN');
+
+-- Giao dịch thanh toán
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (1, 1, 'VNPAY', 320000, 'TXN_20261104_001', 'THANH_CONG', '2026-11-04 14:30:00'),
+    (2, 2, 'MOMO', 190000, 'TXN_20261102_002', 'THANH_CONG', '2026-11-02 19:00:00'),
+    (3, 3, 'ZALOPAY', 255000, 'TXN_20261027_003', 'THANH_CONG', '2026-10-27 20:10:00'),
+    (4, 4, 'VNPAY', 320000, 'TXN_20261104_004', 'THANH_CONG', '2026-11-04 14:30:00'),
+    (5, 5, 'MOMO', 190000, 'TXN_20261102_005', 'THANH_CONG', '2026-11-02 19:00:00'),
+    (6, 6, 'ZALOPAY', 255000, 'TXN_20261027_006', 'THANH_CONG', '2026-10-27 20:10:00');
+
+-- Extra paid bookings for the seeded Tâm Dũ account (user 6), for the member tickets page.
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    (7, 'GLX-DEMO-20261118-01', 6, 5, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 100000, 0, 100000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (8, 'GLX-DEMO-20261118-02', 6, 6, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP),
+    (9, 'GLX-DEMO-20261118-03', 6, 7, 'ONLINE', NULL, 'Tam Du', '0905666777', 'tamdu@gmail.com', NULL, 130000, 0, 130000, 'DA_THANH_TOAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP);
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe) VALUES
+    (5, 9, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (5, 10, 6, 7, 50000, 'DA_THANH_TOAN'),
+    (6, 11, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (6, 12, 6, 8, 65000, 'DA_THANH_TOAN'),
+    (7, 13, 6, 9, 65000, 'DA_THANH_TOAN'),
+    (7, 14, 6, 9, 65000, 'DA_THANH_TOAN');
+
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (7, 7, 'VNPAY', 100000, 'TXN_DEMO_TAMDU_007', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (8, 8, 'MOMO', 130000, 'TXN_DEMO_TAMDU_008', 'THANH_CONG', CURRENT_TIMESTAMP),
+    (9, 9, 'ZALOPAY', 130000, 'TXN_DEMO_TAMDU_009', 'THANH_CONG', CURRENT_TIMESTAMP);

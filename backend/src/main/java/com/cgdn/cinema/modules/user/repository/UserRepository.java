@@ -22,7 +22,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
+    /** Kiểm tra email đã thuộc tài khoản khác; loại ID hiện tại để gửi lại email cũ vẫn hợp lệ. */
+    boolean existsByEmailAndIdNot(String email, Long id);
+
     boolean existsByPhoneNumber(String phoneNumber);
 
+    /** Kiểm tra số điện thoại đã thuộc tài khoản khác; không coi giá trị của chính mình là trùng. */
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
 }

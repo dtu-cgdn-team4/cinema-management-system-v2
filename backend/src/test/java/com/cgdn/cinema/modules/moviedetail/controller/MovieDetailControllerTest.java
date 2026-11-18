@@ -36,7 +36,7 @@ class MovieDetailControllerTest {
         when(service.getMovieDetail(7L)).thenReturn(new MovieDetailMapper().toResponse(movie, null,
                 LocalDate.of(2026, 11, 11)));
 
-        mockMvc.perform(get("/api/movies/7"))
+        mockMvc.perform(get("/api/v1/movies/7"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         {
