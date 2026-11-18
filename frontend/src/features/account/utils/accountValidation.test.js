@@ -72,6 +72,51 @@ describe('accountValidation', () => {
     assert.equal(res12.isValid, true);
   });
 
+  it('validateProfileForm: kiểm tra email bắt buộc, độ dài, regex và từ chối khoảng trắng', () => {
+    const invalidEmails = [
+      ['', 'Email không được để trống.'],
+      ['   ', 'Email không được để trống.'],
+      [' an@example.com', 'Email không đúng định dạng.'],
+      ['an@example.com ', 'Email không đúng định dạng.'],
+      ['invalid-email', 'Email không đúng định dạng.'],
+      ['an@', 'Email không đúng định dạng.'],
+      [`${'a'.repeat(250)}@b.co`, 'Email không được vượt quá 254 ký tự.'],
+    ];
+    for (const [email, error] of invalidEmails) {
+      const result = validateProfileForm({ fullName: 'Nguyễn Văn An', email });
+      assert.equal(result.isValid, false, email);
+      assert.equal(result.errors.email, error, email);
+    }
+
+    const resValid = validateProfileForm({ fullName: 'Nguyễn Văn An', email: 'nguyenvanan@gmail.com' });
+    assert.equal(resValid.isValid, true);
+    assert.equal(resValid.errors.email, undefined);
+  });
+
+  it('validateProfileForm: kiểm tra số điện thoại bắt buộc, đầu số 0[35789] và 10 chữ số', () => {
+    const invalidPhones = [
+      ['', 'Số điện thoại không được để trống.'],
+      ['   ', 'Số điện thoại không được để trống.'],
+      ['0905 123 456', 'Số điện thoại không đúng định dạng.'],
+      ['0123456789', 'Số điện thoại không đúng định dạng.'],
+      ['0423456789', 'Số điện thoại không đúng định dạng.'],
+      ['090512345', 'Số điện thoại không đúng định dạng.'],
+      ['09051234567', 'Số điện thoại không đúng định dạng.'],
+    ];
+    for (const [phoneNumber, error] of invalidPhones) {
+      const result = validateProfileForm({ fullName: 'Nguyễn Văn An', phoneNumber });
+      assert.equal(result.isValid, false, phoneNumber);
+      assert.equal(result.errors.phoneNumber, error, phoneNumber);
+    }
+
+    const validPhones = ['0905123456', '0391234567', '0521234567', '0771234567', '0861234567'];
+    for (const phone of validPhones) {
+      const resOk = validateProfileForm({ fullName: 'Nguyễn Văn An', phoneNumber: phone });
+      assert.equal(resOk.isValid, true);
+      assert.equal(resOk.errors.phoneNumber, undefined);
+    }
+  });
+
   it('validateProfileForm: kiểm tra độ dài địa chỉ (5-255 ký tự)', () => {
     const resShort = validateProfileForm({ fullName: 'Nguyễn Văn An', address: '123' });
     assert.equal(resShort.isValid, false);

@@ -47,6 +47,8 @@ export const getAvatarInitials = (name) => {
  * Kiểm tra tính hợp lệ của form cập nhật hồ sơ cá nhân.
  * @param {Object} form
  * @param {string} form.fullName
+ * @param {string} [form.email]
+ * @param {string} [form.phoneNumber]
  * @param {string} [form.dateOfBirth]
  * @param {string} [form.gender]
  * @param {string} [form.citizenId]
@@ -66,6 +68,28 @@ export const validateProfileForm = (form) => {
       errors.fullName = 'Họ và tên phải có ít nhất 2 ký tự.';
     } else if (trimmed.length > 150) {
       errors.fullName = 'Họ và tên phải có 2-150 ký tự.';
+    }
+  }
+
+  // Email: bắt buộc nếu có trong form, tối đa 254 ký tự, đúng regex chuẩn và không âm thầm chấp nhận khoảng trắng
+  if (form.email !== undefined) {
+    const rawEmail = form.email;
+    if (!rawEmail || !rawEmail.trim()) {
+      errors.email = 'Email không được để trống.';
+    } else if (rawEmail.length > 254) {
+      errors.email = 'Email không được vượt quá 254 ký tự.';
+    } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(rawEmail)) {
+      errors.email = 'Email không đúng định dạng.';
+    }
+  }
+
+  // Số điện thoại: bắt buộc nếu có trong form, đúng mẫu 0[35789][0-9]{8} và không âm thầm chấp nhận khoảng trắng
+  if (form.phoneNumber !== undefined) {
+    const rawPhone = form.phoneNumber;
+    if (!rawPhone || !rawPhone.trim()) {
+      errors.phoneNumber = 'Số điện thoại không được để trống.';
+    } else if (!/^0[35789][0-9]{8}$/.test(rawPhone)) {
+      errors.phoneNumber = 'Số điện thoại không đúng định dạng.';
     }
   }
 

@@ -284,7 +284,7 @@ Khởi chạy ứng dụng Frontend:
 1. Di chuyển vào thư mục frontend: cd frontend
 2. Khởi động máy chủ phát triển Vite:
    npm run dev
-3. Mở trình duyệt web và truy cập theo đường dẫn: http://localhost:5173
+3. Mở trình duyệt web và truy cập theo đường dẫn: http://localhost:5174
 
 ---
 
