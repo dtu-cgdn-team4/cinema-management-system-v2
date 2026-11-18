@@ -63,15 +63,26 @@ function TrailerModal({ url, title, onClose }) {
     if (!url) return '';
     try {
       const u = new URL(url);
-      if (u.hostname.includes('youtube.com')) {
-        const v = u.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&rel=0`;
-      }
-      if (u.hostname === 'youtu.be') return `https://www.youtube.com/embed/${u.pathname.slice(1)}?autoplay=1&rel=0`;
+      const hostname = u.hostname.toLowerCase();
+      const youtubeHosts = new Set([
+        'youtube.com',
+        'www.youtube.com',
+        'm.youtube.com',
+        'youtube-nocookie.com',
+        'www.youtube-nocookie.com',
+        'youtu.be',
+      ]);
+      if (!youtubeHosts.has(hostname)) return '';
+
+      const videoId = hostname === 'youtu.be'
+        ? u.pathname.split('/').filter(Boolean)[0]
+        : u.searchParams.get('v') ?? u.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1];
+      if (!videoId || !/^[\w-]{11}$/.test(videoId)) return '';
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
     } catch {
-      // If the URL is not parseable, keep it as-is for the iframe fallback below.
+      // Invalid URLs are not embedded.
+      return '';
     }
-    return url;
   })();
 
   return (
@@ -84,6 +95,69 @@ function TrailerModal({ url, title, onClose }) {
         )}
         <button onClick={onClose} className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 p-1.5 sm:p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors cursor-pointer" aria-label="Đóng">
           <X className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function GalleryModal({ images, title, activeIndex, onClose, onChange }) {
+  const activeImage = images[activeIndex];
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'ArrowLeft') onChange((activeIndex - 1 + images.length) % images.length);
+      if (event.key === 'ArrowRight') onChange((activeIndex + 1) % images.length);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [activeIndex, images.length, onChange, onClose]);
+
+  if (!activeImage) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[210] flex items-center justify-center bg-black/95 p-3 sm:p-6"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div className="relative flex max-h-full w-full max-w-6xl items-center justify-center" onClick={(event) => event.stopPropagation()}>
+        <img src={activeImage} alt={`${title} – hình ${activeIndex + 1}`} className="max-h-[85vh] max-w-full rounded-xl object-contain" />
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange((activeIndex - 1 + images.length) % images.length)}
+              aria-label="Xem ảnh trước"
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange((activeIndex + 1) % images.length)}
+              aria-label="Xem ảnh tiếp theo"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-2 text-white hover:bg-black"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </>
+        )}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
+          {activeIndex + 1} / {images.length}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng thư viện ảnh"
+          className="absolute right-2 top-2 rounded-full bg-black/70 p-2 text-white hover:bg-black"
+        >
+          <X className="h-5 w-5" />
         </button>
       </div>
     </div>
@@ -368,17 +442,21 @@ function InfoSection({ movie }) {
 /* ═══════════════════════════════════════
    TRAILER & HÌNH ẢNH SECTION
 ═══════════════════════════════════════ */
-function TrailerSection({ movie, onWatchTrailer }) {
+function getGalleryImages(movie) {
   const rawGallery = movie.galleryImages?.length > 0
     ? movie.galleryImages
     : [movie.backdropUrl, movie.posterUrl].filter(Boolean);
   const uniqueImages = [...new Map(rawGallery.map(u => [u, u])).values()];
 
-  const galleryImages = uniqueImages.length >= 2
+  return uniqueImages.length >= 2
     ? uniqueImages.slice(0, 2)
     : uniqueImages.length === 1
       ? [uniqueImages[0], uniqueImages[0]]
       : [];
+}
+
+function TrailerSection({ movie, onWatchTrailer, onViewImage }) {
+  const galleryImages = getGalleryImages(movie);
 
   return (
     <div>
@@ -386,12 +464,14 @@ function TrailerSection({ movie, onWatchTrailer }) {
         Trailer &amp; Hình ảnh
       </SectionHeading>
 
-      {/* Grid 12 cột: Trailer 8 cột, Gallery 4 cột */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-4 items-stretch">
-        {/* ── Trailer lớn bên trái ── */}
+      <div className="grid grid-cols-1 items-stretch gap-2.5 sm:gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        {/* Trailer một bên, hai ảnh xếp dọc ở bên còn lại. */}
         <div
-          onClick={onWatchTrailer}
-          className="md:col-span-7 lg:col-span-8 relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-slate-900 border border-line group cursor-pointer shadow-xl shadow-black/50"
+          onClick={movie.trailerUrl ? onWatchTrailer : undefined}
+          onKeyDown={movie.trailerUrl ? (event) => { if (event.key === 'Enter' || event.key === ' ') onWatchTrailer(); } : undefined}
+          role={movie.trailerUrl ? 'button' : undefined}
+          tabIndex={movie.trailerUrl ? 0 : undefined}
+          className={`relative aspect-video min-w-0 overflow-hidden rounded-xl border border-line bg-slate-900 shadow-xl shadow-black/50 sm:rounded-2xl ${movie.trailerUrl ? 'group cursor-pointer' : ''}`}
         >
           {(movie.backdropUrl || movie.posterUrl) ? (
             <img
@@ -422,24 +502,26 @@ function TrailerSection({ movie, onWatchTrailer }) {
           </div>
         </div>
 
-        {/* ── 2 ảnh phụ bên phải ── */}
-        <div className="md:col-span-5 lg:col-span-4 flex flex-row md:flex-col gap-2 sm:gap-3">
+        <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-1 md:grid-rows-2 sm:gap-3">
           {galleryImages.length > 0 ? (
             galleryImages.map((img, i) => (
               <div
                 key={i}
-                className="relative flex-1 aspect-video md:aspect-auto rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-line group shadow-md sm:shadow-lg shadow-black/40"
+                className="relative aspect-video min-h-0 min-w-0 overflow-hidden rounded-lg border border-line bg-slate-900 shadow-md shadow-black/40 sm:rounded-xl sm:shadow-lg"
               >
-                <img
-                  src={img}
-                  alt={`Hình ảnh ${i + 1} – ${movie.title}`}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                <button type="button" onClick={() => onViewImage(i)} className="group h-full w-full cursor-zoom-in" aria-label={`Xem hình ${i + 1} của ${movie.title}`}>
+                  <img
+                    src={img}
+                    alt={`Hình ảnh ${i + 1} – ${movie.title}`}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </button>
                 {/* Nút "Xem hình ảnh" ở ảnh thứ 2 */}
                 {i === 1 && (
                   <div className="absolute bottom-1.5 right-1.5 sm:bottom-2.5 sm:right-2.5">
                     <button
-                      onClick={onWatchTrailer}
+                      type="button"
+                      onClick={() => onViewImage(i)}
                       className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-black/75 backdrop-blur-sm text-[10px] sm:text-xs font-semibold text-white border border-white/20 hover:bg-black/95 transition-colors cursor-pointer"
                     >
                       <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -908,6 +990,7 @@ export default function MovieDetailPage() {
   const [error, setError]           = useState('');
   const [activeTab, setActiveTab]   = useState('info');
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [galleryOpenIndex, setGalleryOpenIndex] = useState(null);
 
   const infoRef      = useRef(null);
   const trailerRef   = useRef(null);
@@ -977,6 +1060,15 @@ export default function MovieDetailPage() {
       {trailerOpen && movie.trailerUrl && (
         <TrailerModal url={movie.trailerUrl} title={movie.title} onClose={() => setTrailerOpen(false)} />
       )}
+      {galleryOpenIndex !== null && (
+        <GalleryModal
+          images={getGalleryImages(movie)}
+          title={movie.title}
+          activeIndex={galleryOpenIndex}
+          onClose={() => setGalleryOpenIndex(null)}
+          onChange={setGalleryOpenIndex}
+        />
+      )}
 
       {/* Hero */}
       <HeroSection movie={movie} onWatchTrailer={() => setTrailerOpen(true)} onBookNow={handleBookNow} />
@@ -993,7 +1085,11 @@ export default function MovieDetailPage() {
 
         {/* 2. Trailer & Hình ảnh */}
         <div ref={trailerRef}>
-          <TrailerSection movie={movie} onWatchTrailer={() => setTrailerOpen(true)} />
+          <TrailerSection
+            movie={movie}
+            onWatchTrailer={() => setTrailerOpen(true)}
+            onViewImage={setGalleryOpenIndex}
+          />
         </div>
 
         {/* 3. Lịch chiếu & Đặt vé */}
