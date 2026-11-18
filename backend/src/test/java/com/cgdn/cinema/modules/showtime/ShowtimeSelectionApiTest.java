@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.cgdn.cinema.common.constants.AppConstants;
@@ -19,9 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /** SRS 6.2.1 trên dữ liệu test db/test-seed: phim 1–4 đang chiếu, 5 sắp chiếu, 6 đã hết chiếu. */
 @SpringBootTest
@@ -43,6 +46,9 @@ class ShowtimeSelectionApiTest {
 
     @Autowired
     private ObjectMapper json;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @Test
     void listsOnlyMoviesShowingToday() throws Exception {
@@ -77,10 +83,18 @@ class ShowtimeSelectionApiTest {
     }
 
     @Test
-    void listsActiveCinemas() throws Exception {
+    @Transactional
+    void listsActiveCinemasWithActiveRoomCount() throws Exception {
+        // Rạp chưa có phòng và phòng đã xóa mềm chỉ tồn tại trong test này (rollback)
+        jdbc.update("INSERT INTO rap (id, ten_rap, thanh_pho, dia_chi, so_dien_thoai, gio_mo_cua, gio_dong_cua, hinh_anh_url)"
+                + " VALUES (6, 'Lumière Mới', 'Đà Nẵng', '1 Lê Duẩn', '02363001006', '09:00:00', '23:59:00', '')");
+        jdbc.update("INSERT INTO phong_chieu (rap_id, ten_phong, so_hang, so_cot, trang_thai) VALUES (5, 'Phòng 99', 8, 14, 2)");
+
         JsonNode cinemas = getData("/api/v1/cinemas");
 
-        assertThat(cinemas.size()).isEqualTo(5);
+        Map<Long, Integer> roomCounts = new HashMap<>();
+        cinemas.forEach(c -> roomCounts.put(c.get("id").asLong(), c.get("roomCount").asInt()));
+        assertThat(roomCounts).isEqualTo(Map.of(1L, 3, 2L, 2, 3L, 1, 4L, 2, 5L, 1, 6L, 0));
         assertThat(cinemas.findValuesAsText("city")).contains("Đà Nẵng", "TP. Hồ Chí Minh");
     }
 

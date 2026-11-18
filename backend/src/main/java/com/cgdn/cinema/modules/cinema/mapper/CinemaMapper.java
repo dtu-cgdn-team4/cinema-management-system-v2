@@ -8,8 +8,8 @@ public final class CinemaMapper {
     private CinemaMapper() {
     }
 
-    public static CinemaResponse toResponse(Cinema c) {
+    public static CinemaResponse toResponse(Cinema c, int roomCount) {
         return new CinemaResponse(c.getId(), c.getName(), c.getCity(), c.getAddress(), c.getPhone(),
-                c.getOpenTime(), c.getCloseTime(), c.getImageUrl());
+                c.getOpenTime(), c.getCloseTime(), c.getImageUrl(), roomCount);
     }
 }

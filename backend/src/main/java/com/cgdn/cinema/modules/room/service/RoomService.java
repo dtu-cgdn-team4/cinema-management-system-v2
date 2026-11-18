@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import com.cgdn.cinema.common.constants.AppConstants;
 import com.cgdn.cinema.modules.room.entity.Seat;
+import com.cgdn.cinema.modules.room.repository.RoomRepository;
 import com.cgdn.cinema.modules.room.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoomService {
 
     private final SeatRepository seatRepository;
+    private final RoomRepository roomRepository;
+
+    /** Số phòng đang dùng của từng rạp; rạp không có phòng thì không có trong map. */
+    public Map<Long, Integer> countRoomsByCinema() {
+        return roomRepository.countByCinema(AppConstants.STATUS_ACTIVE).stream()
+                .collect(Collectors.toMap(r -> (Long) r[0], r -> ((Long) r[1]).intValue()));
+    }
 
     /** Số ghế đang dùng của từng phòng. */
     public Map<Long, Integer> countSeatsByRoom(Collection<Long> roomIds) {
