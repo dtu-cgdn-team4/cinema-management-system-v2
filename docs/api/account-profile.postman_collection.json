@@ -1,0 +1,2163 @@
+{
+  "info": {
+    "name": "Cinema API",
+    "description": "Kiểm thử API hồ sơ và tài khoản cá nhân. Chạy Auth API / 05–09 theo hướng dẫn Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "expectedUsername",
+      "value": ""
+    },
+    {
+      "key": "expectedEmail",
+      "value": ""
+    },
+    {
+      "key": "expectedUserId",
+      "value": ""
+    },
+    {
+      "key": "otherUsername",
+      "value": ""
+    },
+    {
+      "key": "otherPassword",
+      "value": ""
+    },
+    {
+      "key": "otherAccessToken",
+      "value": ""
+    },
+    {
+      "key": "newPassword",
+      "value": "NewPass456"
+    },
+    {
+      "key": "alternateStrongPassword",
+      "value": "AnotherPass789"
+    },
+    {
+      "key": "shortPassword",
+      "value": "Aa1x"
+    },
+    {
+      "key": "noUppercasePassword",
+      "value": "weakpass123"
+    },
+    {
+      "key": "noLowercasePassword",
+      "value": "WEAKPASS123"
+    },
+    {
+      "key": "noDigitPassword",
+      "value": "WeakPassword"
+    },
+    {
+      "key": "overLimitPassword",
+      "value": "Aa1ééééééééééééééééééééééééééééééééééé"
+    },
+    {
+      "key": "googleAccessToken",
+      "value": ""
+    },
+    {
+      "key": "testEmail",
+      "value": ""
+    },
+    {
+      "key": "testPhoneNumber",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth API",
+      "item": [
+        {
+          "name": "05 - Xem thông tin tài khoản",
+          "description": "Điền username và password của tài khoản thử trước khi chạy thư mục. Hai request cuối cần thêm otherUsername và otherPassword; nếu để trống, Postman sẽ bỏ qua chúng.",
+          "item": [
+            {
+              "name": "01 - Đăng nhập lấy Bearer token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "['accessToken','expectedUsername','expectedEmail','expectedUserId'].forEach(key => pm.collectionVariables.unset(key));",
+                      "if (!pm.collectionVariables.get('username') || !pm.collectionVariables.get('password')) { throw new Error('Điền username và password của tài khoản thử trước khi chạy.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập thành công và nhận JWT', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.data.tokenType).to.eql('Bearer'); pm.expect(body.data.accessToken).to.be.a('string').and.not.empty; });",
+                      "if (pm.response.code === 200) { const data = pm.response.json().data; pm.collectionVariables.set('accessToken', data.accessToken); pm.collectionVariables.set('expectedUsername', data.user.username); pm.collectionVariables.set('expectedEmail', data.user.email); pm.collectionVariables.set('expectedUserId', String(data.user.id)); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 - Xem đầy đủ hồ sơ của tôi",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200 và dữ liệu thuộc tài khoản đăng nhập', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.code).to.eql(200); pm.expect(body.data.username).to.eql(pm.collectionVariables.get('expectedUsername')); pm.expect(body.data.email).to.eql(pm.collectionVariables.get('expectedEmail')); });",
+                      "pm.test('Đủ 11 trường công khai, không lộ dữ liệu xác thực', () => { const fields = ['memberCode','username','fullName','dateOfBirth','gender','email','phoneNumber','citizenId','address','loyaltyPoints','joinedAt']; pm.expect(Object.keys(pm.response.json().data).sort()).to.eql(fields.sort()); });",
+                      "pm.test('Mã thành viên, điểm và ngày tham gia hợp lệ', () => { const d = pm.response.json().data; pm.expect(d.memberCode).to.eql('TV' + pm.collectionVariables.get('expectedUserId').padStart(7, '0')); pm.expect(d.loyaltyPoints).to.be.a('number').and.at.least(0); pm.expect(Date.parse(d.joinedAt)).not.to.be.NaN; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 - Không có token trả 401",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('401 và không có hồ sơ', () => { pm.response.to.have.status(401); const body = pm.response.json(); pm.expect(body.errorCode).to.eql('UNAUTHORIZED'); pm.expect(body.data).to.be.undefined; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 - Token sai trả 401",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "invalid.jwt.token",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('401 và không có hồ sơ', () => { pm.response.to.have.status(401); const body = pm.response.json(); pm.expect(body.errorCode).to.eql('UNAUTHORIZED'); pm.expect(body.data).to.be.undefined; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 - JWT bị sửa chữ ký trả 401",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const token = pm.collectionVariables.get('accessToken');",
+                      "if (!token || token.split('.').length !== 3) { throw new Error('Chạy request 01 để lấy JWT trước.'); }",
+                      "const parts = token.split('.'); parts[2] = (parts[2][0] === 'A' ? 'B' : 'A') + parts[2].slice(1); pm.variables.set('tamperedToken', parts.join('.'));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('401 khi chữ ký JWT thay đổi', () => { pm.response.to.have.status(401); pm.expect(pm.response.json().data).to.be.undefined; });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{tamperedToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              }
+            },
+            {
+              "name": "06 - Token khác tài khoản thứ nhất",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('otherAccessToken');",
+                      "if (!pm.collectionVariables.get('otherUsername') || !pm.collectionVariables.get('otherPassword')) { console.warn('Bỏ qua: cần otherUsername và otherPassword để thử hai tài khoản.'); pm.execution.skipRequest(); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập tài khoản thứ hai', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.user.username).not.to.eql(pm.collectionVariables.get('expectedUsername')); pm.collectionVariables.set('otherAccessToken', d.accessToken); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{otherPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              }
+            },
+            {
+              "name": "07 - JWT thứ hai chỉ xem được hồ sơ thứ hai",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('otherUsername') || !pm.collectionVariables.get('otherPassword')) { console.warn('Bỏ qua: cần tài khoản thứ hai.'); pm.execution.skipRequest(); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('JWT thứ hai trả đúng chủ tài khoản', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.username).to.eql(pm.collectionVariables.get('otherUsername')); pm.expect(d.username).not.to.eql(pm.collectionVariables.get('expectedUsername')); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{otherAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Cập nhật thông tin tài khoản",
+          "description": "Kiểm thử API PATCH /api/v1/account/me. Chạy theo thứ tự để request 01 đăng nhập lưu accessToken.",
+          "item": [
+            {
+              "name": "01 - Đăng nhập lấy Bearer token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "['accessToken','expectedUsername','expectedEmail','expectedUserId'].forEach(key => pm.collectionVariables.unset(key));",
+                      "if (!pm.collectionVariables.get('username') || !pm.collectionVariables.get('password')) { throw new Error('Điền username và password của tài khoản thử trước khi chạy.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập thành công và nhận JWT', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.data.tokenType).to.eql('Bearer'); pm.expect(body.data.accessToken).to.be.a('string').and.not.empty; });",
+                      "if (pm.response.code === 200) { const data = pm.response.json().data; pm.collectionVariables.set('accessToken', data.accessToken); pm.collectionVariables.set('expectedUsername', data.user.username); pm.collectionVariables.set('expectedEmail', data.user.email); pm.collectionVariables.set('expectedUserId', String(data.user.id)); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 - Cập nhật một phần (họ tên)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Hồ Sơ Đã Cập Nhật\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200 và họ tên được cập nhật', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.code).to.eql(200); pm.expect(body.data.fullName).to.eql('Hồ Sơ Đã Cập Nhật'); pm.expect(body.data.username).to.eql(pm.collectionVariables.get('expectedUsername')); pm.expect(body.data.email).to.eql(pm.collectionVariables.get('expectedEmail')); });",
+                      "pm.test('Mã thành viên, điểm và ngày tham gia giữ nguyên', () => { const d = pm.response.json().data; pm.expect(d.memberCode).to.eql('TV' + pm.collectionVariables.get('expectedUserId').padStart(7, '0')); pm.expect(d.joinedAt).to.be.a('string').and.not.empty; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 - Cập nhật đầy đủ các trường hợp lệ",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Nguyễn Văn Đầy Đủ\",\n  \"dateOfBirth\": \"2000-05-15\",\n  \"gender\": \"MALE\",\n  \"citizenId\": \"048200012345\",\n  \"address\": \"123 Đường Điện Biên Phủ, Đà Nẵng\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200 và tất cả các trường cập nhật chính xác', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.fullName).to.eql('Nguyễn Văn Đầy Đủ'); pm.expect(d.dateOfBirth).to.eql('2000-05-15'); pm.expect(d.gender).to.eql('MALE'); pm.expect(d.citizenId).to.eql('048200012345'); pm.expect(d.address).to.eql('123 Đường Điện Biên Phủ, Đà Nẵng'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 - Xóa các trường tùy chọn bằng null",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dateOfBirth\": null,\n  \"gender\": null,\n  \"citizenId\": null,\n  \"address\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200 và 4 trường tùy chọn bị xóa thành null', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.dateOfBirth).to.be.null; pm.expect(d.gender).to.be.null; pm.expect(d.citizenId).to.be.null; pm.expect(d.address).to.be.null; pm.expect(d.fullName).to.eql('Nguyễn Văn Đầy Đủ'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 - Họ tên rỗng hoặc chỉ có khoảng trắng trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"   \"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 khi fullName chỉ chứa khoảng trắng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 - Họ tên null trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 khi fullName gửi null', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "07 - Email null trả lỗi validation 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 và lỗi trường email', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.email).to.be.a('string').and.not.empty; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "08 - SĐT null trả lỗi validation 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 và lỗi trường phoneNumber', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.phoneNumber).to.be.a('string').and.not.empty; });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "09 - Gửi trường chỉ đọc hoặc trường lạ bị từ chối 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"ADMIN\",\n  \"userId\": 1,\n  \"loyaltyPoints\": 9999\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 khi gửi trường ngoài hợp đồng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errorCode).to.eql('INVALID_REQUEST'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "10 - Dữ liệu không hợp lệ trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"gender\": \"UNKNOWN\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 khi giới tính không hợp lệ', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "11 - Không có token trả 401",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Không có token\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 401 khi thiếu Bearer token', () => { pm.response.to.have.status(401); const b = pm.response.json(); pm.expect(b.errorCode).to.eql('UNAUTHORIZED'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "12 - Token khác tài khoản thứ nhất",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('otherAccessToken');",
+                      "if (!pm.collectionVariables.get('otherUsername') || !pm.collectionVariables.get('otherPassword')) { console.warn('Bỏ qua: cần otherUsername và otherPassword để thử hai tài khoản.'); pm.execution.skipRequest(); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập tài khoản thứ hai', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.user.username).not.to.eql(pm.collectionVariables.get('expectedUsername')); pm.collectionVariables.set('otherAccessToken', d.accessToken); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{otherPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              }
+            },
+            {
+              "name": "13 - JWT thứ hai không bị ảnh hưởng bởi cập nhật của tài khoản 1",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('otherUsername') || !pm.collectionVariables.get('otherPassword')) { console.warn('Bỏ qua: cần tài khoản thứ hai.'); pm.execution.skipRequest(); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Hồ sơ tài khoản thứ hai giữ nguyên, không bị sửa đổi', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.username).to.eql(pm.collectionVariables.get('otherUsername')); pm.expect(d.fullName).not.to.eql('Nguyễn Văn Đầy Đủ'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{otherAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Đổi mật khẩu tài khoản",
+          "description": "Chạy tuần tự. Request đổi thành công thay đổi mật khẩu tài khoản thật; chỉ dùng tài khoản thử nghiệm trên local/test.",
+          "item": [
+            {
+              "name": "01 - Đăng nhập lấy Bearer token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/auth/login",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('username') || !pm.collectionVariables.get('password')) throw new Error('Điền username và password tài khoản thử nghiệm trước khi chạy.');"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Đăng nhập thành công và nhận JWT', () => { pm.response.to.have.status(200); const d=pm.response.json().data; pm.expect(d.tokenType).to.eql('Bearer'); pm.expect(d.accessToken).to.be.a('string').and.not.empty; });",
+                      "if (pm.response.code === 200) pm.collectionVariables.set('accessToken', pm.response.json().data.accessToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 - Không có token trả 401",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{alternateStrongPassword}}\",\n  \"confirmPassword\": \"{{alternateStrongPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Thiếu token trả UNAUTHORIZED',()=>{pm.response.to.have.status(401);pm.expect(pm.response.json().errorCode).to.eql('UNAUTHORIZED');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 - Token sai trả 401",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid.token.value"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{alternateStrongPassword}}\",\n  \"confirmPassword\": \"{{alternateStrongPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Token sai trả UNAUTHORIZED',()=>{pm.response.to.have.status(401);pm.expect(pm.response.json().errorCode).to.eql('UNAUTHORIZED');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 - Mật khẩu hiện tại sai không đổi mật khẩu",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"WrongCurrent123\",\n  \"newPassword\": \"{{alternateStrongPassword}}\",\n  \"confirmPassword\": \"{{alternateStrongPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Sai currentPassword trả CURRENT_PASSWORD_INVALID',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().errorCode).to.eql('CURRENT_PASSWORD_INVALID');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 - Mật khẩu mới dưới 8 ký tự",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{shortPassword}}\",\n  \"confirmPassword\": \"{{shortPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Mật khẩu không hợp lệ bị validation newPassword',()=>{pm.response.to.have.status(400);const b=pm.response.json();pm.expect(b.code).to.eql(400);pm.expect(b.errors).to.have.property('newPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 - Thiếu chữ hoa",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{noUppercasePassword}}\",\n  \"confirmPassword\": \"{{noUppercasePassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Mật khẩu không hợp lệ bị validation newPassword',()=>{pm.response.to.have.status(400);const b=pm.response.json();pm.expect(b.code).to.eql(400);pm.expect(b.errors).to.have.property('newPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "07 - Thiếu chữ thường",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{noLowercasePassword}}\",\n  \"confirmPassword\": \"{{noLowercasePassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Mật khẩu không hợp lệ bị validation newPassword',()=>{pm.response.to.have.status(400);const b=pm.response.json();pm.expect(b.code).to.eql(400);pm.expect(b.errors).to.have.property('newPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "08 - Thiếu chữ số",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{noDigitPassword}}\",\n  \"confirmPassword\": \"{{noDigitPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Mật khẩu không hợp lệ bị validation newPassword',()=>{pm.response.to.have.status(400);const b=pm.response.json();pm.expect(b.code).to.eql(400);pm.expect(b.errors).to.have.property('newPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "09 - Vượt 72 byte UTF-8",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{overLimitPassword}}\",\n  \"confirmPassword\": \"{{overLimitPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Mật khẩu không hợp lệ bị validation newPassword',()=>{pm.response.to.have.status(400);const b=pm.response.json();pm.expect(b.code).to.eql(400);pm.expect(b.errors).to.have.property('newPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "10 - Confirm không khớp",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{alternateStrongPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Confirm sai trả lỗi confirmPassword',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().errors).to.have.property('confirmPassword');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "11 - userId trong body bị từ chối",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{alternateStrongPassword}}\",\n  \"confirmPassword\": \"{{alternateStrongPassword}}\",\n  \"userId\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Không chấp nhận userId từ client',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().errorCode).to.eql('INVALID_REQUEST');});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "12 - Đổi mật khẩu thành công",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200 và không lộ mật khẩu hoặc hash', () => { pm.response.to.have.status(200); const b=pm.response.json(); const raw=pm.response.text(); pm.expect(b.code).to.eql(200); pm.expect(b.message).to.eql('Đổi mật khẩu thành công'); pm.expect(b).not.to.have.property('data'); pm.expect(Object.keys(b).sort()).to.eql(['code','message']); pm.expect(raw).not.to.include(pm.collectionVariables.get('password')); pm.expect(raw).not.to.include(pm.collectionVariables.get('newPassword')); });",
+                      "if (pm.response.code === 200) pm.collectionVariables.set('password', pm.collectionVariables.get('newPassword'));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "13 - Đăng nhập bằng mật khẩu mới",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/auth/login",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('username')) throw new Error('Cần cấu hình username.');"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Đăng nhập với password mới thành công',()=>{pm.response.to.have.status(200);const d=pm.response.json().data;pm.expect(d.accessToken).to.be.a('string').and.not.empty;pm.collectionVariables.set('accessToken',d.accessToken);});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "08 - Tài khoản Google chưa có mật khẩu (tùy chọn)",
+          "description": "Điền googleAccessToken bằng JWT backend của tài khoản Google có password = null. Request tự bỏ qua nếu biến trống.",
+          "item": [
+            {
+              "name": "01 - Google account chưa có password không tự thiết lập lần đầu",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{googleAccessToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/account/me/password",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"OldPass123\",\n  \"newPassword\": \"NewPass456\",\n  \"confirmPassword\": \"NewPass456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('googleAccessToken')) pm.execution.skipRequest();"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Trả GOOGLE_PASSWORD_NOT_SET',()=>{pm.response.to.have.status(400);pm.expect(pm.response.json().errorCode).to.eql('GOOGLE_PASSWORD_NOT_SET');});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "09 - Cập nhật thông tin tài khoản (SĐT - email)",
+          "description": "Chạy tuần tự với tài khoản thử có email và số điện thoại. Điền testEmail và testPhoneNumber khác giá trị hiện tại; hai tài khoản thử khác nhau cho ca trùng dữ liệu. Không có OTP. Các bước cuối khôi phục email/SĐT ban đầu.",
+          "item": [
+            {
+              "name": "01 - Đăng nhập tài khoản thử",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "['profileOriginalEmail','profileOriginalPhone','profileOriginalUsername','profileOtherEmail','profileOtherPhone','profileOtherUsername','otherAccessToken'].forEach(key => pm.collectionVariables.unset(key));",
+                      "['accessToken','expectedUsername','expectedEmail','expectedUserId'].forEach(key => pm.collectionVariables.unset(key));",
+                      "if (!pm.collectionVariables.get('username') || !pm.collectionVariables.get('password')) { throw new Error('Điền username và password của tài khoản thử trước khi chạy.'); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập thành công và nhận JWT', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.data.tokenType).to.eql('Bearer'); pm.expect(body.data.accessToken).to.be.a('string').and.not.empty; });",
+                      "if (pm.response.code === 200) { const data = pm.response.json().data; pm.collectionVariables.set('accessToken', data.accessToken); pm.collectionVariables.set('expectedUsername', data.user.username); pm.collectionVariables.set('expectedEmail', data.user.email); pm.collectionVariables.set('expectedUserId', String(data.user.id)); }",
+                      "if (pm.response.code !== 200) { console.error('Đăng nhập tài khoản chính thất bại (' + pm.response.code + ', ' + (pm.response.json().errorCode || 'không có errorCode') + '). Kiểm tra username/password trong Collection Variables; folder 09 dừng để tránh lỗi dây chuyền.'); pm.execution.setNextRequest(null); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 - Lưu hồ sơ ban đầu",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Lưu email và SĐT gốc của tài khoản đăng nhập', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.email).to.be.a('string').and.not.empty; pm.expect(d.phoneNumber).to.be.a('string').and.not.empty; pm.collectionVariables.set('profileOriginalEmail', d.email); pm.collectionVariables.set('profileOriginalPhone', d.phoneNumber); pm.collectionVariables.set('profileOriginalUsername', d.username); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 - Đăng nhập tài khoản thứ hai (tùy chọn)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.collectionVariables.unset('otherAccessToken');",
+                      "if (!pm.collectionVariables.get('otherUsername') || !pm.collectionVariables.get('otherPassword')) { console.warn('Bỏ qua: cần otherUsername và otherPassword để thử hai tài khoản.'); pm.execution.skipRequest(); }"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Đăng nhập tài khoản thứ hai', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.user.username).not.to.eql(pm.collectionVariables.get('expectedUsername')); pm.collectionVariables.set('otherAccessToken', d.accessToken); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{otherUsername}}\",\n  \"password\": \"{{otherPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/auth/login"
+              }
+            },
+            {
+              "name": "04 - Lưu liên hệ tài khoản thứ hai (tùy chọn)",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{otherAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('otherAccessToken')) pm.execution.skipRequest();"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Lưu liên hệ của tài khoản thứ hai', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.username).not.to.eql(pm.collectionVariables.get('profileOriginalUsername')); pm.collectionVariables.set('profileOtherEmail', d.email); pm.collectionVariables.set('profileOtherPhone', d.phoneNumber); pm.collectionVariables.set('profileOtherUsername', d.username); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 - Cập nhật email và SĐT cùng lúc",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"{{testEmail}}\",\"phoneNumber\":\"{{testPhoneNumber}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "const email = pm.collectionVariables.get('testEmail'); const phone = pm.collectionVariables.get('testPhoneNumber');",
+                      "if (!email || !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$/.test(email) || email.length > 254 || email.toLowerCase() === pm.collectionVariables.get('profileOriginalEmail')) throw new Error('Điền testEmail hợp lệ và khác email hiện tại.');",
+                      "if (!phone || !/^0[35789][0-9]{8}$/.test(phone) || phone === pm.collectionVariables.get('profileOriginalPhone')) throw new Error('Điền testPhoneNumber hợp lệ và khác SĐT hiện tại.');"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200; cập nhật cả hai liên hệ', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.email).to.eql(pm.collectionVariables.get('testEmail').toLowerCase()); pm.expect(d.phoneNumber).to.eql(pm.collectionVariables.get('testPhoneNumber')); pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOriginalUsername')); pm.expect(d).not.to.have.property('password'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 - Chỉ cập nhật email, giữ nguyên SĐT",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"{{profileOriginalEmail}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200; email cập nhật đúng', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.email).to.eql(pm.collectionVariables.get('profileOriginalEmail')); pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOriginalUsername')); pm.expect(d).not.to.have.property('password'); });",
+                      "pm.test('SĐT giữ nguyên', () => pm.expect(pm.response.json().data.phoneNumber).to.eql(pm.collectionVariables.get('testPhoneNumber')));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "07 - Chỉ cập nhật SĐT, giữ nguyên email",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phoneNumber\":\"{{profileOriginalPhone}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200; phoneNumber cập nhật đúng', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.phoneNumber).to.eql(pm.collectionVariables.get('profileOriginalPhone')); pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOriginalUsername')); pm.expect(d).not.to.have.property('password'); });",
+                      "pm.test('Email giữ nguyên', () => pm.expect(pm.response.json().data.email).to.eql(pm.collectionVariables.get('profileOriginalEmail')));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "08 - Gửi lại liên hệ của chính mình",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"{{profileOriginalEmail}}\",\"phoneNumber\":\"{{profileOriginalPhone}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 200; email cập nhật đúng', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.email).to.eql(pm.collectionVariables.get('profileOriginalEmail')); pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOriginalUsername')); pm.expect(d).not.to.have.property('password'); });",
+                      "pm.test('SĐT của chính mình không bị báo trùng', () => pm.expect(pm.response.json().data.phoneNumber).to.eql(pm.collectionVariables.get('profileOriginalPhone')));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "09 - Email sai định dạng trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"not-an-email\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400; lỗi email đúng hợp đồng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.email).to.eql('Email không đúng định dạng.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "10 - SĐT sai định dạng trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phoneNumber\":\"123\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400; lỗi phoneNumber đúng hợp đồng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.phoneNumber).to.eql('Số điện thoại phải gồm 10 số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "11 - Email null trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":null}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400; lỗi email đúng hợp đồng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.email).to.eql('Vui lòng nhập email.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "12 - SĐT null trả 400",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phoneNumber\":null}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400; lỗi phoneNumber đúng hợp đồng', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.code).to.eql(400); pm.expect(b.errors.phoneNumber).to.eql('Vui lòng nhập số điện thoại.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "13 - Email tài khoản khác trả 409 (tùy chọn)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"{{profileOtherEmail}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('profileOtherEmail')) pm.execution.skipRequest();"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 409; lỗi email đúng hợp đồng', () => { pm.response.to.have.status(409); const b = pm.response.json(); pm.expect(b.code).to.eql(409); pm.expect(b.errors.email).to.eql('Email đã tồn tại.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "14 - SĐT tài khoản khác trả 409 (tùy chọn)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"phoneNumber\":\"{{profileOtherPhone}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('profileOtherPhone')) pm.execution.skipRequest();"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 409; lỗi phoneNumber đúng hợp đồng', () => { pm.response.to.have.status(409); const b = pm.response.json(); pm.expect(b.code).to.eql(409); pm.expect(b.errors.phoneNumber).to.eql('Số điện thoại đã tồn tại.'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "15 - userId trong body bị từ chối",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"userId\":999999,\"email\":\"{{testEmail}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 400 INVALID_REQUEST', () => { pm.response.to.have.status(400); const b = pm.response.json(); pm.expect(b.errorCode).to.eql('INVALID_REQUEST'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "16 - Không có token trả 401",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\":\"{{testEmail}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('HTTP 401 UNAUTHORIZED', () => { pm.response.to.have.status(401); pm.expect(pm.response.json().errorCode).to.eql('UNAUTHORIZED'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "17 - Xác minh tài khoản hiện tại đã về giá trị gốc",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Email, SĐT và username giữ đúng tài khoản', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.email).to.eql(pm.collectionVariables.get('profileOriginalEmail')); pm.expect(d.phoneNumber).to.eql(pm.collectionVariables.get('profileOriginalPhone')); pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOriginalUsername')); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "18 - Tài khoản thứ hai không đổi (tùy chọn)",
+              "request": {
+                "method": "GET",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{otherAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "url": "{{baseUrl}}/api/v1/account/me"
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "if (!pm.collectionVariables.get('profileOtherUsername')) pm.execution.skipRequest();"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Tài khoản khác không bị sửa', () => { pm.response.to.have.status(200); const d = pm.response.json().data; pm.expect(d.username).to.eql(pm.collectionVariables.get('profileOtherUsername')); pm.expect(d.email).to.eql(pm.collectionVariables.get('profileOtherEmail')); pm.expect(d.phoneNumber).to.eql(pm.collectionVariables.get('profileOtherPhone')); });"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

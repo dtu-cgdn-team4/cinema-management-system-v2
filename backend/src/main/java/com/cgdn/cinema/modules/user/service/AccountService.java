@@ -7,6 +7,7 @@ import com.cgdn.cinema.modules.user.dto.request.UpdateAccountProfileRequest;
 import com.cgdn.cinema.modules.user.dto.response.AccountProfileResponse;
 import com.cgdn.cinema.modules.user.entity.User;
 import com.cgdn.cinema.modules.user.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,10 +77,28 @@ public class AccountService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // Giữ thứ tự kiểm tra email, số điện thoại rồi các trường hồ sơ khác;
+        // lỗi ở bất kỳ trường nào đều làm giao dịch PATCH không được lưu.
         applyProfileUpdates(user, request);
 
-        User saved = userRepository.save(user);
-        return toProfileResponse(saved);
+        try {
+            // Flush ngay trong try để lỗi UNIQUE của hai request đồng thời được đổi thành lỗi API có kiểm soát.
+            return toProfileResponse(userRepository.saveAndFlush(user));
+        } catch (DataIntegrityViolationException exception) {
+            // Truy vấn exists chỉ kiểm tra trước khi lưu; ràng buộc UNIQUE của CSDL vẫn là chốt chặn cuối.
+            // Dùng tên cột trong thông báo DB theo cùng cách xử lý của RegistrationService.
+            String detail = exception.getMostSpecificCause().getMessage();
+            if (detail != null) {
+                String constraint = detail.toLowerCase(Locale.ROOT);
+                if (constraint.contains("email")) {
+                    throw BusinessException.forField(ErrorCode.EMAIL_EXISTS, "email");
+                }
+                if (constraint.contains("so_dien_thoai")) {
+                    throw BusinessException.forField(ErrorCode.PHONE_EXISTS, "phoneNumber");
+                }
+            }
+            throw exception;
+        }
     }
 
     /**
@@ -141,8 +160,14 @@ public class AccountService {
         userRepository.save(user);
     }
 
-    /** Cập nhật từng trường được phép, chỉ khi trường đó có mặt trong JSON. */
+    /**
+     * Áp dụng đúng các trường có mặt trong JSON, theo thứ tự kiểm tra hiện tại.
+     * Hai hàm cập nhật liên hệ tự kiểm tra cờ hiện diện để trường vắng mặt không ghi đè dữ liệu cũ.
+     */
     private void applyProfileUpdates(User user, UpdateAccountProfileRequest request) {
+        applyEmailUpdate(user, request);
+        applyPhoneNumberUpdate(user, request);
+
         // Họ tên bắt buộc khi được gửi; sau trim độ dài phải từ 2 đến 150 ký tự.
         if (request.isFullNamePresent()) {
             String rawName = request.getFullName();
@@ -216,6 +241,52 @@ public class AccountService {
                 }
                 user.setAddress(address);
             }
+        }
+    }
+
+    /**
+     * Kiểm tra email theo định dạng đăng ký trên giá trị gốc, sau đó chuẩn hóa như luồng đăng ký.
+     * Không cho phép null/rỗng vì email là cột bắt buộc; chỉ báo trùng nếu email thuộc tài khoản khác.
+     */
+    private void applyEmailUpdate(User user, UpdateAccountProfileRequest request) {
+        if (request.isEmailPresent()) {
+            String rawEmail = request.getEmail();
+            if (rawEmail == null || rawEmail.isBlank()) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "email", "Vui lòng nhập email.");
+            }
+            if (rawEmail.length() > 254) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "email", "Email quá dài.");
+            }
+            if (!rawEmail.matches("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}")) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "email", "Email không đúng định dạng.");
+            }
+            String email = rawEmail.trim().toLowerCase(Locale.ROOT);
+            if (userRepository.existsByEmailAndIdNot(email, user.getId())) {
+                throw BusinessException.forField(ErrorCode.EMAIL_EXISTS, "email");
+            }
+            user.setEmail(email);
+        }
+    }
+
+    /**
+     * Kiểm tra số điện thoại theo định dạng đăng ký và loại ID hiện tại khi kiểm tra trùng.
+     * API hồ sơ chỉ kiểm tra định dạng/tính duy nhất, không thực hiện OTP hay đánh dấu đã xác minh.
+     */
+    private void applyPhoneNumberUpdate(User user, UpdateAccountProfileRequest request) {
+        if (request.isPhoneNumberPresent()) {
+            String rawPhone = request.getPhoneNumber();
+            if (rawPhone == null || rawPhone.isBlank()) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "phoneNumber", "Vui lòng nhập số điện thoại.");
+            }
+            if (!rawPhone.matches("0[35789][0-9]{8}")) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "phoneNumber",
+                        "Số điện thoại phải gồm 10 số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
+            }
+            String phoneNumber = rawPhone.trim();
+            if (userRepository.existsByPhoneNumberAndIdNot(phoneNumber, user.getId())) {
+                throw BusinessException.forField(ErrorCode.PHONE_EXISTS, "phoneNumber");
+            }
+            user.setPhoneNumber(phoneNumber);
         }
     }
 
