@@ -1,6 +1,7 @@
 package com.cgdn.cinema.modules.auth.dto.response;
 
 import com.cgdn.cinema.common.enums.Role;
+import java.time.LocalDate;
 
 /**
  * Kết quả trả về sau khi đăng nhập thành công gồm JWT token và thông tin người dùng.
@@ -17,6 +18,8 @@ public record LoginResponse(
             String fullName,
             String email,
             String phoneNumber,
+            LocalDate dateOfBirth,
+            String gender,
             String avatarUrl,
             Role role,
             String roleCode,
@@ -34,7 +37,22 @@ public record LoginResponse(
                 Long cinemaId,
                 Integer loyaltyPoints
         ) {
-            this(id, username, fullName, email, phoneNumber, null, role, roleCode, cinemaId, loyaltyPoints);
+            this(id, username, fullName, email, phoneNumber, null, null, null, role, roleCode, cinemaId, loyaltyPoints);
+        }
+
+        public UserInfoResponse(
+                Long id,
+                String username,
+                String fullName,
+                String email,
+                String phoneNumber,
+                String avatarUrl,
+                Role role,
+                String roleCode,
+                Long cinemaId,
+                Integer loyaltyPoints
+        ) {
+            this(id, username, fullName, email, phoneNumber, null, null, avatarUrl, role, roleCode, cinemaId, loyaltyPoints);
         }
     }
 }

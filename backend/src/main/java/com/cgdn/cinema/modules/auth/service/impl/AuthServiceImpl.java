@@ -4,6 +4,7 @@ import com.cgdn.cinema.common.enums.RecordStatus;
 import com.cgdn.cinema.common.enums.Role;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.auth.dto.request.CompleteProfileRequest;
 import com.cgdn.cinema.modules.auth.dto.request.GoogleLoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.LoginRequest;
 import com.cgdn.cinema.modules.auth.dto.response.GoogleAuthUrlResponse;
@@ -24,7 +25,9 @@ import org.springframework.util.StringUtils;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -117,6 +120,67 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
         return authMapper.toUserInfoResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse.UserInfoResponse completeProfile(String username, CompleteProfileRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        ensureAccountActive(user);
+
+        String cleanPhone = request.phoneNumber().trim();
+        if (userRepository.existsByPhoneNumberAndIdNot(cleanPhone, user.getId())) {
+            throw new BusinessException(ErrorCode.PHONE_EXISTS);
+        }
+
+        LocalDate dob = request.dateOfBirth();
+        LocalDate today = LocalDate.now(appClock);
+        if (!dob.isBefore(today)) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ngày sinh phải là ngày trong quá khứ");
+        }
+        int age = Period.between(dob, today).getYears();
+        if (age < 13 || age > 120) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "dateOfBirth", "Tuổi phải từ 13 đến 120.");
+        }
+
+        String rawGender = request.gender().trim().toUpperCase(Locale.ROOT);
+        String cleanGender;
+        if (rawGender.equals("NAM") || rawGender.equals("MALE")) {
+            cleanGender = "MALE";
+        } else if (rawGender.equals("NỮ") || rawGender.equals("NU") || rawGender.equals("FEMALE")) {
+            cleanGender = "FEMALE";
+        } else if (rawGender.equals("KHÁC") || rawGender.equals("KHAC") || rawGender.equals("OTHER")) {
+            cleanGender = "OTHER";
+        } else {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Giới tính phải là Nam, Nữ hoặc Khác");
+        }
+
+        if (StringUtils.hasText(request.fullName())) {
+            String trimmedName = request.fullName().trim();
+            if (trimmedName.length() >= 2 && trimmedName.length() <= 150) {
+                user.setFullName(trimmedName);
+            }
+        }
+
+        if (StringUtils.hasText(request.idCard())) {
+            String cleanCard = request.idCard().trim();
+            if (!cleanCard.matches("^[0-9]{9}$|^[0-9]{12}$")) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "idCard", "CMND/CCCD phải gồm 9 hoặc 12 số.");
+            }
+            user.setCitizenId(cleanCard);
+        }
+
+        if (StringUtils.hasText(request.address())) {
+            user.setAddress(request.address().trim());
+        }
+
+        user.setPhoneNumber(cleanPhone);
+        user.setDateOfBirth(dob);
+        user.setGender(cleanGender);
+        User updated = userRepository.save(user);
+
+        return authMapper.toUserInfoResponse(updated);
     }
 
     private LoginResponse authenticateGoogleClaims(GoogleUserClaims claims) {

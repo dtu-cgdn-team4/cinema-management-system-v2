@@ -3,6 +3,7 @@ package com.cgdn.cinema.modules.auth.controller;
 import com.cgdn.cinema.common.response.ApiResponse;
 import com.cgdn.cinema.exception.BusinessException;
 import com.cgdn.cinema.exception.ErrorCode;
+import com.cgdn.cinema.modules.auth.dto.request.CompleteProfileRequest;
 import com.cgdn.cinema.modules.auth.dto.request.GoogleLoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.LoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.RegisterAvailabilityRequest;
@@ -32,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -56,17 +59,21 @@ public class AuthController {
     private static final String GOOGLE_CALLBACK_PATH = "/api/v1/auth/google/callback";
     private static final Duration GOOGLE_STATE_TTL = Duration.ofMinutes(5);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final GoogleProperties googleProperties;
     private final RegistrationService registration;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public AuthController(AuthService authService, GoogleProperties googleProperties,RegistrationService registration) {
+    public AuthController(AuthService authService, GoogleProperties googleProperties,
+            RegistrationService registration, ObjectMapper objectMapper) {
         this.authService = authService;
         this.googleProperties = googleProperties;
         this.registration = registration;
+        this.objectMapper = objectMapper;
     }
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
@@ -114,12 +121,15 @@ public class AuthController {
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, createStateCookie("", Duration.ZERO).toString());
 
         boolean isBrowser = (acceptHeader != null && acceptHeader.contains(MediaType.TEXT_HTML_VALUE))
-                || (userAgent != null && (userAgent.contains("Mozilla") || userAgent.contains("Chrome") || userAgent.contains("Safari")));
+                || (userAgent != null && (userAgent.contains("Mozilla") || userAgent.contains("Chrome")
+                        || userAgent.contains("Safari")));
 
         if (!matchesState(expectedState, state)) {
             if (isBrowser) {
                 String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
-                        .queryParam("error", URLEncoder.encode("Trạng thái xác thực không hợp lệ hoặc đã hết hạn.", StandardCharsets.UTF_8))
+                        .queryParam("error",
+                                URLEncoder.encode("Trạng thái xác thực không hợp lệ hoặc đã hết hạn.",
+                                        StandardCharsets.UTF_8))
                         .build(true)
                         .toUriString();
                 servletResponse.sendRedirect(errorRedirect);
@@ -145,7 +155,13 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.success("Đăng nhập Google thành công", response));
         } catch (Exception ex) {
             if (isBrowser) {
-                String errorMsg = ex.getMessage() != null ? ex.getMessage() : "Đăng nhập Google thất bại.";
+                String errorMsg;
+                if (ex instanceof BusinessException) {
+                    errorMsg = ex.getMessage();
+                } else {
+                    log.error("Google OAuth callback failed", ex);
+                    errorMsg = "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.";
+                }
                 String errorRedirect = UriComponentsBuilder.fromUriString("http://localhost:5173/auth/google/callback")
                         .queryParam("error", URLEncoder.encode(errorMsg, StandardCharsets.UTF_8))
                         .build(true)
@@ -193,5 +209,16 @@ public class AuthController {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
         return ResponseEntity.ok(ApiResponse.success(authService.getCurrentUser(userDetails.getUsername())));
+    }
+
+    @PostMapping("/complete-profile")
+    public ResponseEntity<ApiResponse<LoginResponse.UserInfoResponse>> completeProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody CompleteProfileRequest request) {
+        if (userDetails == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        LoginResponse.UserInfoResponse updatedUser = authService.completeProfile(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("Hoàn tất thông tin tài khoản thành công", updatedUser));
     }
 }
