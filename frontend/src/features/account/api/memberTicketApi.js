@@ -14,7 +14,3 @@ export const fetchMemberTickets = ({ page = 0, size = 10, view = 'ALL' } = {}) =
     params: { page, size, view },
   });
 
-export const fetchMemberTicketDetail = (bookingCode) =>
-  apiClient.get(`/api/me/bookings/${bookingCode}`, {
-    baseURL: BACKEND_ORIGIN,
-  });

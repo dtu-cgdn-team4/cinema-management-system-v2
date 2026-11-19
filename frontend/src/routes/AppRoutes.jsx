@@ -11,6 +11,7 @@ import AdminMovieListPage from "@/features/admin/pages/AdminMovieListPage";
 import { useAuth } from "@/context/AuthContext";
 import MovieListPage from "@/features/movies/pages/MovieListPage";
 import MemberTicketsPage from "@/features/account/pages/MemberTicketsPage";
+import MemberTicketDetailPage from "@/features/tickets/pages/MemberTicketDetailPage";
 import MovieDetailPage from "@/features/movies/pages/MovieDetailPage";
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
@@ -96,6 +97,7 @@ export default function AppRoutes() {
         <Route path="/rap-chieu" element={<CinemaSelectionPage />} />
         <Route path="/tai-khoan" element={<AccountPage />} />
         <Route path="/tai-khoan/ve-da-dat" element={<MemberTicketsPage />} />
+        <Route path="/tai-khoan/ve-da-dat/:bookingCode" element={<MemberTicketDetailPage />} />
         <Route
           path="/dat-ve/suat-chieu/:showtimeId/thanh-toan"
           element={
