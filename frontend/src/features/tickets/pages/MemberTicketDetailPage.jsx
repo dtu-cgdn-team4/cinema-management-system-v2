@@ -1,6 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
-import { AlertCircle, ArrowLeft, Clock3, MapPin, Ticket } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Clock3, FileText, MapPin, Plus, Ticket } from 'lucide-react';
 import { Link, Navigate, useParams } from 'react-router-dom';
+import PaymentDetailsCard from '../components/PaymentDetailsCard';
 import useMemberTicketDetail from '../hooks/useMemberTicketDetail';
 
 const VIETNAM_TIME_ZONE = 'Asia/Ho_Chi_Minh';
@@ -94,9 +95,9 @@ function TicketDetailError({ error, isNotFound, onRetry }) {
   );
 }
 
-function DetailItem({ label, children }) {
+function DetailItem({ label, children, className = '' }) {
   return (
-    <div>
+    <div className={`min-w-0 ${className}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
       <div className="mt-1.5 text-sm font-semibold text-white">{children || 'Chưa cập nhật'}</div>
     </div>
@@ -203,7 +204,7 @@ export default function MemberTicketDetailPage() {
                 </div>
               </div>
 
-              <div className="mt-7 grid gap-x-8 gap-y-6 border-t border-white/10 pt-6 sm:grid-cols-2">
+              <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-5 border-t border-white/10 pt-6 sm:gap-x-8 sm:gap-y-6">
                 <DetailItem label="Rạp chiếu">{ticket.cinema?.name}</DetailItem>
                 <DetailItem label="Phòng chiếu">{ticket.room?.name}</DetailItem>
                 <DetailItem label="Ngày chiếu">{formatTicketDate(showtime.startsAt)}</DetailItem>
@@ -212,7 +213,7 @@ export default function MemberTicketDetailPage() {
                     ? `${formatTicketTime(showtime.startsAt)} – ${formatTicketTime(showtime.endsAt)}`
                     : 'Chưa cập nhật'}
                 </DetailItem>
-                <DetailItem label={`Ghế ngồi (${ticket.seatCount ?? seats.length})`}>
+                <DetailItem label={`Ghế ngồi (${ticket.seatCount ?? seats.length})`} className="col-span-2">
                   {seatLabels.length ? (
                     <span className="flex flex-wrap gap-2">
                       {seatLabels.map(({ label, type }) => (
@@ -238,6 +239,29 @@ export default function MemberTicketDetailPage() {
             </aside>
           </div>
         </section>
+
+        <PaymentDetailsCard ticket={ticket} />
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            disabled
+            title="Hóa đơn điện tử chưa khả dụng"
+            className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-[#344052] bg-[#121927] px-5 py-3 text-sm font-semibold text-zinc-400 opacity-70"
+          >
+            <FileText size={16} />
+            Xem hóa đơn điện tử
+          </button>
+          {ticket.movie?.id && (
+            <Link
+              to={`/phim/${ticket.movie.id}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#344052] bg-[#121927] px-5 py-3 text-sm font-semibold text-zinc-200 transition hover:border-[#ea384d]/50 hover:bg-[#1b2230]"
+            >
+              <Plus size={17} className="text-emerald-400" />
+              Đặt thêm vé / suất khác
+            </Link>
+          )}
+        </div>
 
         <Link
           to="/tai-khoan/ve-da-dat"
