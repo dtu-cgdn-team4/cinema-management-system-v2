@@ -881,6 +881,81 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"));
     }
 
+    @Test
+    void completeProfile_success() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        String body = """
+                {
+                    "phoneNumber": "0988776655",
+                    "dateOfBirth": "1998-10-25",
+                    "gender": "Nữ"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/complete-profile")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.phoneNumber").value("0988776655"))
+                .andExpect(jsonPath("$.data.dateOfBirth").value("1998-10-25"))
+                .andExpect(jsonPath("$.data.gender").value("FEMALE"));
+
+        User reloaded = userRepository.findById(activeCustomer.getId()).orElseThrow();
+        assertThat(reloaded.getPhoneNumber()).isEqualTo("0988776655");
+        assertThat(reloaded.getDateOfBirth()).isEqualTo(LocalDate.of(1998, 10, 25));
+        assertThat(reloaded.getGender()).isEqualTo("FEMALE");
+    }
+
+    @Test
+    void completeProfile_duplicatePhoneNumber_returnsConflict() throws Exception {
+        // Create another user with phone 0912345678
+        User another = createUser("another_user", "another@gmail.com", "0912345678",
+                Role.KHACH_HANG, null, RecordStatus.ACTIVE.getCode());
+        userRepository.save(another);
+
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        String body = """
+                {
+                    "phoneNumber": "0912345678",
+                    "dateOfBirth": "1998-10-25",
+                    "gender": "Nam"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/complete-profile")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409));
+    }
+
+    @Test
+    void completeProfile_invalidRequest_returnsBadRequest() throws Exception {
+        String token = loginAndGetToken(activeCustomer.getUsername(), "Secret@123");
+
+        // Invalid phone number (wrong prefix/length)
+        String body = """
+                {
+                    "phoneNumber": "012345",
+                    "dateOfBirth": "2030-01-01",
+                    "gender": ""
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/complete-profile")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.errors.phoneNumber").exists());
+    }
+
     private String loginAndGetToken(String username, String password) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

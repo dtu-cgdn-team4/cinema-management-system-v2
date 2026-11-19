@@ -172,3 +172,66 @@ export function validateRegisterForm(formData = {}) {
     errors,
   };
 }
+
+/**
+ * Kiểm tra dữ liệu bổ sung thông tin hồ sơ cho tài khoản đăng nhập nhanh qua Google.
+ * Tái sử dụng các quy chuẩn xác thực của form đăng ký nhưng bỏ qua mật khẩu và điều khoản.
+ *
+ * @param {object} formData Dữ liệu biểu mẫu hiện tại.
+ * @returns {{ isValid: boolean, errors: Record<string, string> }} Kết quả và lỗi theo từng trường.
+ */
+export function validateCompleteProfileForm(formData = {}) {
+  const errors = {};
+
+  const fullName = formData.fullName?.trim() ?? '';
+  if (!fullName) {
+    errors.fullName = 'Vui lòng nhập họ và tên.';
+  } else if (fullName.length < 2 || fullName.length > 150) {
+    errors.fullName = 'Họ và tên phải có 2-150 ký tự.';
+  }
+
+  const dateOfBirth = formData.dateOfBirth?.trim() ?? '';
+  if (!dateOfBirth) {
+    errors.dateOfBirth = 'Vui lòng nhập ngày sinh.';
+  } else {
+    const age = calculateAge(dateOfBirth);
+    if (age === null || isNaN(age)) {
+      errors.dateOfBirth = 'Ngày sinh không hợp lệ.';
+    } else if (age < 13 || age > 120) {
+      errors.dateOfBirth = 'Tuổi phải từ 13 đến 120.';
+    }
+  }
+
+  const gender = formData.gender?.trim() ?? '';
+  if (!gender) {
+    errors.gender = 'Vui lòng chọn giới tính.';
+  } else if (!['MALE', 'FEMALE', 'OTHER', 'Nam', 'Nữ', 'Khác'].includes(gender)) {
+    errors.gender = 'Giới tính không hợp lệ.';
+  }
+
+  const phoneNumber = formData.phoneNumber?.trim() ?? '';
+  if (!phoneNumber) {
+    errors.phoneNumber = 'Vui lòng nhập SĐT.';
+  } else if (!/^0[35789][0-9]{8}$/.test(phoneNumber)) {
+    errors.phoneNumber = 'SĐT phải có 10 chữ số (đầu số 03, 05, 07, 08, 09).';
+  }
+
+  const idCard = formData.idCard?.trim() ?? '';
+  if (idCard && !/^(?:[0-9]{9}|[0-9]{12})$/.test(idCard)) {
+    errors.idCard = 'CMND/CCCD phải gồm 9 hoặc 12 số.';
+  }
+
+  const address = formData.address?.trim() ?? '';
+  if (address) {
+    if (address.length < 5) {
+      errors.address = 'Địa chỉ phải có ít nhất 5 ký tự.';
+    } else if (address.length > 255) {
+      errors.address = 'Địa chỉ không được vượt quá 255 ký tự.';
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}

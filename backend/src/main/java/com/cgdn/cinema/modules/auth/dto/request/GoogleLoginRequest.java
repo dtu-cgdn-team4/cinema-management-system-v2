@@ -7,7 +7,13 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record GoogleLoginRequest(
         @NotBlank(message = "Google ID token không được để trống")
-        String idToken
+        String idToken,
+
+        Boolean rememberMe
 ) {
+
+    public GoogleLoginRequest(String idToken) {
+        this(idToken, true);
+    }
 }
 

@@ -61,20 +61,23 @@ export const authApi = {
   },
 
   /** Đăng nhập bằng Google ID Token. */
-  loginWithGoogle: (idToken) => {
-    return apiClient.post('/auth/google', { idToken });
+  loginWithGoogle: (idToken, rememberMe = true) => {
+    return apiClient.post('/auth/google', { idToken, rememberMe });
   },
 
   /**
    * Lấy URL chuyển hướng đăng nhập Google
    */
-  getGoogleAuthUrl: () => {
-    return apiClient.get('/auth/google/url');
+  getGoogleAuthUrl: (rememberMe = true) => {
+    return apiClient.get('/auth/google/url', { params: { rememberMe } });
   },
 
-  /** Hoàn tất đăng nhập Google bằng cookie callback HttpOnly. */
+  /** Revoke the current refresh token and clear its HttpOnly cookie. */
+  logout: () => apiClient.post('/auth/logout'),
+
+  /** Lấy access token sau Google OAuth bằng refresh cookie HttpOnly. */
   exchangeGoogleLogin: () => {
-    return apiClient.post('/auth/google/exchange');
+    return apiClient.post('/auth/refresh');
   },
 
   /**
@@ -83,6 +86,17 @@ export const authApi = {
   getCurrentUser: () => {
     return apiClient.get('/auth/me');
   },
+
+  /**
+   * Bổ sung thông tin bắt buộc (SĐT, Ngày sinh, Giới tính) cho tài khoản
+   */
+  completeProfile: (data) => {
+    return apiClient.post('/auth/complete-profile', data);
+  },
+};
+
+export const completeProfile = (data) => {
+  return apiClient.post('/auth/complete-profile', data);
 };
 
 export default authApi;

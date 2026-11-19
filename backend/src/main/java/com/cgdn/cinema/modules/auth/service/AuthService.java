@@ -1,5 +1,6 @@
 package com.cgdn.cinema.modules.auth.service;
 
+import com.cgdn.cinema.modules.auth.dto.request.CompleteProfileRequest;
 import com.cgdn.cinema.modules.auth.dto.request.GoogleLoginRequest;
 import com.cgdn.cinema.modules.auth.dto.request.LoginRequest;
 import com.cgdn.cinema.modules.auth.dto.response.GoogleAuthUrlResponse;
@@ -19,4 +20,6 @@ public interface AuthService {
     GoogleAuthUrlResponse getGoogleAuthorizationUrl(String state);
 
     LoginResponse.UserInfoResponse getCurrentUser(String username);
+
+    LoginResponse.UserInfoResponse completeProfile(String username, CompleteProfileRequest request);
 }

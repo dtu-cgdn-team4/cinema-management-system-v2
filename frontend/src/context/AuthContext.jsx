@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import apiClient from '../services/apiClient';
 
 export const AuthContext = createContext(null);
 
@@ -31,9 +32,23 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setToken(null);
+      setUser(null);
+    };
+
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, []);
+
   const handleLogin = (loginData, rememberMe = true) => {
     const { accessToken, user: userInfo } = loginData;
     const storage = rememberMe ? localStorage : sessionStorage;
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+
+    otherStorage.removeItem('accessToken');
+    otherStorage.removeItem('currentUser');
 
     storage.setItem('accessToken', accessToken);
     storage.setItem('currentUser', JSON.stringify(userInfo));
@@ -43,6 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleLogout = () => {
+    apiClient.post('/auth/logout').catch(() => {});
     localStorage.removeItem('accessToken');
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('accessToken');

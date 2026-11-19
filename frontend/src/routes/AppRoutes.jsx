@@ -53,6 +53,21 @@ const AdminRoute = ({ children }) => {
 };
 
 export default function AppRoutes() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const isProfileIncomplete = Boolean(
+    isAuthenticated && user && (!user.phoneNumber || !user.dateOfBirth || !user.gender)
+  );
+  const isAuthRoute = [
+    "/dang-nhap",
+    "/login",
+    "/auth/google/callback",
+  ].includes(location.pathname);
+
+  if (!isLoading && isProfileIncomplete && !isAuthRoute) {
+    return <Navigate to="/dang-nhap?step=complete-profile" replace />;
+  }
+
   return (
     <Routes>
       {/* Trang đăng ký độc lập */}

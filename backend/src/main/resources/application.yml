@@ -47,8 +47,9 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:5174}
   jwt:
     secret: ${JWT_SECRET:cinema-dev-secret-key-please-change-in-production-at-least-256-bits}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+    refresh-cookie-secure: ${JWT_REFRESH_COOKIE_SECURE:false}
   security:
     max-failed-attempts: 5
     lock-duration-minutes: ${SECURITY_LOCK_DURATION_MINUTES:15}

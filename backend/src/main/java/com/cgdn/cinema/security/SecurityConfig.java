@@ -1,6 +1,7 @@
 package com.cgdn.cinema.security;
 
 import com.cgdn.cinema.exception.GlobalExceptionHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -31,6 +33,8 @@ public class SecurityConfig {
             "/api/v1/auth/register",
             "/api/v1/auth/register/availability",
             "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout",
             "/api/v1/auth/google",
             "/api/v1/auth/google/**",
             "/v3/api-docs/**",
@@ -43,15 +47,18 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final GlobalExceptionHandler globalExceptionHandler;
     private final CorsProperties corsProperties;
+    private final ObjectMapper objectMapper;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider,
                           CustomUserDetailsService userDetailsService,
                           GlobalExceptionHandler globalExceptionHandler,
-                          CorsProperties corsProperties) {
+                          CorsProperties corsProperties,
+                          ObjectMapper objectMapper) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
         this.globalExceptionHandler = globalExceptionHandler;
         this.corsProperties = corsProperties;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -72,6 +79,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/staff/**", "/api/v1/counter/**").hasAnyRole("STAFF", "ADMIN")
                         .anyRequest().authenticated())
+                .addFilterAfter(
+                        new LoginRateLimitFilter(objectMapper),
+                        CorsFilter.class)
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class)

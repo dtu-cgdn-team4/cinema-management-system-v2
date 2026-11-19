@@ -74,4 +74,14 @@ public class ApiResponse<T> {
                 .data(data)
                 .build();
     }
+
+    public static ApiResponse<Void> errorWithErrors(
+            int code, String errorCode, String message, Map<String, String> errors) {
+        return ApiResponse.<Void>builder()
+                .code(code)
+                .errorCode(errorCode)
+                .message(message)
+                .errors(errors)
+                .build();
+    }
 }

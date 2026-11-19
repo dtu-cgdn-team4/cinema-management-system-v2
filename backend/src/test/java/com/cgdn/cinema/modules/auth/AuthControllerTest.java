@@ -33,9 +33,10 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         service = mock(RegistrationService.class);
+        ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(
-                        mock(AuthService.class), mock(GoogleProperties.class), service))
-                .setControllerAdvice(new GlobalExceptionHandler(new ObjectMapper())).build();
+                        mock(AuthService.class), mock(GoogleProperties.class), service, objectMapper))
+                .setControllerAdvice(new GlobalExceptionHandler(objectMapper)).build();
     }
 
     @Test
