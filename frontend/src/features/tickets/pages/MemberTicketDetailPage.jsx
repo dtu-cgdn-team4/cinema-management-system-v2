@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { AlertCircle, ArrowLeft, Clock3, FileText, MapPin, Plus, Ticket } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Clock3, FileText, MapPin, Plus, Share2, Ticket } from 'lucide-react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import PaymentDetailsCard from '../components/PaymentDetailsCard';
+import TicketQrPanel from '../components/TicketQrPanel';
 import useMemberTicketDetail from '../hooks/useMemberTicketDetail';
 
 const VIETNAM_TIME_ZONE = 'Asia/Ho_Chi_Minh';
@@ -105,6 +107,7 @@ function DetailItem({ label, children, className = '' }) {
 }
 
 export default function MemberTicketDetailPage() {
+  const [shareMessage, setShareMessage] = useState('');
   const { bookingCode } = useParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { ticket, isLoading, error, isNotFound, reload } = useMemberTicketDetail(
@@ -127,6 +130,31 @@ export default function MemberTicketDetailPage() {
     label: `${rowName ?? ''}${number ?? ''}`,
     type,
   })).filter(({ label }) => label);
+
+  const handleShareTicket = async () => {
+    const shareText = [
+      movie.title,
+      ticket.cinema?.name,
+      showtime.startsAt && `${formatTicketDate(showtime.startsAt)} lúc ${formatTicketTime(showtime.startsAt)}`,
+      `Mã vé: ${ticket.bookingCode}`,
+    ].filter(Boolean).join(' · ');
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Thông tin vé xem phim', text: shareText });
+        setShareMessage('Đã mở bảng chia sẻ.');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareText);
+        setShareMessage('Đã sao chép thông tin vé để chia sẻ.');
+      } else {
+        setShareMessage('Thiết bị này chưa hỗ trợ chia sẻ vé trực tiếp.');
+      }
+    } catch (shareError) {
+      if (shareError?.name !== 'AbortError') {
+        setShareMessage('Không thể chia sẻ vé lúc này.');
+      }
+    }
+  };
 
   return (
     <main className="min-h-[calc(100vh-200px)] bg-page text-white">
@@ -228,21 +256,26 @@ export default function MemberTicketDetailPage() {
               </div>
             </div>
 
-            <aside className="border-t border-[#252d3b] bg-[#141720] p-5 sm:p-7 md:border-l md:border-t-0 lg:p-8">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-400">Mã đặt vé điện tử</p>
-              <div className="mt-3 rounded-xl border border-[#293141] bg-[#0b0d12] px-3 py-3 text-center font-mono text-lg font-bold tracking-[0.16em] text-white [overflow-wrap:anywhere] sm:text-xl sm:tracking-[0.2em]">
-                {ticket.bookingCode}
-              </div>
-              <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-400 sm:text-xs">
-                Mã vé được tạo khi đặt vé và lưu trong hệ thống.
-              </p>
-            </aside>
+            <TicketQrPanel bookingCode={ticket.bookingCode} />
           </div>
         </section>
 
         <PaymentDetailsCard ticket={ticket} />
 
+        <div className="mt-7 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-4 py-3.5 text-xs leading-relaxed text-amber-200/80 sm:flex sm:items-center sm:gap-3">
+          <Clock3 size={17} className="mb-2 shrink-0 text-amber-400 sm:mb-0" />
+          <p>Vui lòng có mặt trước giờ chiếu 15 phút. Vé đã thanh toán không thể đổi hoặc hoàn tiền theo chính sách của Galaxy Cinema Lumière.</p>
+        </div>
+
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={handleShareTicket}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand/15 transition hover:bg-rose-600"
+          >
+            <Share2 size={16} />
+            Chia sẻ vé với bạn bè
+          </button>
           <button
             type="button"
             disabled
@@ -262,6 +295,9 @@ export default function MemberTicketDetailPage() {
             </Link>
           )}
         </div>
+        <p aria-live="polite" className="mt-2 min-h-4 text-center text-xs text-zinc-400">
+          {shareMessage}
+        </p>
 
         <Link
           to="/tai-khoan/ve-da-dat"
