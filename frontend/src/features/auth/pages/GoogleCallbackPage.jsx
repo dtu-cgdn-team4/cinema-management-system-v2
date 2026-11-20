@@ -4,6 +4,7 @@ import { ArrowLeft, Globe, ChevronDown, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import RegisterCinematicHero from '../components/RegisterCinematicHero';
 import authApi from '../api/authApi';
+import { getPostLoginRedirectPath } from '../utils/authRedirect';
 
 /**
  * Trang xử lý callback xác thực từ Google OAuth2
@@ -39,10 +40,8 @@ export const GoogleCallbackPage = () => {
         }
 
         const rememberMe = sessionStorage.getItem('googleLoginRememberMe') !== 'false';
-        const requestedPath = sessionStorage.getItem('googleLoginReturnTo') || '/';
-        const returnTo = requestedPath.startsWith('/') && !requestedPath.startsWith('//')
-          ? requestedPath
-          : '/';
+        const requestedPath = sessionStorage.getItem('googleLoginReturnTo');
+        const returnTo = getPostLoginRedirectPath(user, requestedPath);
 
         sessionStorage.removeItem('googleLoginRememberMe');
 
