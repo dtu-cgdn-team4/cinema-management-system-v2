@@ -95,6 +95,7 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
     (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
+    (8, 'admin123', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Quản Trị Viên 123', 'admin123@lumiere.vn', '0905999888', '2000-01-01', 'Nam', '048099888999', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
 
     -- Nhân viên rạp Lumière Landmark 81 (rap_id bắt buộc = 1 theo CHECK constraint)
     (2, 'staff_landmark', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Trần Văn Long', 'longtv@lumiere.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
