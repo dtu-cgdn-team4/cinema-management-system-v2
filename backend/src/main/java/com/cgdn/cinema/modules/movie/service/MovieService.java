@@ -34,6 +34,11 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final Clock clock;
 
+    public List<MovieResponse> getFeaturedMovies() {
+        return movieRepository.findFeatured(LocalDate.now(clock), AppConstants.STATUS_ACTIVE).stream()
+                .limit(8).map(MovieMapper::toResponse).toList();
+    }
+
     /** Phim đang chiếu: hôm nay nằm trong [ngày khởi chiếu, ngày kết thúc] (Q&A #38). */
     public List<MovieResponse> getShowingMovies() {
         return movieRepository.findShowing(LocalDate.now(clock), AppConstants.STATUS_ACTIVE).stream()

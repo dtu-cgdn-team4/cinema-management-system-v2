@@ -21,6 +21,11 @@ public class MovieController {
 
     private final MovieService movieService;
 
+    @GetMapping("/featured")
+    public ApiResponse<List<MovieResponse>> getFeatured() {
+        return ApiResponse.success(movieService.getFeaturedMovies());
+    }
+
     /** Danh sách phim theo trạng thái; hiện chỉ có SHOWING (phim đang chiếu). */
     @GetMapping
     public ApiResponse<List<MovieResponse>> getMovies(

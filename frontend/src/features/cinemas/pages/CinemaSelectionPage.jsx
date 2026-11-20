@@ -126,7 +126,7 @@ export default function CinemaSelectionPage() {
           Chọn rạp chiếu
         </h1>
         <p className="text-sm text-muted">
-          Tìm rạp gần bạn và khám phá không gian điện ảnh yêu thích cùng Galaxy Lumière.
+          Tìm rạp gần bạn và khám phá không gian điện ảnh yêu thích cùng Galaxy.
         </p>
       </div>
 

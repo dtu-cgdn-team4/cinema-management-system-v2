@@ -264,7 +264,7 @@ export default function MemberTicketDetailPage() {
 
         <div className="mt-7 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] px-4 py-3.5 text-xs leading-relaxed text-amber-200/80 sm:flex sm:items-center sm:gap-3">
           <Clock3 size={17} className="mb-2 shrink-0 text-amber-400 sm:mb-0" />
-          <p>Vui lòng có mặt trước giờ chiếu 15 phút. Vé đã thanh toán không thể đổi hoặc hoàn tiền theo chính sách của Galaxy Cinema Lumière.</p>
+          <p>Vui lòng có mặt trước giờ chiếu 15 phút. Vé đã thanh toán không thể đổi hoặc hoàn tiền theo chính sách của Galaxy Cinema.</p>
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

@@ -34,6 +34,10 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     List<GenreOption> findGenreOptions();
 
     @EntityGraph(attributePaths = "genres")
+    @Query("select m from Movie m where " + SHOWING + " and m.featuredOrder IS NOT NULL order by m.featuredOrder, m.id")
+    List<Movie> findFeatured(@Param("today") LocalDate today, @Param("status") int status);
+
+    @EntityGraph(attributePaths = "genres")
     @Query("select m from Movie m where " + SHOWING + " order by m.releaseDate desc, m.id")
     List<Movie> findShowing(@Param("today") LocalDate today, @Param("status") int status);
 

@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 const NAV = [
   ['/trang-chu', 'Trang chủ'],
   ['/phim', 'Phim'],
-  ['/lich-chieu', 'Lịch chiếu'],
   ['/rap-chieu', 'Rạp chiếu'],
   ['/uu-dai', 'Ưu đãi'],
 ];

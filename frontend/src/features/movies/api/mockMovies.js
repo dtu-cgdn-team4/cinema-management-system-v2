@@ -7,11 +7,20 @@ function demoDate(offset) {
 }
 
 export const mockMovies = [
-  { id: 'demo-1', title: 'Interstellar (Demo)', duration: 169, ageRating: 'T13', genres: ['Khoa học viễn tưởng', 'Phiêu lưu'], director: 'Christopher Nolan', actors: ['Matthew McConaughey', 'Anne Hathaway'], status: 'NOW_SHOWING', releaseDate: demoDate(-7), posterUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800' },
-  { id: 'demo-2', title: 'Mai (Demo)', duration: 131, ageRating: 'T18', genres: ['Tâm lý', 'Tình cảm'], director: 'Trấn Thành', actors: ['Phương Anh Đào', 'Tuấn Trần'], status: 'NOW_SHOWING', releaseDate: demoDate(-14), posterUrl: 'https://images.unsplash.com/photo-1518676599649-7c7e30d31efb?w=800' },
-  { id: 'demo-3', title: 'Inception (Demo)', duration: 148, ageRating: 'T13', genres: ['Hành động', 'Khoa học viễn tưởng'], director: 'Christopher Nolan', actors: ['Leonardo DiCaprio', 'Cillian Murphy'], status: 'COMING_SOON', releaseDate: demoDate(7), posterUrl: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800' },
-  { id: 'demo-4', title: 'Arrival (Demo)', duration: 116, ageRating: 'T13', genres: ['Khoa học viễn tưởng', 'Tâm lý'], director: 'Denis Villeneuve', actors: ['Amy Adams', 'Jeremy Renner'], status: 'COMING_SOON', releaseDate: demoDate(14), posterUrl: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800' },
-].map((movie) => ({ ...movie, genre: movie.genres.join(', ') }));
+  { id: 'demo-1', title: 'Interstellar (Demo)', duration: 169, ageRating: 'T13', genres: ['Khoa học viễn tưởng', 'Phiêu lưu'], director: 'Christopher Nolan', actors: ['Matthew McConaughey', 'Anne Hathaway'], status: 'NOW_SHOWING', releaseDate: demoDate(-7), posterUrl: '/images/movies/7.jpg' },
+  { id: 'demo-2', title: 'Mai (Demo)', duration: 131, ageRating: 'T18', genres: ['Tâm lý', 'Tình cảm'], director: 'Trấn Thành', actors: ['Phương Anh Đào', 'Tuấn Trần'], status: 'NOW_SHOWING', releaseDate: demoDate(-14), posterUrl: '/images/movies/3.jpg' },
+  { id: 'demo-3', title: 'Inception (Demo)', duration: 148, ageRating: 'T13', genres: ['Hành động', 'Khoa học viễn tưởng'], director: 'Christopher Nolan', actors: ['Leonardo DiCaprio', 'Cillian Murphy'], status: 'COMING_SOON', releaseDate: demoDate(7), posterUrl: '/images/movies/8.jpg' },
+  { id: 'demo-4', title: 'Arrival (Demo)', duration: 116, ageRating: 'T13', genres: ['Khoa học viễn tưởng', 'Tâm lý'], director: 'Denis Villeneuve', actors: ['Amy Adams', 'Jeremy Renner'], status: 'COMING_SOON', releaseDate: demoDate(14), posterUrl: '/images/movies/9.jpg' },
+].map((movie) => ({
+  ...movie,
+  genre: movie.genres.join(', '),
+  trailerUrl: {
+    'demo-1': 'https://www.youtube.com/watch?v=zSWdZVtXT7E',
+    'demo-2': 'https://www.youtube.com/watch?v=HXWRTGbhb4U',
+    'demo-3': 'https://www.youtube.com/watch?v=YoHD9XEInc0',
+    'demo-4': 'https://www.youtube.com/watch?v=tFMo3UJ4B4g',
+  }[movie.id],
+}));
 
 export const mockGenres = [...new Set(mockMovies.flatMap((movie) => movie.genres))];
 

@@ -6,7 +6,7 @@ import BrandLogo from '../components/common/BrandLogo';
 const COLUMNS = [
   ['Khám phá', ['Phim đang chiếu', 'Phim sắp chiếu', 'Hệ thống rạp']],
   ['Hỗ trợ', ['Hướng dẫn đặt vé', 'Câu hỏi thường gặp', 'Liên hệ']],
-  ['Thông tin', ['Về Galaxy Lumière', 'Điều khoản sử dụng', 'Chính sách bảo mật']],
+  ['Thông tin', ['Về Galaxy', 'Điều khoản sử dụng', 'Chính sách bảo mật']],
 ];
 
 export default function SiteFooter() {
@@ -39,7 +39,7 @@ export default function SiteFooter() {
           ))}
         </div>
         <div className="flex flex-col gap-3 border-t border-line pt-5 text-xs leading-5 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-zinc-500">© 2026 Galaxy Cinema / Lumière. Mọi quyền được bảo lưu.</span>
+          <span className="text-zinc-500">© 2026 Galaxy Cinema. Mọi quyền được bảo lưu.</span>
           <span className="text-muted">Tiếng Việt · VN</span>
         </div>
       </div>

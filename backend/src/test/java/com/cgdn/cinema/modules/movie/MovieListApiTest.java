@@ -58,6 +58,21 @@ class MovieListApiTest {
     }
 
     @Test
+    void featuredUsesDatabaseSelectionAndOrderOnlyForShowingMovies() throws Exception {
+        jdbc.update("UPDATE phim SET thu_tu_noi_bat = 1 WHERE id IN (901, 902, 903, 904)");
+        mvc.perform(get("/api/v1/movies/featured"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].id").value(901));
+        jdbc.update("UPDATE phim SET thu_tu_noi_bat = 0 WHERE id = 900");
+        mvc.perform(get("/api/v1/movies/featured"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(900))
+                .andExpect(jsonPath("$.data[1].id").value(901));
+    }
+
+    @Test
     void genresReturnIdsAndNamesForTheFilter() throws Exception {
         mvc.perform(get("/api/v1/movies/genres"))
                 .andExpect(status().isOk())

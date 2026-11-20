@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 
-export default function MovieFilterSelect({ label, value, options, onChange }) {
+export default function MovieFilterSelect({ label, value, options, onChange, disabled = false }) {
   const root = useRef(null);
   const trigger = useRef(null);
   const id = useId();
@@ -27,7 +27,7 @@ export default function MovieFilterSelect({ label, value, options, onChange }) {
           trigger.current.focus();
         }
       }}>
-      <summary ref={trigger} aria-controls={id} aria-label={`${label}: ${selected?.label ?? value}`}
+      <summary ref={trigger} aria-disabled={disabled} tabIndex={disabled ? -1 : 0} onClick={(event) => { if (disabled) event.preventDefault(); }} aria-controls={id} aria-label={`${label}: ${selected?.label ?? value}`}
         className="flex min-h-11 w-full cursor-pointer list-none items-center gap-2 rounded-xl border border-[#222E42] bg-[#131B2A] px-3 py-2 text-sm text-slate-200 focus-visible:outline-2 focus-visible:outline-brand [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 flex-1 truncate">{selected?.label ?? value}</span>
         <ChevronDown className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -35,7 +35,7 @@ export default function MovieFilterSelect({ label, value, options, onChange }) {
       <div id={id} role="group" aria-label={label}
         className="absolute inset-x-0 top-full mt-1 max-h-[min(16rem,45dvh)] overflow-y-auto overscroll-contain rounded-xl border border-[#303D53] bg-[#131B2A] p-1 shadow-xl">
         {options.map((option) => (
-          <button key={option.value} type="button" aria-pressed={option.value === value}
+          <button key={option.value} type="button" disabled={disabled} aria-pressed={option.value === value}
             onClick={() => {
               onChange(option.value);
               root.current.removeAttribute('open');

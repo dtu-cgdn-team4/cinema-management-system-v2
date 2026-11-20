@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import logoIcon from '../../assets/logo-icon.svg';
 
-/** Logo Galaxy Lumière; header/footer chung đặt khung 145×40 như Figma qua `className`. */
+/** Logo Galaxy; header/footer chung đặt khung 145×40 như Figma qua `className`. */
 export default function BrandLogo({ className = '' }) {
   return (
     <Link to="/" className={`flex items-center gap-2.5 ${className}`}>

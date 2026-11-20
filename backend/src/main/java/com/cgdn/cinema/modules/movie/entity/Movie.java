@@ -66,6 +66,9 @@ public class Movie {
     @Column(name = "trailer_url")
     private String trailerUrl;
 
+    @Column(name = "thu_tu_noi_bat")
+    private Integer featuredOrder;
+
     @Column(name = "noi_dung")
     private String description;
 

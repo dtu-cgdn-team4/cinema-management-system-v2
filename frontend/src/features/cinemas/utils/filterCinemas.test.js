@@ -4,9 +4,9 @@ import { filterCinemas } from './filterCinemas.js';
 
 const HCM = 'TP. Hồ Chí Minh';
 const cinemas = [
-  { id: 1, name: 'Lumière Landmark 81', city: HCM, address: 'Tầng B1, Vincom Center Landmark 81, Quận Bình Thạnh' },
-  { id: 2, name: 'Lumière Nguyễn Du', city: HCM, address: '116 Nguyễn Du, Quận 1' },
-  { id: 3, name: 'Lumière Đà Nẵng Center', city: 'Đà Nẵng', address: '910A Ngô Quyền, Quận Sơn Trà' },
+  { id: 1, name: 'Galaxy Landmark 81', city: HCM, address: 'Tầng B1, Vincom Center Landmark 81, Quận Bình Thạnh' },
+  { id: 2, name: 'Galaxy Nguyễn Du', city: HCM, address: '116 Nguyễn Du, Quận 1' },
+  { id: 3, name: 'Galaxy Đà Nẵng Center', city: 'Đà Nẵng', address: '910A Ngô Quyền, Quận Sơn Trà' },
 ];
 const ids = (city, query) => filterCinemas(cinemas, city, query).map((c) => c.id);
 

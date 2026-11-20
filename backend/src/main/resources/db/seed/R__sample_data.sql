@@ -1,5 +1,5 @@
 -- ==============================================================================
--- DỮ LIỆU MẪU HỆ THỐNG RẠP CHIẾU PHIM (GALAXY LUMIÈRE CINEMA)
+-- DỮ LIỆU MẪU HỆ THỐNG RẠP CHIẾU PHIM (Galaxy CINEMA)
 -- Khớp 100% với sơ đồ ERD, tài liệu docs/database/database.md và giao diện Figma.
 -- Dữ liệu thực tế tại thị trường Việt Nam (TP. Hồ Chí Minh & TP. Đà Nẵng).
 -- ==============================================================================
@@ -21,10 +21,10 @@ INSERT IGNORE INTO the_loai (id, ten) VALUES
 -- 2. HỆ THỐNG CỤM RẠP (rap) - Chuẩn Figma & Thực tế tại Việt Nam
 -- ------------------------------------------------------------------------------
 INSERT IGNORE INTO rap (id, ten_rap, thanh_pho, dia_chi, so_dien_thoai, gio_mo_cua, gio_dong_cua, hinh_anh_url, trang_thai) VALUES
-    (1, 'Lumière Landmark 81', 'TP. Hồ Chí Minh', 'Tầng B1, TTTM Vincom Center Landmark 81, 720A Điện Biên Phủ, Phường 22, Quận Bình Thạnh, TP. Hồ Chí Minh', '02873002222', '08:00:00', '23:30:00', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1000', 1),
-    (2, 'Lumière Nguyễn Du', 'TP. Hồ Chí Minh', '116 Nguyễn Du, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh', '02838234567', '08:30:00', '23:30:00', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1000', 1),
-    (3, 'Lumière Đà Nẵng Center', 'Đà Nẵng', 'Tầng 3, TTTM Vincom Plaza Ngô Quyền, 910A Ngô Quyền, Phường An Hải Bắc, Quận Sơn Trà, TP. Đà Nẵng', '02363996688', '08:30:00', '23:00:00', 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?w=1000', 1),
-    (4, 'Lumière Quang Trung', 'TP. Hồ Chí Minh', '190 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh', '02838941234', '08:00:00', '23:00:00', 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=1000', 1);
+    (1, 'Galaxy Landmark 81', 'TP. Hồ Chí Minh', 'Tầng B1, TTTM Vincom Center Landmark 81, 720A Điện Biên Phủ, Phường 22, Quận Bình Thạnh, TP. Hồ Chí Minh', '02873002222', '08:00:00', '23:30:00', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1000', 1),
+    (2, 'Galaxy Nguyễn Du', 'TP. Hồ Chí Minh', '116 Nguyễn Du, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh', '02838234567', '08:30:00', '23:30:00', 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1000', 1),
+    (3, 'Galaxy Đà Nẵng Center', 'Đà Nẵng', 'Tầng 3, TTTM Vincom Plaza Ngô Quyền, 910A Ngô Quyền, Phường An Hải Bắc, Quận Sơn Trà, TP. Đà Nẵng', '02363996688', '08:30:00', '23:00:00', 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?w=1000', 1),
+    (4, 'Galaxy Quang Trung', 'TP. Hồ Chí Minh', '190 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh', '02838941234', '08:00:00', '23:00:00', 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=1000', 1);
 
 -- ------------------------------------------------------------------------------
 -- 3. DANH SÁCH PHIM (phim) - Các phim chiếu rạp đình đám thực tế trên Figma
@@ -32,7 +32,7 @@ INSERT IGNORE INTO rap (id, ten_rap, thanh_pho, dia_chi, so_dien_thoai, gio_mo_c
 INSERT IGNORE INTO phim (id, ten_phim, thoi_luong, nhan_tuoi, ngay_khoi_chieu, ngay_ket_thuc, dao_dien, dien_vien, hang_san_xuat, trailer_url, poster_url, noi_dung, trang_thai) VALUES
     (1, 'Dune: Hành Tinh Cát — Phần 2', 166, 'T16', '2026-03-01', '2026-12-31', 'Denis Villeneuve', 'Timothée Chalamet, Zendaya, Rebecca Ferguson, Javier Bardem, Austin Butler', 'Warner Bros. Pictures', 'https://www.youtube.com/watch?v=Way9Dexny3w', 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800', 'Paul Atreides hợp lực cùng Chani và tộc người Fremen để trả thù những kẻ đã hủy hoại gia đình mình, đồng thời đối mặt với lựa chọn giữa tình yêu và số phận vũ trụ.', 1),
     (2, 'Deadpool & Wolverine', 128, 'T18', '2026-07-26', '2026-12-31', 'Shawn Levy', 'Ryan Reynolds, Hugh Jackman, Emma Corrin, Matthew Macfadyen', 'Marvel Studios', 'https://www.youtube.com/watch?v=73_1biulkYk', 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800', 'Wade Wilson tái xuất trong bộ đồ Deadpool và buộc phải thuyết phục Wolverine hợp tác để bảo vệ dòng thời gian và cứu lấy thế giới của anh.', 1),
-    (3, 'Mai (2024)', 131, 'T18', '2026-02-10', '2026-12-31', 'Trấn Thành', 'Phương Anh Đào, Tuấn Trần, Trấn Thành, Hồng Đào, Uyển Ân', 'CJ HK Entertainment', 'https://www.youtube.com/watch?v=d_kFvP35mO8', 'https://images.unsplash.com/photo-1518676599649-7c7e30d31efb?w=800', 'Mai là một phụ nữ ngoài 30 tuổi làm nghề mát-xa chịu nhiều định kiến xã hội. Cuộc đời cô rẽ sang trang mới khi gặp Dương, chàng trai trẻ phong lưu hết lòng theo đuổi cô.', 1),
+    (3, 'Mai (2024)', 131, 'T18', '2026-02-10', '2026-12-31', 'Trấn Thành', 'Phương Anh Đào, Tuấn Trần, Trấn Thành, Hồng Đào, Uyển Ân', 'CJ HK Entertainment', 'https://www.youtube.com/watch?v=EX6clvId19s', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcyh7v0jngN0gOCGhWiEsbcTpDERp3-n5FZQ3dtSnbpA&s=10', 'Mai là một phụ nữ ngoài 30 tuổi làm nghề mát-xa chịu nhiều định kiến xã hội. Cuộc đời cô rẽ sang trang mới khi gặp Dương, chàng trai trẻ phong lưu hết lòng theo đuổi cô.', 1),
     (4, 'Quật Mộ Trùng Ma', 134, 'T18', '2026-03-15', '2026-12-31', 'Jang Jae-hyun', 'Choi Min-sik, Kim Go-eun, Yoo Hae-jin, Lee Do-hyun', 'Showbox', 'https://www.youtube.com/watch?v=kYJ0i-f5r-Y', 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=800', 'Hai pháp sư, một thầy phong thủy và một chuyên gia tang lễ nhận lời khai quật một ngôi mộ cổ bí ẩn tại vùng hẻo lánh, vô tình giải phóng một thế lực tà ác cổ xưa.', 1),
     (5, 'Oppenheimer: Kẻ Huỷ Diệt', 180, 'T18', '2026-08-11', '2026-12-31', 'Christopher Nolan', 'Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr., Florence Pugh', 'Universal Pictures', 'https://www.youtube.com/watch?v=uYPbbksJxIg', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800', 'Câu chuyện chân thực về nhà vật lý lý thuyết J. Robert Oppenheimer, người đứng đầu Dự án Manhattan khai sinh ra quả bom nguyên tử đầu tiên trong lịch sử nhân loại.', 1),
     (6, 'Lật Mặt 7: Một Điều Ước', 138, 'K', '2026-04-26', '2026-12-31', 'Lý Hải', 'Thanh Hiền, Trương Minh Cường, Đinh Y Nhung, Quách Ngọc Tuyên, Trâm Anh', 'Lý Hải Production', 'https://www.youtube.com/watch?v=QfV7b_5sXbE', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800', 'Bà Hai 73 tuổi sống một mình tại làng quê Lâm Đồng. Biến cố xảy ra khi bà bị tai nạn gãy chân, đặt 5 người con trưởng thành vào bài toán ai sẽ là người chăm sóc mẹ già.', 1);
@@ -78,7 +78,7 @@ INSERT IGNORE INTO bang_gia (thu_trong_tuan, loai_ghe, gia) VALUES
 -- ------------------------------------------------------------------------------
 INSERT IGNORE INTO khuyen_mai (id, ma, tieu_de, noi_dung, hinh_anh_url, loai_giam, muc_giam, bat_dau, ket_thuc, tu_dong_ap_dung, trang_thai) VALUES
     (1, NULL, 'Thứ 3 Vui Vẻ — Giảm 10.000 đ/vé', 'Mỗi thứ Ba hằng tuần, mọi suất chiếu được giảm 10.000 đ/vé, trừ thẳng vào tiền vé khi đặt online hoặc mua tại quầy.', 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800', 'SO_TIEN', 10000, '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE, 1),
-    (2, 'MEMBER15', 'Thành viên nhập mã giảm 15.000 đ/vé', 'Dành riêng cho khách hàng thành viên có tài khoản Lumière Cinema khi đặt vé xem phim trực tuyến.', 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800', 'SO_TIEN', 15000, '2026-01-01 00:00:00', '2026-12-31 23:59:59', FALSE, 1),
+    (2, 'MEMBER15', 'Thành viên nhập mã giảm 15.000 đ/vé', 'Dành riêng cho khách hàng thành viên có tài khoản Galaxy Cinema khi đặt vé xem phim trực tuyến.', 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800', 'SO_TIEN', 15000, '2026-01-01 00:00:00', '2026-12-31 23:59:59', FALSE, 1),
     (3, 'HSSV20', 'Học sinh sinh viên giảm 20% tiền vé', 'Ưu đãi 20% trên tổng hóa đơn vé xem phim cho học sinh, sinh viên xuất trình thẻ sinh viên hợp lệ.', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800', 'PHAN_TRAM', 20, '2026-01-01 00:00:00', '2026-12-31 23:59:59', FALSE, 1),
     (4, 'WEEKEND5', 'Cuối tuần nhập mã giảm 5.000 đ/vé', 'Nhập mã WEEKEND5 giảm ngay 5.000 đ/vé cho các suất chiếu Thứ 6, Thứ 7 và Chủ nhật.', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800', 'SO_TIEN', 5000, '2026-01-01 00:00:00', '2026-12-31 23:59:59', FALSE, 1),
     (5, 'PAYPAL10', 'Thanh toán ví PayPal giảm 10.000 đ', 'Giảm trực tiếp 10.000 đ cho khách hàng hoàn tất thanh toán vé trực tuyến qua cổng PayPal.', 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800', 'SO_TIEN', 10000, '2026-01-01 00:00:00', '2026-12-31 23:59:59', FALSE, 1);
@@ -94,13 +94,13 @@ INSERT IGNORE INTO khuyen_mai_thu (khuyen_mai_id, thu_trong_tuan) VALUES
 -- ------------------------------------------------------------------------------
 INSERT IGNORE INTO nguoi_dung (id, tai_khoan, mat_khau, ho_ten, email, so_dien_thoai, ngay_sinh, gioi_tinh, cccd, dia_chi, vai_tro, rap_id, diem_tich_luy, trang_thai) VALUES
     -- Quản trị viên hệ thống (rap_id bắt buộc NULL theo CHECK constraint)
-    (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@lumiere.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
+    (1, 'admin', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Minh Nguyên', 'admin@Galaxy.vn', '0905111222', '2002-05-15', 'Nam', '048099001122', 'Hải Châu, TP. Đà Nẵng', 'ADMIN', NULL, 0, 1),
 
-    -- Nhân viên rạp Lumière Landmark 81 (rap_id bắt buộc = 1 theo CHECK constraint)
-    (2, 'staff_landmark', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Trần Văn Long', 'longtv@lumiere.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
+    -- Nhân viên rạp Galaxy Landmark 81 (rap_id bắt buộc = 1 theo CHECK constraint)
+    (2, 'staff_landmark', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Trần Văn Long', 'longtv@Galaxy.vn', '0905222333', '2003-08-20', 'Nam', '048099002233', 'Bình Thạnh, TP. Hồ Chí Minh', 'NHAN_VIEN', 1, 0, 1),
 
-    -- Nhân viên rạp Lumière Đà Nẵng Center (rap_id bắt buộc = 3 theo CHECK constraint)
-    (3, 'staff_danang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Vinh Hà', 'hanv@lumiere.vn', '0905333444', '2003-11-10', 'Nam', '048099003344', 'Sơn Trà, TP. Đà Nẵng', 'NHAN_VIEN', 3, 0, 1),
+    -- Nhân viên rạp Galaxy Đà Nẵng Center (rap_id bắt buộc = 3 theo CHECK constraint)
+    (3, 'staff_danang', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Nguyễn Vinh Hà', 'hanv@Galaxy.vn', '0905333444', '2003-11-10', 'Nam', '048099003344', 'Sơn Trà, TP. Đà Nẵng', 'NHAN_VIEN', 3, 0, 1),
 
     -- Khách hàng mẫu 1 (rap_id bắt buộc NULL theo CHECK constraint)
     (4, 'hoangnam', '$2a$10$S/TmQQBk61EmbX03Rq2B.OdkRjVPjjFLWBodfyNRov1sAsP399wxe', 'Lê Hoàng Nam', 'hoangnam@gmail.com', '0914555666', '2001-03-25', 'Nam', '048099004455', 'Quận 1, TP. Hồ Chí Minh', 'KHACH_HANG', NULL, 150, 1),
@@ -240,3 +240,47 @@ INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich
     (7, 7, 'VNPAY', 100000, 'TXN_DEMO_TAMDU_007', 'THANH_CONG', CURRENT_TIMESTAMP),
     (8, 8, 'MOMO', 130000, 'TXN_DEMO_TAMDU_008', 'THANH_CONG', CURRENT_TIMESTAMP),
     (9, 9, 'ZALOPAY', 130000, 'TXN_DEMO_TAMDU_009', 'THANH_CONG', CURRENT_TIMESTAMP);
+-- 12. LOCAL UPCOMING SHOWTIMES: 7 days, room 1, only future non-overlapping slots.
+-- Added on seed execution; existing showtimes and bookings are never rescheduled.
+INSERT INTO suat_chieu (phim_id, phong_chieu_id, bat_dau, ket_thuc, trang_thai)
+SELECT p.id, r.id, TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY), slots.at_time),
+       DATE_ADD(TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY), slots.at_time), INTERVAL (p.thoi_luong + 20) MINUTE), 1
+FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6) days
+CROSS JOIN (SELECT 1 movie_id, '09:00:00' at_time UNION ALL SELECT 2, '12:30:00' UNION ALL SELECT 5, '16:00:00' UNION ALL SELECT 3, '19:30:00') slots
+JOIN phim p ON p.id = slots.movie_id AND p.trang_thai = 1
+JOIN phong_chieu r ON r.id = 1 AND r.trang_thai = 1
+WHERE DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY) BETWEEN p.ngay_khoi_chieu AND p.ngay_ket_thuc
+  AND TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY), slots.at_time) > NOW()
+  AND EXISTS (SELECT 1 FROM ghe g WHERE g.phong_chieu_id = r.id AND g.trang_thai = 1)
+  AND NOT EXISTS (
+    SELECT 1 FROM suat_chieu existing
+    WHERE existing.phong_chieu_id = r.id AND existing.trang_thai = 1
+      AND existing.bat_dau < DATE_ADD(TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY), slots.at_time), INTERVAL (p.thoi_luong + 20) MINUTE)
+      AND existing.ket_thuc > TIMESTAMP(DATE_ADD(CURRENT_DATE(), INTERVAL days.n DAY), slots.at_time)
+  );
+-- Thông tin media được đối chiếu ngày 2026-11-18 với CGV và các kênh trailer.
+-- Chạy sau R__sample_data.sql để cập nhật cả database đã seed từ trước.
+-- thu_tu_noi_bat là lựa chọn biên tập, không phải thống kê lượt xem/doanh thu.
+-- Lịch chiếu trong dự án vẫn là lịch local giả lập, không phải lịch rạp ngoài đời.
+
+UPDATE phim SET ten_phim = 'Dune: Hành Tinh Cát — Phần 2', poster_url = '/images/movies/1.jpg', trailer_url = 'https://www.youtube.com/watch?v=Way9Dexny3w', thu_tu_noi_bat = 2 WHERE id = 1;
+UPDATE phim SET ten_phim = 'Deadpool & Wolverine', poster_url = '/images/movies/2.jpg', trailer_url = 'https://www.youtube.com/watch?v=73_1biulkYk', thu_tu_noi_bat = 3 WHERE id = 2;
+UPDATE phim SET ten_phim = 'Mai (2024)', poster_url = '/images/movies/3.jpg', trailer_url = 'https://www.youtube.com/watch?v=HXWRTGbhb4U', thu_tu_noi_bat = 1 WHERE id = 3;
+UPDATE phim SET ten_phim = 'Quật Mộ Trùng Ma', poster_url = '/images/movies/4.jpg', trailer_url = 'https://www.youtube.com/watch?v=7LH-TIcPqks', thu_tu_noi_bat = 6 WHERE id = 4;
+UPDATE phim SET ten_phim = 'Oppenheimer: Kẻ Huỷ Diệt', poster_url = '/images/movies/5.jpg', trailer_url = 'https://www.youtube.com/watch?v=uYPbbksJxIg', thu_tu_noi_bat = 4 WHERE id = 5;
+UPDATE phim SET ten_phim = 'Lật Mặt 7: Một Điều Ước', poster_url = '/images/movies/6.jpg', trailer_url = 'https://www.youtube.com/watch?v=d1ZHdosjNX8', thu_tu_noi_bat = 5 WHERE id = 6;
+UPDATE phim SET ten_phim = 'Interstellar', poster_url = '/images/movies/7.jpg', trailer_url = 'https://www.youtube.com/watch?v=zSWdZVtXT7E', thu_tu_noi_bat = 7 WHERE id = 7;
+UPDATE phim SET ten_phim = 'Inception', poster_url = '/images/movies/8.jpg', trailer_url = 'https://www.youtube.com/watch?v=YoHD9XEInc0', thu_tu_noi_bat = 8 WHERE id = 8;
+UPDATE phim SET ten_phim = 'Arrival', poster_url = '/images/movies/9.jpg', trailer_url = 'https://www.youtube.com/watch?v=tFMo3UJ4B4g', thu_tu_noi_bat = NULL WHERE id = 9;
+
+-- Hai phim đã phát hành được đưa vào chương trình chiếu lại local để đủ 8 phim nổi bật.
+UPDATE phim SET ngay_khoi_chieu = '2014-11-07', ngay_ket_thuc = '2026-12-31', noi_dung = 'Một nhóm phi hành gia đi qua hố sâu vũ trụ để tìm nơi sinh sống mới cho loài người.' WHERE id = 7;
+UPDATE phim SET ngay_khoi_chieu = '2010-07-16', ngay_ket_thuc = '2026-12-31', noi_dung = 'Dom Cobb cùng đồng đội xâm nhập giấc mơ để gieo một ý tưởng vào tiềm thức của mục tiêu.' WHERE id = 8;
+UPDATE phim SET noi_dung = 'Nhà ngôn ngữ học Louise Banks tìm cách giao tiếp với những vị khách ngoài hành tinh, qua đó thay đổi cách nhìn về ngôn ngữ và thời gian.' WHERE id = 9;
+
+-- Đồng bộ tên rạp đã tồn tại; không thay ID hoặc liên kết vé/suất chiếu.
+UPDATE rap SET ten_rap = REPLACE(REPLACE(ten_rap, 'Lumière', 'Galaxy'), 'Lumiere', 'Galaxy')
+WHERE ten_rap LIKE '%Lumière%' OR ten_rap LIKE '%Lumiere%';
+
+UPDATE khuyen_mai SET noi_dung = REPLACE(REPLACE(noi_dung, 'Lumière', 'Galaxy'), 'Lumiere', 'Galaxy')
+WHERE noi_dung LIKE '%Lumière%' OR noi_dung LIKE '%Lumiere%';

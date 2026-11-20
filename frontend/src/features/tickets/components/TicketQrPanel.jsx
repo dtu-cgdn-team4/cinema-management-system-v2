@@ -73,7 +73,7 @@ export default function TicketQrPanel({ bookingCode }) {
       </div>
 
       <p className="mx-auto mt-4 max-w-xs text-center text-[11px] leading-relaxed text-zinc-400 sm:text-xs">
-        Đưa mã QR cho nhân viên tại quầy hoặc cửa soát vé rạp Galaxy Lumière.
+        Đưa mã QR cho nhân viên tại quầy hoặc cửa soát vé rạp Galaxy.
       </p>
 
       <button

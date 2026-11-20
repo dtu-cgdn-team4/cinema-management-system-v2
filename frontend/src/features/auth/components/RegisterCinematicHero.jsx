@@ -57,7 +57,7 @@ export default function RegisterCinematicHero() {
 
         <p className="mt-4 max-w-[534px] font-inter font-normal text-[16px] leading-[1.7] text-[#c3c1c2]">
           Từ những thước phim đầu tiên đến dư âm cuối cùng. Khám phá, đặt vé
-          và tận hưởng thế giới điện ảnh cùng Lumière.
+          và tận hưởng thế giới điện ảnh cùng Galaxy.
         </p>
       </div>
 

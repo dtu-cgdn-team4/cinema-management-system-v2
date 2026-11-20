@@ -13,6 +13,7 @@ async function loadMovies(path, keyword, signal) {
 
 // apiClient đã lấy trường data từ ApiResponse của backend.
 export const movieApi = {
+  getFeaturedMovies: (signal) => apiClient.get('/movies/featured', { signal, timeout: 8000 }),
   getGenres: (signal) => apiClient.get('/movies/genres', { signal, timeout: 8000 }),
   getNowShowingMovies: (keyword = '', signal) => loadMovies('/movies/now-showing', keyword, signal),
   getComingSoonMovies: (keyword = '', signal) => loadMovies('/movies/coming-soon', keyword, signal),

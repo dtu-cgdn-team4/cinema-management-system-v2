@@ -13,6 +13,7 @@ import MovieListPage from "@/features/movies/pages/MovieListPage";
 import MemberTicketsPage from "@/features/account/pages/MemberTicketsPage";
 import MemberTicketDetailPage from "@/features/tickets/pages/MemberTicketDetailPage";
 import MovieDetailPage from "@/features/movies/pages/MovieDetailPage";
+import HomePage from "@/features/home/pages/HomePage";
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
 const AdminRoute = ({ children }) => {
@@ -97,15 +98,8 @@ export default function AppRoutes() {
 
       {/* Các trang chính thuộc luồng khách hàng với Header & Footer chung */}
       <Route element={<CustomerLayout />}>
-        <Route path="/" element={<Navigate to="/phim" replace />} />
-        <Route
-          path="/trang-chu"
-          element={
-            <p className="py-24 text-center text-muted">
-              Trang chủ đang được xây dựng.
-            </p>
-          }
-        />
+        <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+        <Route path="/trang-chu" element={<HomePage />} />
         <Route path="/phim" element={<MovieListPage />} />
         <Route path="/phim/:movieId" element={<MovieDetailPage />} />
         <Route path="/lich-chieu" element={<ShowtimeSelectionPage />} />
