@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import apiClient from '../services/apiClient';
+import LogoutConfirmModal from '../components/common/LogoutConfirmModal';
 
 export const AuthContext = createContext(null);
 
@@ -7,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     // Khởi tạo state từ storage
@@ -57,8 +59,25 @@ export const AuthProvider = ({ children }) => {
     setUser(userInfo);
   };
 
+  // Mở modal xác nhận đăng xuất khi người dùng click
   const handleLogout = () => {
-    apiClient.post('/auth/logout').catch(() => {});
+    setIsLogoutModalOpen(true);
+  };
+
+  // Người dùng xác nhận đăng xuất trên modal
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    forceLogout();
+  };
+
+  // Người dùng bấm Hủy trên modal
+  const cancelLogout = () => {
+    setIsLogoutModalOpen(false);
+  };
+
+  // Thực hiện đăng xuất ngay lập tức (xóa token và gọi API)
+  const forceLogout = () => {
+    apiClient.post('/auth/logout').catch(() => { });
     localStorage.removeItem('accessToken');
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('accessToken');
@@ -85,10 +104,23 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login: handleLogin,
     logout: handleLogout,
+    forceLogout,
+    confirmLogout,
+    cancelLogout,
+    openLogoutModal: handleLogout,
     updateUser: handleUpdateUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
