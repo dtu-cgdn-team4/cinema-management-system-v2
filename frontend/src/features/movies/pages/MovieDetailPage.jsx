@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Clock, Calendar, Play, X, Ticket,
   MapPin, Film, ChevronLeft, ChevronRight as ChevronRightIcon,
@@ -548,6 +548,7 @@ function TrailerSection({ movie, onWatchTrailer, onViewImage }) {
    SHOWTIMES SECTION (3 bước + sidebar)
 ═══════════════════════════════════════ */
 function ShowtimesSection({ movieId, movie }) {
+  const navigate = useNavigate();
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
@@ -606,7 +607,29 @@ function ShowtimesSection({ movieId, movie }) {
   };
 
   const handleContinue = () => {
-    alert('Chức năng đặt vé đang được phát triển. Vui lòng quay lại sau!');
+    if (!selectedSlot?.slot?.id) return;
+
+    const previewMovie = {
+      ...movie,
+      genres: (movie.genres ?? [])
+        .map((genre) => (typeof genre === 'string' ? genre : genre.name))
+        .filter(Boolean),
+    };
+    const previewShowtime = {
+      id: selectedSlot.slot.id,
+      cinemaId: selectedCinemaId ?? filteredCinemas[0]?.id,
+      startTime: selectedSlot.slot.startsAt,
+      endTime: selectedSlot.slot.endsAt,
+      room: {
+        id: selectedSlot.room.id,
+        name: selectedSlot.room.name,
+        format: selectedSlot.room.format,
+      },
+    };
+
+    navigate(`/dat-ve/suat-chieu/${selectedSlot.slot.id}/chon-ghe`, {
+      state: { movie: previewMovie, showtime: previewShowtime },
+    });
   };
 
   return (
