@@ -240,3 +240,54 @@ INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich
     (7, 7, 'VNPAY', 100000, 'TXN_DEMO_TAMDU_007', 'THANH_CONG', CURRENT_TIMESTAMP),
     (8, 8, 'MOMO', 130000, 'TXN_DEMO_TAMDU_008', 'THANH_CONG', CURRENT_TIMESTAMP),
     (9, 9, 'ZALOPAY', 130000, 'TXN_DEMO_TAMDU_009', 'THANH_CONG', CURRENT_TIMESTAMP);
+
+-- ------------------------------------------------------------------------------
+-- 12. DỮ LIỆU ĐƠN VÉ MẪU PHỤC VỤ THỐNG KÊ DOANH THU & BÁO CÁO PHIM (TASK 6.16.1.1)
+-- Bổ sung đơn vé đã thanh toán trong Tháng 11/2026 cho đủ Top 5 phim
+-- ------------------------------------------------------------------------------
+-- Suất chiếu bổ sung cho các phim (1: Dune 2, 2: Deadpool, 3: Mai, 4: Quật Mộ, 5: Oppenheimer, 6: Lật Mặt 7)
+INSERT IGNORE INTO suat_chieu (id, phim_id, phong_chieu_id, bat_dau, ket_thuc, trang_thai) VALUES
+    (101, 1, 1, '2026-11-15 09:00:00', '2026-11-15 11:45:00', 1),
+    (102, 2, 1, '2026-11-15 13:00:00', '2026-11-15 15:10:00', 1),
+    (103, 3, 1, '2026-11-15 16:00:00', '2026-11-15 18:15:00', 1),
+    (104, 4, 1, '2026-11-15 19:00:00', '2026-11-15 21:15:00', 1),
+    (105, 5, 1, '2026-11-16 09:30:00', '2026-11-16 12:30:00', 1),
+    (106, 6, 1, '2026-11-16 14:00:00', '2026-11-16 16:20:00', 1);
+
+-- Đơn đặt vé cho từng phim
+INSERT IGNORE INTO dat_ve (id, ma_dat_ve, nguoi_dung_id, suat_chieu_id, kenh, nhan_vien_id, ten_nguoi_nhan, sdt_nguoi_nhan, email_nguoi_nhan, khuyen_mai_id, tong_tien, tien_giam, thanh_tien, trang_thai_dat_ve, thanh_toan_luc, nhan_ve_luc, ngay_tao) VALUES
+    -- Phim 3: Mai (5 vé, 425.000 VNĐ)
+    (101, 'GLX-MAI-202611-01', 6, 103, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 425000, 0, 425000, 'DA_THANH_TOAN', '2026-11-15 10:00:00', NULL, '2026-11-15 09:50:00'),
+    -- Phim 2: Deadpool & Wolverine (4 vé, 340.000 VNĐ)
+    (102, 'GLX-DPWL-202611-01', 4, 102, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 340000, 0, 340000, 'DA_THANH_TOAN', '2026-11-15 11:30:00', NULL, '2026-11-15 11:20:00'),
+    -- Phim 4: Quật Mộ Trùng Ma (3 vé, 255.000 VNĐ)
+    (103, 'GLX-EXHUMA-202611-01', 6, 104, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 255000, 0, 255000, 'DA_THANH_TOAN', '2026-11-15 14:00:00', NULL, '2026-11-15 13:50:00'),
+    -- Phim 6: Lật Mặt 7 (3 vé, 210.000 VNĐ)
+    (104, 'GLX-LATMAT-202611-01', 4, 106, 'ONLINE', NULL, 'Lê Hoàng Nam', '0914555666', 'hoangnam@gmail.com', NULL, 210000, 0, 210000, 'DA_THANH_TOAN', '2026-11-16 10:15:00', NULL, '2026-11-16 10:00:00'),
+    -- Phim 5: Oppenheimer (2 vé, 170.000 VNĐ)
+    (105, 'GLX-OPP-202611-01', 6, 105, 'ONLINE', NULL, 'Tâm Dũ', '0867004248', 'tamdu11111@gmail.com', NULL, 170000, 0, 170000, 'DA_THANH_TOAN', '2026-11-16 08:30:00', NULL, '2026-11-16 08:20:00');
+
+-- Ghế cho các đơn đặt vé (lấy từ các ghế phòng 1)
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe)
+SELECT 103, g.id, 6, 101, 85000, 'DA_THANH_TOAN' FROM ghe g WHERE g.phong_chieu_id = 1 LIMIT 5;
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe)
+SELECT 102, g.id, 4, 102, 85000, 'DA_THANH_TOAN' FROM ghe g WHERE g.phong_chieu_id = 1 LIMIT 4;
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe)
+SELECT 104, g.id, 6, 103, 85000, 'DA_THANH_TOAN' FROM ghe g WHERE g.phong_chieu_id = 1 LIMIT 3;
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe)
+SELECT 106, g.id, 4, 104, 70000, 'DA_THANH_TOAN' FROM ghe g WHERE g.phong_chieu_id = 1 LIMIT 3;
+
+INSERT IGNORE INTO ghe_suat_chieu (suat_chieu_id, ghe_id, nguoi_dung_id, dat_ve_id, gia, trang_thai_ghe)
+SELECT 105, g.id, 6, 105, 85000, 'DA_THANH_TOAN' FROM ghe g WHERE g.phong_chieu_id = 1 LIMIT 2;
+
+-- Giao dịch thanh toán tương ứng
+INSERT IGNORE INTO thanh_toan (id, dat_ve_id, phuong_thuc, so_tien, ma_giao_dich, trang_thai_thanh_toan, thoi_diem) VALUES
+    (101, 101, 'VNPAY', 425000, 'TXN_20261115_101', 'THANH_CONG', '2026-11-15 10:00:00'),
+    (102, 102, 'MOMO', 340000, 'TXN_20261115_102', 'THANH_CONG', '2026-11-15 11:30:00'),
+    (103, 103, 'ZALOPAY', 255000, 'TXN_20261115_103', 'THANH_CONG', '2026-11-15 14:00:00'),
+    (104, 104, 'VNPAY', 210000, 'TXN_20261116_104', 'THANH_CONG', '2026-11-16 10:15:00'),
+    (105, 105, 'MOMO', 170000, 'TXN_20261116_105', 'THANH_CONG', '2026-11-16 08:30:00');
+
