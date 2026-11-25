@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import MovieListPage from "@/features/movies/pages/MovieListPage";
 import MemberTicketsPage from "@/features/account/pages/MemberTicketsPage";
 import MemberTicketDetailPage from "@/features/tickets/pages/MemberTicketDetailPage";
-import MovieDetailPage from "@/features/movies/pages/MovieDetailPage";
+import MovieDetailPage from "@/features/moviedetail/pages/MovieDetailPage";
 
 /** Bảo vệ các route quản trị: yêu cầu đã đăng nhập và có quyền ADMIN. */
 const AdminRoute = ({ children }) => {
