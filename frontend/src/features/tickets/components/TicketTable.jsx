@@ -55,7 +55,7 @@ export default function TicketTable({ tickets, isLoading, error }) {
         </div>
 
         {/* Danh sách các vé */}
-        <div className="max-h-[624px] overflow-y-auto overscroll-contain divide-y divide-white/5 [scrollbar-gutter:stable]">
+        <div className="max-h-[624px] overflow-y-auto overscroll-contain no-scrollbar divide-y divide-white/5">
           {tickets.map((ticket) => (
             <TicketRow key={ticket.bookingCode} ticket={ticket} />
           ))}

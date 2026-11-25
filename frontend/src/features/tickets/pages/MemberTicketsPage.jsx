@@ -1,7 +1,7 @@
 import { Link, Navigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import AccountSidebar from '../components/AccountSidebar';
+import AccountSidebar from '@/features/account/components/AccountSidebar';
 import TicketTable from '../components/TicketTable';
 import useMemberTickets from '../hooks/useMemberTickets';
 
