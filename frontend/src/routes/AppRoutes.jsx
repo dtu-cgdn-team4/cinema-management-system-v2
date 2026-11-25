@@ -10,7 +10,7 @@ import AccountPage from "@/features/account/pages/AccountPage";
 import AdminMovieListPage from "@/features/admin/pages/AdminMovieListPage";
 import { useAuth } from "@/context/AuthContext";
 import MovieListPage from "@/features/movies/pages/MovieListPage";
-import MemberTicketsPage from "@/features/account/pages/MemberTicketsPage";
+import MemberTicketsPage from "@/features/tickets/pages/MemberTicketsPage";
 import MemberTicketDetailPage from "@/features/tickets/pages/MemberTicketDetailPage";
 import MovieDetailPage from "@/features/moviedetail/pages/MovieDetailPage";
 

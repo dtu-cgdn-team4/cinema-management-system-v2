@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchMemberTickets } from '../api/memberTicketApi';
+import { fetchMemberTickets } from '../api/memberTicketListApi';
 
 /**
  * Hook quản lý state danh sách vé thành viên.
