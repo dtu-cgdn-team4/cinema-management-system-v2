@@ -93,9 +93,6 @@ function TrailerModal({ url, title, onClose }) {
         ) : (
           <div className="w-full h-full bg-slate-900 flex items-center justify-center text-slate-400 text-xs sm:text-sm">Không thể phát trailer này.</div>
         )}
-        <button onClick={onClose} className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 p-1.5 sm:p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors cursor-pointer" aria-label="Đóng">
-          <X className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
       </div>
     </div>
   );
