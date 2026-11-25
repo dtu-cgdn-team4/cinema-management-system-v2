@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import authApi from '../api/authApi';
 import { errorMessage } from '@/services/apiClient';
+import { getPostLoginRedirectPath } from '../utils/authRedirect';
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -81,9 +82,9 @@ export const useLogin = () => {
         // Lưu token và thông tin người dùng vào AuthContext & Storage
         login(loginData, formData.rememberMe);
 
-        // Chuyển hướng theo role hoặc trang đích ban đầu
-        const from = location.state?.from?.pathname || '/';
-        navigate(from, { replace: true });
+        // Chuyển hướng theo vai trò hoặc trang đích ban đầu
+        const targetPath = getPostLoginRedirectPath(loginData.user, location.state?.from?.pathname);
+        navigate(targetPath, { replace: true });
       }
     } catch (error) {
       const fieldErrors = error?.response?.data?.data;

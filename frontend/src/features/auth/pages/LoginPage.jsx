@@ -6,6 +6,7 @@ import LoginForm from '../components/LoginForm';
 import CompleteProfileForm from '../components/CompleteProfileForm';
 import { useLogin } from '../hooks/useLogin';
 import { useAuth } from '@/context/AuthContext';
+import { getPostLoginRedirectPath } from '../utils/authRedirect';
 
 /**
  * Trang Đăng nhập hệ thống Quản lý rạp chiếu phim Galaxy
@@ -32,7 +33,10 @@ export const LoginPage = () => {
 
   const handleProfileSuccess = (updatedUser) => {
     updateUser(updatedUser);
-    const returnTo = sessionStorage.getItem('googleLoginReturnTo') || '/';
+    const returnTo = getPostLoginRedirectPath(
+      updatedUser,
+      sessionStorage.getItem('googleLoginReturnTo')
+    );
     sessionStorage.removeItem('googleLoginReturnTo');
     navigate(returnTo, { replace: true });
   };
