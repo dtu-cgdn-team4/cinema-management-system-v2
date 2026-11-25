@@ -13,7 +13,6 @@ import MovieBanner from '../components/MovieBanner';
 import SeatBox from '../components/SeatBox';
 import SeatMap from '../components/SeatMap';
 import { clearHold, loadHold, saveHold } from '../utils/heldSeats';
-import { seatCountError } from '../utils/seatCountError';
 import { SEAT_TYPE_NAME } from '../utils/seatTypes';
 
 const AGE_NOTE = {
@@ -33,7 +32,7 @@ const LEGEND = [
 /**
  * SRS 6.2.2 Đặt vé – Chọn ghế, giao diện theo frame "Trang chọn ghế" của Figma.
  * Sơ đồ lấy qua REST rồi cập nhật qua WebSocket (architecture.md, luồng đặt vé bước 1 và 4).
- * Chọn số lượng rồi chọn ghế (business-rules, Figma chưa có ô số lượng); bấm Tiếp tục thì giữ ghế 10 phút ở server.
+ * Bấm thẳng vào ghế, tối đa maxSeats ghế mỗi lần (business-rules); bấm Tiếp tục thì giữ ghế 10 phút ở server.
  */
 export default function SeatSelectionPage() {
   const { showtimeId } = useParams();
@@ -46,7 +45,6 @@ export default function SeatSelectionPage() {
   const [loadError, setLoadError] = useState(null);
   // Quay lại từ bước thanh toán: ghế mình đang giữ hiện là ghế đang chọn, kèm thời gian còn lại
   const [hold, setHold] = useState(() => loadHold(showtimeId));
-  const [quantity, setQuantity] = useState(hold?.seats.length ?? 0);
   const [selected, setSelected] = useState(hold?.seats ?? []);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -106,8 +104,8 @@ export default function SeatSelectionPage() {
       setSelected((prev) => prev.filter((s) => s.id !== seat.id));
       return;
     }
-    if (!quantity || selected.length >= quantity) {
-      setError(seatCountError(quantity, selected.length + 1));
+    if (selected.length >= seatMap.maxSeats) {
+      setError(`Mỗi lần đặt tối đa ${seatMap.maxSeats} ghế`);
       return;
     }
     setSelected((prev) => [...prev, seat]);
@@ -120,15 +118,14 @@ export default function SeatSelectionPage() {
     : '/lich-chieu';
 
   const submit = async () => {
-    const message = seatCountError(quantity, selected.length);
-    if (message) {
-      setError(message);
+    if (selected.length === 0) {
+      setError('Vui lòng chọn ghế');
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
-      const result = await holdSeats(showtimeId, { quantity, seatIds: selected.map((seat) => seat.id) });
+      const result = await holdSeats(showtimeId, { quantity: selected.length, seatIds: selected.map((seat) => seat.id) });
       saveHold(result);
       navigate(`/dat-ve/suat-chieu/${showtimeId}/thanh-toan`, { state: { hold: result, movie, showtime } });
     } catch (err) {
@@ -162,7 +159,9 @@ export default function SeatSelectionPage() {
                   <span className="size-2 rounded-full bg-brand" />
                   Chọn ghế của bạn
                 </h2>
-                <p className="text-xs text-muted">Chạm vào ghế trống để chọn hoặc bỏ chọn.</p>
+                <p className="text-xs text-muted">
+                  Chạm vào ghế trống để chọn hoặc bỏ chọn{seatMap && `, tối đa ${seatMap.maxSeats} ghế`}.
+                </p>
               </div>
               {showtime && (
                 <div className="flex shrink-0 flex-col items-end gap-1.25 text-xs whitespace-nowrap">
@@ -171,32 +170,6 @@ export default function SeatSelectionPage() {
                 </div>
               )}
             </div>
-
-            {seatMap && (
-              <label className="flex flex-wrap items-center gap-3 text-xs text-zinc-300">
-                Số lượng ghế
-                <select
-                  value={quantity}
-                  onChange={(e) => {
-                    setError(null);
-                    setQuantity(Number(e.target.value));
-                  }}
-                  className="rounded-lg border border-line bg-card px-3 py-1.5 font-semibold text-white scheme-dark outline-none focus:border-brand"
-                >
-                  <option value={0}>Chọn số lượng</option>
-                  {Array.from({ length: seatMap.maxSeats }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n} ghế
-                    </option>
-                  ))}
-                </select>
-                {quantity > 0 && (
-                  <span className="text-muted">
-                    Đã chọn {selected.length}/{quantity}
-                  </span>
-                )}
-              </label>
-            )}
 
             {seatMap ? (
               <SeatMap rows={seatMap.rows} isTaken={isTaken} selectedIds={selectedIds} onToggle={toggle} />
