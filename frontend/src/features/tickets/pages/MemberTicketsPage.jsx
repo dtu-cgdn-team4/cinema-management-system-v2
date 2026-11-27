@@ -1,25 +1,42 @@
+import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { getAccountProfile } from '@/features/account/api/accountApi';
+import { formatDate } from '@/utils/format';
 import AccountSidebar from '@/features/account/components/AccountSidebar';
 import TicketTable from '../components/TicketTable';
 import useMemberTickets from '../hooks/useMemberTickets';
 
 export default function MemberTicketsPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { tickets, isLoading, error } = useMemberTickets();
+  const [profileData, setProfileData] = useState(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    let isCurrent = true;
+    getAccountProfile()
+      .then((response) => {
+        if (isCurrent) setProfileData(response?.data ?? response);
+      })
+      .catch(() => {
+        if (isCurrent) setProfileData(null);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [isAuthenticated]);
 
   if (!authLoading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   // Ngày tham gia hiển thị định dạng ngày/tháng/năm
-  const joinDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
+  const joinDate = profileData?.joinedAt
+    ? formatDate(profileData.joinedAt)
     : '12/03/2025';
 
   return (
