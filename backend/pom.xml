@@ -229,8 +229,8 @@
                     <user>${env.FLYWAY_USER}</user>
                     <password>${env.FLYWAY_PASSWORD}</password>
                     <locations>
-                        <location>filesystem:src/main/resources/db/migration</location>
-                        <location>filesystem:src/main/resources/db/seed</location>
+                        <location>classpath:db/migration</location>
+                        <location>classpath:db/seed</location>
                     </locations>
                 </configuration>
                 <dependencies>

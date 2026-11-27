@@ -40,6 +40,9 @@ public class CustomUserDetails implements UserDetails {
         Set<GrantedAuthority> grantedAuthorities = new LinkedHashSet<>();
         grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role.getSecurityRole()));
         grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        if (role == Role.NHAN_VIEN) {
+            grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        }
         return Set.copyOf(grantedAuthorities);
     }
 

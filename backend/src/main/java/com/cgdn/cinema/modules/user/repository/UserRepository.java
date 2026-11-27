@@ -1,5 +1,6 @@
 package com.cgdn.cinema.modules.user.repository;
 
+import com.cgdn.cinema.common.enums.Role;
 import com.cgdn.cinema.modules.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -29,4 +30,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** Kiểm tra số điện thoại đã thuộc tài khoản khác; không coi giá trị của chính mình là trùng. */
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
+
+    boolean existsByPhoneNumberAndRoleAndStatus(String phoneNumber, Role role, Integer status);
+
+    boolean existsByCitizenIdAndRoleAndStatus(String citizenId, Role role, Integer status);
 }
